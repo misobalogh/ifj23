@@ -1,1 +1,8 @@
 /.vscode
+*.o
+*.out
+*.so
+*.dll
+*.a
+*.exe
+[^\.]*

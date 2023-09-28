@@ -1,3 +1,13 @@
+/***************************************************************
+* **Project Name:** Implementace překladače imperativního jazyka IFJ23
+* **File Name:** colors.h
+* **Description:** Color codes for terminal output
+* **Author:** MICHAL BALOGH xbalog06
+* **Faculty:** FIT VUT
+* **Date:** 29.09.2023
+*
+* **Comments:** Color codes used in unit tests
+***************************************************************/
 
 #ifndef COLORS_H
 #define COLORS_H

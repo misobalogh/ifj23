@@ -1,18 +1,38 @@
+/***************************************************************
+* **Project Name:** Implementace překladače imperativního jazyka IFJ23
+* **File Name:** test.c
+* **Description:** Example file of unit test
+* **Author:** MICHAL BALOGH xbalog06
+* **Faculty:** FIT VUT
+* **Date:** 29.09.2023
+*
+* **Comments:** Example file that shows how to write unit tests
+*               using CUnit library.
+*
+* **Example usage:**
+* ```
+* make
+* make runtests - start all unit tests
+* ```
+***************************************************************/
+
 #include <CUnit/Basic.h>
 #include "../sum.h" 
 #include "colors.h"
 
+// test case 1
 void test_add_POS_INT() {
     CU_ASSERT(sum(2, 3) == 5);
     CU_ASSERT(sum(1, 0) == 1);
 }
 
-
+// test case 2
 void test_add_NEG_INT() {
     CU_ASSERT(sum(-2, -3) == -5);
     CU_ASSERT(sum(-2, -1) == -3);
 }
 
+// test case 3
 void wrong_arg() {
     CU_ASSERT(sum(NULL, -1) == -3);
 }

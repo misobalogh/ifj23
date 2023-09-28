@@ -11,10 +11,20 @@ EXEC = $(basename $(SRC_FILES))
 TEST_FILES = $(wildcard tests/*.c)
 UNIT_TESTS = $(basename $(TEST_FILES))
 
-all: main tests
 
-run:
-	./main
+help:
+	@echo ""
+	@echo "Usage:"
+	@echo "make help     - print this help message"
+	@echo "make	      - print this help message"
+	@echo "make all      - compile all files and run tests"
+	@echo "make tests    - compile all tests"
+	@echo "make runtests - run all tests"
+	@echo "make <target> - compile targeted program"
+	@echo "make clean    - remove all object files and binaries"	
+	@echo ""
+
+all: main tests
 
 runtests: $(UNIT_TESTS)
 	@for test in $(UNIT_TESTS); do \
