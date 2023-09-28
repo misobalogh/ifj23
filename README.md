@@ -1,56 +1,63 @@
-# Project: IFJ23 - Implementace překladače imperativního jazyka
+# Project: IFJ23
 
-## Project Information
-- **Project Name:** Implementace překladače imperativního jazyka IFJ23
-- **File Name:** 
-- **Description:** [Brief project description here]
-- **Author:** Joe Mama (xjmama69)
-- **Faculty:** FIT VUT
-- **Date:** 29.09.2023
-
-## Comments
-[Add any additional comments or notes here]
-
+```c
+/***************************************************************
+* **Project Name:** Implementace překladače imperativního jazyka IFJ23
+* **File Name:** [Add File Name Here]
+* **Description:** [Add Description Here]
+* **Author:** JOE MAMA (xjmama69)
+* **Faculty:** FIT VUT
+* **Date:** 29.09.2023
+*
+* **Comments:** [Add Comments Here]
+***************************************************************/
+```
 ---
 
 ## Structure
 - `./tests` - Unit tests
 - `Makefile`
-- `README`
+- `README.md`
 - `*.c` - Source code files
 - `*.h` - Header files
 
----
+--- 
 
-## Header Files (*.h)
-Header files should follow this structure:
-
+## Header Files (*.h) - Hlavičkové soubory
+- Na vrchu hlavička
+- Deklarace funkcí korespondujících zdrojovým souborům *.c
+- K každé funkci Doxygen komentáře
+- #### Doxygen komentáře
 ```c
-/**
- * @file filename.h
- * @brief Brief description of the header file.
- *
- * Detailed description of the header file.
- */
+/*HLAVICKA*/
 
 #ifndef HEADER_FILENAME_H
 #define HEADER_FILENAME_H
 
+...
+
 /**
- * @brief Brief description of a function.
+ * @brief Stručný popis funkce
  *
- * Detailed description of the function.
+ * Širší popis funkce
  *
- * @param a First parameter.
- * @param b Second parameter.
- * @return Return value.
+ * @param a První parametr
+ * @param b Druhý parametr
+ * @return Návratová hodnota
  */
-ReturnType functionName(ParameterType a, ParameterType b);
+int sum(int a, int b);
+
+...
 
 #endif // HEADER_FILENAME_H
+```
 
 
-Unit testing:
-install CUnit:
-sudo apt-get install libcunit1 libcunit1-dev
+## Unit Testing
+Pro instalaci CUnit použijte následující příkaz:
+
+`sudo apt-get install libcunit1 libcunit1-dev`
+
+
+
 
