@@ -56,7 +56,9 @@ int sum(int a, int b);
 ## Unit Testing
 Pro instalaci CUnit použijte následující příkaz:
 
-`sudo apt-get install libcunit1 libcunit1-dev`
+```
+sudo apt-get install libcunit1 libcunit1-dev
+```
 
 
 
