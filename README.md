@@ -3,14 +3,15 @@
 ## Hlavička
 ```c
 /***************************************************************
-* **Project Name:** Implementace překladače imperativního jazyka IFJ23
-* **File Name:** [Add File Name Here]
-* **Description:** [Add Description Here]
-* **Author:** JOE MAMA (xjmama69)
-* **Faculty:** FIT VUT
-* **Date:** 29.09.2023
-*
-* **Comments:** [Add Comments Here]
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: 
+* Description: 
+* Author: 
+* Faculty: FIT VUT
+* Date: 
+
+* Comments:
+
 ***************************************************************/
 ```
 ---

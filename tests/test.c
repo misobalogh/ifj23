@@ -1,15 +1,15 @@
 /***************************************************************
-* **Project Name:** Implementace překladače imperativního jazyka IFJ23
-* **File Name:** test.c
-* **Description:** Example file of unit test
-* **Author:** MICHAL BALOGH xbalog06
-* **Faculty:** FIT VUT
-* **Date:** 29.09.2023
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: test.c
+* Description: Example file of unit test
+* Author: MICHAL BALOGH xbalog06
+* Faculty: FIT VUT
+* Date: 29.09.2023
 *
-* **Comments:** Example file that shows how to write unit tests
-*               using CUnit library.
+* Comments: Example file that shows how to write unit tests
+*           using CUnit library.
 *
-* **Example usage:**
+* Example usage:
 * ```
 * make
 * make runtests - start all unit tests
