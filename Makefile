@@ -51,4 +51,4 @@ tests/%: tests/%.o $(filter-out main.o, $(OBJ_FILES))
 clean:
 	rm -f $(OBJ_FILES) $(EXEC) $(UNIT_TESTS) tests/*.o
 
-.PHONY: all clean
+.PHONY: all clean main run

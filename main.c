@@ -17,6 +17,7 @@
 #include "error_codes.h"
 #include "load_input.h"
 #include "swift_keywords.h"
+#include "hash_table.h"
 
 int main() {
     const char* str = swiftTypeToString(2);
@@ -40,6 +41,18 @@ int main() {
     else {
         printf("Not special keyword\n");   
     }
+
+    printf("Hash: %d\n", hash("isSwift", 100));
+    hashTable* htab = hashTableInit();
+
+    if (hashTableInsert(htab, "isSwift", 1111)) { 
+        for(int i = 0; i < 101; i++) {
+            if (htab->table[i].key != NULL) {
+                printf("%s\n", htab->table[i].key);
+            }
+        }
+    }
+
 
     // char* buffer = NULL;
     // buffer = load_input(stdin);

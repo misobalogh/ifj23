@@ -13,6 +13,9 @@
 #ifndef MACROS_H
 #define MACROS_H
 
+#include <stdio.h>
+#include "error_codes.h"
+
 /**
  * @brief Check if memory allocation was successful.
  * 
@@ -20,13 +23,12 @@
  * the stderr and exits with the specified error code.
  * 
  * @param ptr Pointer to allocated memory
- * @param error_code Error code to exit with
  */
-#define CHECK_MEMORY_ALLOC(ptr, error_code)                      \
+#define CHECK_MEMORY_ALLOC(ptr)                      \
     do {                                                         \
         if (!(ptr)) {                                            \
-            fprintf(stderr, "ERR_CODE: %d - Memory allocation failed\n", error_code);       \
-            exit(error_code);                                    \
+            fprintf(stderr, "ERR_CODE: %d - Memory allocation failed\n", INTERNAL_ERROR);       \
+            exit(INTERNAL_ERROR);                                    \
         }                                                        \
     } while (0)
 
