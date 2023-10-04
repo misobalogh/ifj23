@@ -15,12 +15,35 @@
 #include <stdbool.h>
 #include "macros.h"
 #include "error_codes.h"
-#include "load_input.c"
+#include "load_input.h"
+#include "swift_keywords.h"
 
 int main() {
-    char* buffer = NULL;
-    buffer = load_input(stdin);
-    printf("%s\n", buffer);
-    free(buffer);
+    const char* str = swiftTypeToString(2);
+    if (str == NULL) {
+        printf("NULL\n");
+        return 1;
+    }
+    else {
+        printf("%s\n", str);
+    }
+    
+    if (isSwiftSpecialKeyword(str)) {
+        printf("Is special keyword\n");
+        if(isSwiftType(str)) {
+            printf("Also it is type\n");
+        }
+        else {
+            printf("Only keyword\n");
+        }
+    }
+    else {
+        printf("Not special keyword\n");   
+    }
+
+    // char* buffer = NULL;
+    // buffer = load_input(stdin);
+    // printf("%s\n", buffer);
+    // free(buffer);
     return 0;
 }

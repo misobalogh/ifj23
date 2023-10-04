@@ -73,13 +73,13 @@ int main() {
     }
 
     // Create a test suite
-    CU_pSuite suite = CU_add_suite("load_input_OK", NULL, NULL);
+    CU_pSuite suite = CU_add_suite(YELLOW "load_input_OK" RESET, NULL, NULL);
     if (suite == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if (CU_add_test(suite, "test_load_input", test_load_input) == NULL ||
-        CU_add_test(suite, "test_load_input_empty", test_load_input_empty) == NULL) {
+    if (CU_add_test(suite, YELLOW "test_load_input" RESET, test_load_input) == NULL ||
+        CU_add_test(suite, YELLOW "test_load_input_empty" RESET, test_load_input_empty) == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }
