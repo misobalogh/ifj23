@@ -21,6 +21,7 @@
 
 // Prime number for size of hash table
 #define HASH_TABLE_SIZE 101
+#define HASH_TABLE_MAX_LOAD 0.75
 
 /**
  * @brief struct for hash table item
@@ -37,34 +38,33 @@ typedef struct htableItem {
  * @brief struct for hash table
  * 
  * @param size size of hash table
- * @param count number of items in hash table
+ * @param itemCount number of items in hash table
  * @param table array of hash table items
 */
 typedef struct hashTable {
     int size;
-    int count;
-    hashTableItem* table;
+    int itemCount;
+    hashTableItem *table;
 } hashTable;
 
 
-uint32_t hash(const char* key, int length);
+uint32_t hash(const char* key, size_t length, size_t size);
 
-hashTable* hashTableInit();
+hashTable* hashTableInit(size_t capacity);
 
 bool hashTableInsert(hashTable* htab, const char* key, int data);
 
-hashTableItem* htableSearch(hashTable* htab, const char* key);
+hashTableItem* hashTableSearch(hashTable* htab, const char* key);
 
-void hashTableDelete(hashTable* htab, const char* key);
+bool copyHashTable(hashTable* dest, hashTable* src);
+
+bool hashTableResize(hashTable* htab);
+
+void hashTableDeleteItem(hashTable* htab, const char* key);
 
 void hashTableClear(hashTable* htab);
 
 void hashTableFree(hashTable* htab);
-
-
-
-
-
 
 
 #endif // HASH_TABLE_H
