@@ -54,8 +54,9 @@ void workingWithSwiftKeywords() {
 void workingWithHashTable() {
     hashTable* htab = hashTableInit(HASH_TABLE_SIZE); // init
 
-    for (int i = 0; i < 124; i++) {
+    for (int i = 0; i < 76; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
+        CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
         int retValue = hashTableInsert(htab, key, i);
         if (retValue == 0) {    // insert, automatic resize
@@ -64,22 +65,32 @@ void workingWithHashTable() {
             hashTableFree(htab);
             exit(1);
         }
+
         // if (retValue == 1) {
         //     hashTableResize(&htab);
         //     hashTableInsert(htab, key, i);
         // }
         free(key);
-    }    
+    }
 
     hashTableItem* item;
     for (int i = 0; i < 202; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
+        CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
         if ((item = hashTableSearch(htab, key))) {
             printf("Key: %s, Data: %d\n", item->key, item->data);
         }
         free(key);
     }
+
+
+    fprintf(stderr, "htable size: %d\n", htab->size);
+    if (hashTableInsert(htab, "key1199", 100) == 2) {
+        fprintf(stderr, "Erorr, htable size: %d\n", htab->size);
+    }
+    fprintf(stderr, "htable size: %d\n", htab->size);
+
     hashTableFree(htab); // free
 }
 
@@ -89,7 +100,7 @@ int main() {
     workingWithHashTable();
 
     // workingWithLoadInput();
-    
+
 
     return 0;
 }
