@@ -82,9 +82,15 @@ hashTable* hashTableInit(size_t capacity) {
  * If the key already exists in the hash table, the data is updated.
  * If memory allocation for item fails, exits with INTERNAL_ERROR.
  *
+ * @param htab pointer to hash table
+ * @param key key to insert
+ * @param data data to insert
+ * 
+ * @return 0 if insert fails, 1 if item was already in table and was updated, 2 if item was inserted succesfully
  */
 int hashTableInsert(hashTable* htab, const char* key, int data) {
     if (htab == NULL) {
+        fprintf(stderr, "Error - hashTableInsert: invalid pointer, htab is NULL\n");
         return 0;
     }
 
@@ -94,7 +100,8 @@ int hashTableInsert(hashTable* htab, const char* key, int data) {
             fprintf(stderr, "Error - hashTableResize\n");
             return 0;
         }
-        // printf("resized\n");
+        printf("newww size: %d\n", htab->size);
+        printf("resized\n\n\n\n\n\n\n\n");
         // printf("size: %d\n", htab->size);
         // hashTableItem* item;
         // for (int i = 0; i < 202; i++) {
@@ -105,14 +112,11 @@ int hashTableInsert(hashTable* htab, const char* key, int data) {
         //     }
         //     free(key);
         // }
+        // printf("return\n");
+        // return 1;
     }
 
-    // Check if hash table is full
-    // if (htab->itemCount == htab->size) {
-    //     return 1;
-    // }
-
-    // Hash the 
+    // Hash the key to get the index of the slot where the item should be inserted
     uint32_t hashValue = hash(key, strlen(key), htab->size);
     // Find an empty slot
     while (htab->table[hashValue].key != NULL) {
@@ -127,13 +131,16 @@ int hashTableInsert(hashTable* htab, const char* key, int data) {
         hashValue++;
         hashValue %= htab->size;
     }
-
     // Insert item
-    htab->table[hashValue].key = (char*)malloc(sizeof(char) * (strlen(key) + 1));
+    htab->table[hashValue].key = (char*)malloc(sizeof(char) * (strlen(key) + 1));    
     CHECK_MEMORY_ALLOC(htab->table[hashValue].key);
-    strcpy(htab->table[hashValue].key, key);
+    if (!strcpy(htab->table[hashValue].key, key)) {
+        fprintf(stderr, "Error - hashTableInsert: strcpy failed\n");
+        return 0;
+    }
     htab->table[hashValue].data = data;
     htab->itemCount++;
+    printf("htabble size: %d\n", htab->size);
 
     return 2;
 }
@@ -175,7 +182,7 @@ void hashTableDeleteItem(hashTable* htab, const char* key) {
 
 bool copyHashTable(hashTable* dest, hashTable* src) {
     if (dest == NULL || src == NULL) {
-        fprintf(stderr, "Error - copyHashTable: dest or src is NULL\n");
+        fprintf(stderr, "Error - copyHashTable: invalid pointer, dest or src is NULL\n");
         return false;
     }
 
