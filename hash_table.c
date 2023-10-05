@@ -1,10 +1,10 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
-* File Name:
-* Description:
-* Author:
+* File Name: hash_table.c
+* Description: implementation of hash table for table of symbols
+* Author: MICHAL BALOGH xbalog06
 * Faculty: FIT VUT
-* Date:
+* Date: 5.10.2023
 
 * Comments:
 
