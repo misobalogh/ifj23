@@ -1,10 +1,10 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
-* File Name: 
-* Description: 
-* Author: 
+* File Name:
+* Description:
+* Author:
 * Faculty: FIT VUT
-* Date: 
+* Date:
 
 * Comments:
 
@@ -41,17 +41,17 @@ uint32_t hash(const char* key, size_t length, size_t size) {
         // This helps prevent hash collisions and improves the distribution of hash values.
         hash *= 16777619;
     }
-
+    // Return the final hash value that fits in the hash table.
     return hash % size;
 }
 
 
 /**
  * @brief initialize hash table
- * 
+ *
  * Initialize hash table with size HASH_TABLE_SIZE, if memory allocation fails
  * exits with INTERNAL_ERROR. All items in hash table are set to NULL and data are set to 0.
- * 
+ *
  * @return pointer to initialized hash table
 */
 hashTable* hashTableInit(size_t capacity) {
@@ -64,32 +64,63 @@ hashTable* hashTableInit(size_t capacity) {
     CHECK_MEMORY_ALLOC(htab->table);
 
     // Initialize all items in hash table to NULL and data to 0
-    for(int i = 0; i < htab->size; i++) {
+    for (int i = 0; i < htab->size; i++) {
         htab->table[i].key = NULL;
-        htab->table[i].data = 1;
+        htab->table[i].data = 0;
     }
 
     return htab;
 }
 
-bool hashTableInsert(hashTable* htab, const char* key, int data) {
+
+/**
+ * @brief Insert an item into the hash table.
+ *
+ * Insert an item into the hash table on the position given by the hash function. If the position is already occupied,
+ * linear probing is used to find an empty slot.
+ * When the hash table reaches HASH_TABLE_MAX_LOAD capacity, it is automatically resized to double the size.
+ * If the key already exists in the hash table, the data is updated.
+ * If memory allocation for item fails, exits with INTERNAL_ERROR.
+ *
+ */
+int hashTableInsert(hashTable* htab, const char* key, int data) {
     if (htab == NULL) {
-        return false;
+        return 0;
+    }
+
+    // Resize hash table if it's full
+    if (htab->itemCount >= (htab->size * HASH_TABLE_MAX_LOAD)) {
+        if (!hashTableResize(&htab)) {
+            fprintf(stderr, "Error - hashTableResize\n");
+            return 0;
+        }
+        // printf("resized\n");
+        // printf("size: %d\n", htab->size);
+        // hashTableItem* item;
+        // for (int i = 0; i < 202; i++) {
+        //     char* key = (char*)malloc(sizeof(char) * 10);
+        //     sprintf(key, "key%d", i);
+        //     if ((item = hashTableSearch(htab, key))) {
+        //         printf("Key: %s, Data: %d\n", item->key, item->data);
+        //     }
+        //     free(key);
+        // }
     }
 
     // Check if hash table is full
-    if(htab->itemCount == htab->size) {
-        return false;
-    }
+    // if (htab->itemCount == htab->size) {
+    //     return 1;
+    // }
 
-    // Hash the key
+    // Hash the 
     uint32_t hashValue = hash(key, strlen(key), htab->size);
-
     // Find an empty slot
-    while(htab->table[hashValue].key != NULL) {
+    while (htab->table[hashValue].key != NULL) {
         // Check if key already exists
-        if(strcmp(htab->table[hashValue].key, key) == 0) {
-            return false;
+        if (strcmp(htab->table[hashValue].key, key) == 0) {
+            // Update data of existing item
+            htab->table[hashValue].data = data;
+            return 1;
         }
 
         // Linear probing to find an empty slot
@@ -104,16 +135,16 @@ bool hashTableInsert(hashTable* htab, const char* key, int data) {
     htab->table[hashValue].data = data;
     htab->itemCount++;
 
-    return true;
+    return 2;
 }
 
 
 /**
  * @brief Look up an item in the hash table by key.
- * 
+ *
  * @param htab pointer to hash table
  * @param key key to search for
- * 
+ *
  * @return pointer to hash table item if found, NULL otherwise
 */
 hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
@@ -121,8 +152,8 @@ hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
     uint32_t hashValue = hash(key, strlen(key), htab->size);
 
     // Search for the item while we don't find an empty slot
-    while(htab->table[hashValue].key != NULL) {
-        if(strcmp(htab->table[hashValue].key, key) == 0) {
+    while (htab->table[hashValue].key != NULL) {
+        if (strcmp(htab->table[hashValue].key, key) == 0) {
             return &htab->table[hashValue];
         }
 
@@ -136,7 +167,7 @@ hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
 }
 
 void hashTableDeleteItem(hashTable* htab, const char* key) {
-    hashTableItem *itemToDelete = hashTableSearch(htab, key);
+    hashTableItem* itemToDelete = hashTableSearch(htab, key);
     itemToDelete->key = "TOMBSTONE"; // TOOD: maybe add flag to hashTableItem struct to indicate if item is deleted instead?
     itemToDelete->data = 0;
 }
@@ -144,22 +175,18 @@ void hashTableDeleteItem(hashTable* htab, const char* key) {
 
 bool copyHashTable(hashTable* dest, hashTable* src) {
     if (dest == NULL || src == NULL) {
-        printf("dest or src is NULL\n");
+        fprintf(stderr, "Error - copyHashTable: dest or src is NULL\n");
         return false;
     }
 
     if (dest->size < src->size) {
-        printf("dest size is smaller than src size\n");
+        fprintf(stderr, "Error - copyHashTable: dest capacity is smaller than src capacity\n");
         return false;
     }
 
     for (int i = 0; i < src->size; i++) {
-        // char *item = src->table[i].key;
         if (src->table[i].key != NULL) {
-            dest->table[i].key = (char*)malloc(sizeof(char) * (strlen(src->table[i].key) + 1));
-            CHECK_MEMORY_ALLOC(dest->table[i].key);
-            strcpy(dest->table[i].key, src->table[i].key);
-            dest->table[i].data = src->table[i].data;
+            hashTableInsert(dest, src->table[i].key, src->table[i].data);
         }
     }
 
@@ -167,33 +194,34 @@ bool copyHashTable(hashTable* dest, hashTable* src) {
 }
 
 
-bool hashTableResize(hashTable* htab) {
+
+bool hashTableResize(hashTable** htab) {
     // Create a new hash table with double the size
-    size_t newCapacity = htab->size * 2;
+    size_t newCapacity = (*htab)->size * 2;
     hashTable* newHtab = hashTableInit(newCapacity);
 
     // Copy all items from the old table to the new table
-    if(!copyHashTable(newHtab, htab)) {
-        printf("Error - copyHashTable\n"); 
+    if (!copyHashTable(newHtab, *htab)) {
+        hashTableFree(newHtab);
         return false;
     }
 
     // Delete the old table
-    hashTableFree(htab);
+    hashTableFree(*htab);
     // Set the new table as the hash table
-    htab = newHtab;
+    *htab = newHtab;
 
     return true;
 }
 
 /**
  * @brief Clear and free hash table items
- * 
+ *
  * @param htab pointer to hash table
  */
 void hashTableClear(hashTable* htab) {
-    for(int i = 0; i < htab->size; i++) {
-        if(htab->table[i].key != NULL) {
+    for (int i = 0; i < htab->size; i++) {
+        if (htab->table[i].key != NULL) {
             free(htab->table[i].key);
             htab->table[i].key = NULL;
             htab->table[i].data = 0;
@@ -204,7 +232,7 @@ void hashTableClear(hashTable* htab) {
 
 /**
  * @brief Deallocate hash table sources
- * 
+ *
  * @param htab pointer to hash table
 */
 void hashTableFree(hashTable* htab) {
