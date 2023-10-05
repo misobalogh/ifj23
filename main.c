@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 29.09.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -19,20 +19,27 @@
 #include "swift_keywords.h"
 #include "hash_table.h"
 
-int main() {
-    // Working with swift_keywords
+
+void workingWithLoadInput() {
+    char* buffer = NULL;
+    buffer = load_input(stdin);
+    printf("%s\n", buffer);
+    free(buffer);
+}
+
+void workingWithSwiftKeywords() {
     const char* str = swiftTypeToString(2);
     if (str == NULL) {
         printf("NULL\n");
-        return 1;
+        exit(INTERNAL_ERROR);
     }
     else {
         printf("%s\n", str);
     }
-    
+
     if (isSwiftSpecialKeyword(str)) {
         printf("Is special keyword\n");
-        if(isSwiftType(str)) {
+        if (isSwiftType(str)) {
             printf("Also it is type\n");
         }
         else {
@@ -40,85 +47,49 @@ int main() {
         }
     }
     else {
-        printf("Not special keyword\n");   
+        printf("Not special keyword\n");
     }
+}
 
-    printf("Hash: %d\n", hash("isSwift", 100, 101));
+void workingWithHashTable() {
+    hashTable* htab = hashTableInit(HASH_TABLE_SIZE); // init
 
-    
-    // Working with hash table
-    hashTable* htab = hashTableInit(HASH_TABLE_SIZE);
-
-    for (int i = 0; i < 101; i++) {
+    for (int i = 0; i < 124; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
         sprintf(key, "key%d", i);
-        if(hashTableInsert(htab, key, i) == false) {
+        int retValue = hashTableInsert(htab, key, i);
+        if (retValue == 0) {    // insert, automatic resize
             printf("ERROR\n");
             free(key);
-            return 1;
+            hashTableFree(htab);
+            exit(1);
         }
-        free(key);
-    }
-
-    for (int i = 0; i < 101; i++) {
-        char* key = (char*)malloc(sizeof(char) * 10);
-        sprintf(key, "key%d", i);
-        hashTableItem* item = hashTableSearch(htab, key);
-        // printf("Key: %s, Data: %d\n", item->key, item->data);
-        free(key);
-    }
-
-    hashTable *htab2 = hashTableInit(HASH_TABLE_SIZE);
-
-    if (copyHashTable(htab2, htab) == false) {
-        printf("1 ERROR\n");
-        return 1;
-    }
-
-    for (int i = 0; i < 101; i++) {
-        char* key = (char*)malloc(sizeof(char) * 10);
-        sprintf(key, "key%d", i);
-        hashTableItem* item = hashTableSearch(htab2, key);
-        // printf("Key: %s, Data: %d\n", item->key, item->data);
+        // if (retValue == 1) {
+        //     hashTableResize(&htab);
+        //     hashTableInsert(htab, key, i);
+        // }
         free(key);
     }    
 
-    hashTableResize(htab2);
-    
-    printf("okej\n");
-    if (hashTableInsert(htab2, "key101", 101)) {
-        printf("ERROR\n");
-        return 1;
-    }
-    if (hashTableInsert(htab2, "key102", 102)) {
-        printf("ERROR\n");
-        return 1;
-    }
-    
-
-    printf("Data 1: %d\n" , hashTableSearch(htab2, "key101")->data);
-    printf("Data 2: %d\n" , hashTableSearch(htab2, "key102")->data);
-
-    printf("\n\n\n");
+    hashTableItem* item;
     for (int i = 0; i < 202; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
         sprintf(key, "key%d", i);
-        if(hashTableInsert(htab2, key, i) == false) {
-            printf("ERROR\n");
-            free(key);
-            return 1;
+        if ((item = hashTableSearch(htab, key))) {
+            printf("Key: %s, Data: %d\n", item->key, item->data);
         }
-        printf("Key: %s, Data: %d\n", key, i);
         free(key);
     }
+    hashTableFree(htab); // free
+}
 
-    // Working with load_input
-    // char* buffer = NULL;
-    // buffer = load_input(stdin);
-    // printf("%s\n", buffer);
-    // free(buffer);
+int main() {
+    // workingWithSwiftKeywords();
 
-    // hashTableFree(htab);
-    // hashTableFree(htab2);
+    workingWithHashTable();
+
+    // workingWithLoadInput();
+    
+
     return 0;
 }
