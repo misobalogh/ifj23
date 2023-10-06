@@ -154,17 +154,14 @@ hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
     return NULL;
 }
 
+//TODO: implement hashTableDeleteItem
 /**
- * @brief TODO: Delete an item from the hash table by key. 
+ * @brief Delete an item from the hash table by key. 
  *
  * @param htab pointer to hash table
  * @param key key to delete
  */
-void hashTableDeleteItem(hashTable* htab, const char* key) {
-    hashTableItem* itemToDelete = hashTableSearch(htab, key);
-    itemToDelete->key = "TOMBSTONE"; // TOOD: maybe add flag to hashTableItem struct to indicate if item is deleted instead?
-    itemToDelete->data = 0;
-}
+// TOOD: add flag to hashTableItem struct to indicate if item is deleted instead of freeing the key
 
 
 /**
