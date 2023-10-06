@@ -12,6 +12,8 @@
 #ifndef INPUT_LOADER_H
 #define INPUT_LOADER_H
 
+#include <stdio.h>
+
 /**
  * @brief Loads input from stdin.
  *

@@ -30,13 +30,13 @@ char* load_input(FILE* input_file) {
     int c;   
 
     buffer = (char*) malloc(buffer_size * sizeof(char));
-    CHECK_MEMORY_ALLOC(buffer, INTERNAL_ERROR);
+    CHECK_MEMORY_ALLOC(buffer);
 
     while((c=fgetc(input_file)) != EOF) {
         if(lenght+1 >= buffer_size) {
             buffer_size *= 2;
             buffer = (char*) realloc(buffer, buffer_size * sizeof(char));
-            CHECK_MEMORY_ALLOC(buffer, INTERNAL_ERROR);
+            CHECK_MEMORY_ALLOC(buffer);
         }
         buffer[lenght++] = (char)c;
     }

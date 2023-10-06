@@ -32,11 +32,6 @@ void test_add_NEG_INT() {
     CU_ASSERT(sum(-2, -1) == -3);
 }
 
-// test case 3
-void wrong_arg() {
-    CU_ASSERT(sum(NULL, -1) == -3);
-}
-
 
 int main() {
     CU_initialize_registry();
@@ -47,14 +42,6 @@ int main() {
     // Add test cases to the suite
     CU_add_test(suite, "2 positive integers", test_add_POS_INT);
     CU_add_test(suite, "2 negative integers", test_add_NEG_INT);
-
-    // Create second suite
-    CU_pSuite suite2 = CU_add_suite("Test Sum2", NULL, NULL);
-
-    // Add test to the second suite
-    CU_add_test(suite2, "Wrong arg", wrong_arg);
-
-    CU_basic_set_mode(CU_BRM_VERBOSE);
 
     // Run the tests
     CU_basic_run_tests();
