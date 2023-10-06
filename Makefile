@@ -35,7 +35,7 @@ runtests: $(UNIT_TESTS)
 	done
 
 run: main
-	./main <main.c
+	./main
 
 main: $(OBJ_FILES)
 	$(CC) $(CFLAGS) $^ -o $@

@@ -54,43 +54,36 @@ void workingWithSwiftKeywords() {
 void workingWithHashTable() {
     hashTable* htab = hashTableInit(HASH_TABLE_SIZE); // init
 
-    for (int i = 0; i < 76; i++) {
+    printf("Old item count: %d\n", htab->itemCount);
+    printf("Old size: %d\n", htab->size);
+
+    hashTableItem* item = NULL;
+    for (int i = 0; i < 104; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
         CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
-        int retValue = hashTableInsert(htab, key, i);
-        if (retValue == 0) {    // insert, automatic resize
-            printf("ERROR\n");
-            free(key);
-            hashTableFree(htab);
-            exit(1);
-        }
-
-        // if (retValue == 1) {
-        //     hashTableResize(&htab);
-        //     hashTableInsert(htab, key, i);
-        // }
-        free(key);
-    }
-
-    hashTableItem* item;
-    for (int i = 0; i < 202; i++) {
-        char* key = (char*)malloc(sizeof(char) * 10);
-        CHECK_MEMORY_ALLOC(key);
-        sprintf(key, "key%d", i);
-        if ((item = hashTableSearch(htab, key))) {
-            printf("Key: %s, Data: %d\n", item->key, item->data);
+        if (!hashTableInsert(htab, key, i)) { // insert with automatic resize
+            fprintf(stderr, "Error - hashTableInsert\n");
+            hashTableFree(htab); 
+            return;
         }
         free(key);
     }
 
+    for (int i = 0; i < htab->size; i++) {
+        char* key = (char*)malloc(sizeof(char) * 10);
+        CHECK_MEMORY_ALLOC(key);
+        sprintf(key, "key%d", i);
+        item = hashTableSearch(htab, key);
+        if (item != NULL) {
+            // printf("Key: %s, Data: %d\n", item->key, item->data);
+        }
 
-    fprintf(stderr, "htable size: %d\n", htab->size);
-    if (hashTableInsert(htab, "key1199", 100) == 2) {
-        fprintf(stderr, "Erorr, htable size: %d\n", htab->size);
+        free(key);
     }
-    fprintf(stderr, "htable size: %d\n", htab->size);
 
+    printf("New item count: %d\n", htab->itemCount);
+    printf("New size: %d\n", htab->size);
     hashTableFree(htab); // free
 }
 

@@ -48,17 +48,13 @@ typedef struct hashTable {
 } hashTable;
 
 
-uint32_t hash(const char* key, size_t length, size_t size);
-
 hashTable* hashTableInit(size_t capacity);
 
 int hashTableInsert(hashTable* htab, const char* key, int data);
 
 hashTableItem* hashTableSearch(hashTable* htab, const char* key);
 
-bool copyHashTable(hashTable* dest, hashTable* src);
-
-bool hashTableResize(hashTable** htab);
+bool copyHashTableItems(hashTable* dest, hashTable* src);
 
 void hashTableDeleteItem(hashTable* htab, const char* key);
 
