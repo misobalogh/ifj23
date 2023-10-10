@@ -68,3 +68,9 @@ bool global_addVar(char* id, char* type, int value) {
 void global_generateInstruction();
 
 
+
+//TODO:
+char* transformFuncParams();
+
+char* parseFuncParams();
+
