@@ -1,6 +1,6 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
-* File Name: hash_table.c
+* File Name: symtable.c
 * Description: implementation of hash table for table of symbols
 * Author: MICHAL BALOGH xbalog06
 * Faculty: FIT VUT
@@ -10,7 +10,7 @@
 
 ***************************************************************/
 
-#include "hash_table.h"
+#include "symtable.h"
 
 
 static uint32_t hash(const char* key, size_t length, size_t size);
