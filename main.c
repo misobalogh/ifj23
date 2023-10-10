@@ -94,32 +94,16 @@ void workingWithHashTable() {
 int main() {
     // workingWithSwiftKeywords();
 
-    workingWithHashTable();
+    // workingWithHashTable();
 
     // workingWithLoadInput();
     
-    char* globalVar = "globalVar";
-    global_addVar(globalVar, "String", 5);
-    symtableItem* item = symtableSearch(global_table, globalVar);
-    if (item != NULL) {
-        printf("Key: %s, Data: %d\n", item->key, item->data);
-    }
-    char* globalVar2 = "f;S;S;_;x;S;with;y";
-    global_addVar(globalVar2,"String", 5);
-    item = symtableSearch(global_table, globalVar2);
-    if (item != NULL) {
-        printf("Key: %s, Data: %d\n", item->key, item->data);
-    }
-    char* globalVar3 = "globalVar";
-    if(!global_addVar(globalVar3, "String", 5)) {
-        printf("Double declaration\n");
-    }
 
-    cleanup();
 
+
+
+
+    char* parsed = transformFuncParams(9, "String", "var1", "x","Int", "var2", "y","Double", "var3", "z");
+    free(parsed);
     return 0;
-}
-
-void cleanup() {
-    symtableFree(global_table);
 }
