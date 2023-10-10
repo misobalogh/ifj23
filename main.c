@@ -17,8 +17,11 @@
 #include "error_codes.h"
 #include "load_input.h"
 #include "swift_keywords.h"
-#include "hash_table.h"
+#include "symtable.h"
+#include "global_variables.h"
 
+
+void cleanup(); 
 
 void workingWithLoadInput() {
     char* buffer = NULL;
@@ -63,7 +66,7 @@ void workingWithHashTable() {
         char* key = (char*)malloc(sizeof(char) * 10);
         CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
-        if (!symtableInsert(tab, key, i)) { // insert with automatic resize
+        if (!symtableInsert(tab, key, "String", i)) { // insert with automatic resize
             fprintf(stderr, "Error - symtableInsert\n");
             symtableFree(tab); 
             return;
@@ -94,7 +97,29 @@ int main() {
     workingWithHashTable();
 
     // workingWithLoadInput();
+    
+    char* globalVar = "globalVar";
+    global_addVar(globalVar, "String", 5);
+    symtableItem* item = symtableSearch(global_table, globalVar);
+    if (item != NULL) {
+        printf("Key: %s, Data: %d\n", item->key, item->data);
+    }
+    char* globalVar2 = "f;S;S;_;x;S;with;y";
+    global_addVar(globalVar2,"String", 5);
+    item = symtableSearch(global_table, globalVar2);
+    if (item != NULL) {
+        printf("Key: %s, Data: %d\n", item->key, item->data);
+    }
+    char* globalVar3 = "globalVar";
+    if(!global_addVar(globalVar3, "String", 5)) {
+        printf("Double declaration\n");
+    }
 
+    cleanup();
 
     return 0;
+}
+
+void cleanup() {
+    symtableFree(global_table);
 }
