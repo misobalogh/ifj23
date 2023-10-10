@@ -37,12 +37,13 @@ int main() {
     CU_initialize_registry();
 
     // Create a test suite
-    CU_pSuite suite = CU_add_suite("Test Sum", NULL, NULL);
+    CU_pSuite suite = CU_add_suite(YELLOW "Test Sum" RESET, NULL, NULL);
 
     // Add test cases to the suite
-    CU_add_test(suite, "2 positive integers", test_add_POS_INT);
-    CU_add_test(suite, "2 negative integers", test_add_NEG_INT);
+    CU_add_test(suite, BLUE "2 positive integers" RESET, test_add_POS_INT);
+    CU_add_test(suite, BLUE "2 negative integers" RESET, test_add_NEG_INT);
 
+    CU_basic_set_mode(CU_BRM_VERBOSE);
     // Run the tests
     CU_basic_run_tests();
     if (CU_get_number_of_failures() == 0) {
