@@ -52,29 +52,30 @@ void workingWithSwiftKeywords() {
 }
 
 void workingWithHashTable() {
-    hashTable* htab = hashTableInit(HASH_TABLE_SIZE); // init
+    int prime = 101;
+    symtable* tab = symtableInit(prime); // init
 
-    printf("Old item count: %d\n", htab->itemCount);
-    printf("Old size: %d\n", htab->size);
+    printf("Old item count: %d\n", tab->itemCount);
+    printf("Old size: %d\n", tab->size);
 
-    hashTableItem* item = NULL;
-    for (int i = 0; i < 104; i++) {
+    symtableItem* item = NULL;
+    for (int i = 0; i < 258; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
         CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
-        if (!hashTableInsert(htab, key, i)) { // insert with automatic resize
-            fprintf(stderr, "Error - hashTableInsert\n");
-            hashTableFree(htab); 
+        if (!symtableInsert(tab, key, i)) { // insert with automatic resize
+            fprintf(stderr, "Error - symtableInsert\n");
+            symtableFree(tab); 
             return;
         }
         free(key);
     }
 
-    for (int i = 0; i < htab->size; i++) {
+    for (int i = 0; i < tab->size; i++) {
         char* key = (char*)malloc(sizeof(char) * 10);
         CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
-        item = hashTableSearch(htab, key);
+        item = symtableSearch(tab, key);
         if (item != NULL) {
             // printf("Key: %s, Data: %d\n", item->key, item->data);
         }
@@ -82,9 +83,9 @@ void workingWithHashTable() {
         free(key);
     }
 
-    printf("New item count: %d\n", htab->itemCount);
-    printf("New size: %d\n", htab->size);
-    hashTableFree(htab); // free
+    printf("New item count: %d\n", tab->itemCount);
+    printf("New size: %d\n", tab->size);
+    symtableFree(tab); // free
 }
 
 int main() {

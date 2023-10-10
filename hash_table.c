@@ -14,7 +14,7 @@
 
 
 static uint32_t hash(const char* key, size_t length, size_t size);
-static bool hashTableResize(hashTable** htab);
+static bool symtableResize(symtable** htab);
 
 
 /**
@@ -59,13 +59,13 @@ static uint32_t hash(const char* key, size_t length, size_t size) {
  *
  * @return pointer to initialized hash table
 */
-hashTable* hashTableInit(size_t capacity) {
-    hashTable* htab = (hashTable*)malloc(sizeof(hashTable));
+symtable* symtableInit(size_t capacity) {
+    symtable* htab = (symtable*)malloc(sizeof(symtable));
     CHECK_MEMORY_ALLOC(htab);
 
     htab->size = capacity;
     htab->itemCount = 0;
-    htab->table = malloc(sizeof(hashTableItem) * htab->size);
+    htab->table = malloc(sizeof(symtableItem) * htab->size);
     CHECK_MEMORY_ALLOC(htab->table);
 
     // Initialize all items in hash table to NULL and data to 0
@@ -83,7 +83,7 @@ hashTable* hashTableInit(size_t capacity) {
  *
  * Insert an item into the hash table on the position given by the hash function. If the position is already occupied,
  * linear probing is used to find an empty slot.
- * When the hash table reaches HASH_TABLE_MAX_LOAD capacity, it is automatically resized to double the size.
+ * When the hash table reaches SYMTABLE_MAX_LOAD capacity, it is automatically resized to double the size.
  * If the key already exists in the hash table, the data is updated.
  * If memory allocation for item fails, exits with INTERNAL_ERROR.
  *
@@ -93,16 +93,16 @@ hashTable* hashTableInit(size_t capacity) {
  *
  * @return 0 if insert fails, 1 if item was already in table and was updated, 2 if item was inserted succesfully
  */
-int hashTableInsert(hashTable* htab, const char* key, int data) {
+int symtableInsert(symtable* htab, const char* key, int data) {
     if (htab == NULL) {
-        fprintf(stderr, "Error - hashTableInsert: invalid pointer, htab is NULL\n");
+        fprintf(stderr, "Error - symtableInsert: invalid pointer, htab is NULL\n");
         return 0;
     }
 
-    // Resize hash table when it reaches HASH_TABLE_MAX_LOAD capacity
-    if (htab->itemCount >= (htab->size * HASH_TABLE_MAX_LOAD)) {
-        if (!hashTableResize(&htab)) {
-            fprintf(stderr, "Error - hashTableResize\n");
+    // Resize hash table when it reaches SYMTABLE_MAX_LOAD capacity
+    if (htab->itemCount >= (htab->size * SYMTABLE_MAX_LOAD)) {
+        if (!symtableResize(&htab)) {
+            fprintf(stderr, "Error - symtableResize\n");
             return 0;
         }
     }
@@ -112,8 +112,8 @@ int hashTableInsert(hashTable* htab, const char* key, int data) {
     while (htab->table[hashValue].key != NULL) { // Find an empty slot
         if (strcmp(htab->table[hashValue].key, key) == 0) { // Check if key already exists
             htab->table[hashValue].data = data;  // Update data of existing item
-            return 1; 
-        }        
+            return 1;
+        }
         hashValue++; // Linear probing to find an empty slot
         hashValue %= htab->size;
     }
@@ -137,7 +137,7 @@ int hashTableInsert(hashTable* htab, const char* key, int data) {
  *
  * @return pointer to hash table item if found, NULL otherwise
 */
-hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
+symtableItem* symtableSearch(symtable* htab, const char* key) {
     // Hash the key, so we know where to look initialy for it in the hash table
     uint32_t hashValue = hash(key, strlen(key), htab->size);
 
@@ -145,7 +145,7 @@ hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
     while (htab->table[hashValue].key != NULL) {
         if (strcmp(htab->table[hashValue].key, key) == 0) {
             return &htab->table[hashValue];
-        }         
+        }
         hashValue++; // Linear probing
         hashValue %= htab->size;
     }
@@ -154,35 +154,35 @@ hashTableItem* hashTableSearch(hashTable* htab, const char* key) {
     return NULL;
 }
 
-//TODO: implement hashTableDeleteItem
+//TODO: implement symtableDeleteItem
 /**
- * @brief Delete an item from the hash table by key. 
+ * @brief Delete an item from the hash table by key.
  *
  * @param htab pointer to hash table
  * @param key key to delete
  */
-// TOOD: add flag to hashTableItem struct to indicate if item is deleted instead of freeing the key
+ // TOOD: add flag to symtableItem struct to indicate if item is deleted instead of freeing the key
 
 
-/**
- * @brief Copy hash table items from src to dest
- * 
- * @return true if copy was successful, false if dest capacity is smaller than src capacity or if dest or src is NULL
- */
-bool copyHashTableItems(hashTable* dest, hashTable* src) {
+ /**
+  * @brief Copy hash table items from src to dest
+  *
+  * @return true if copy was successful, false if dest capacity is smaller than src capacity or if dest or src is NULL
+  */
+bool copySymtableItems(symtable* dest, symtable* src) {
     if (dest == NULL || src == NULL) {
-        fprintf(stderr, "Error - copyHashTableItems: invalid pointer, dest or src is NULL\n");
+        fprintf(stderr, "Error - copySymtableItems: invalid pointer, dest or src is NULL\n");
         return false;
     }
 
     if (dest->size < src->size) {
-        fprintf(stderr, "Error - copyHashTableItems: dest capacity is smaller than src capacity\n");
+        fprintf(stderr, "Error - copySymtableItems: dest capacity is smaller than src capacity\n");
         return false;
     }
 
     for (int i = 0; i < src->size; i++) {
         if (src->table[i].key != NULL) {
-            hashTableInsert(dest, src->table[i].key, src->table[i].data);
+            symtableInsert(dest, src->table[i].key, src->table[i].data);
         }
     }
 
@@ -191,22 +191,22 @@ bool copyHashTableItems(hashTable* dest, hashTable* src) {
 
 /**
  * @brief Resize hash table to double the size.
- * Resizing is done by creating a new hash table with double the size and copying all items from the old 
+ * Resizing is done by creating a new hash table with double the size and copying all items from the old
  * table to the new table and then deleting the old table. Function is called automatically when the hash table
- * reaches HASH_TABLE_MAX_LOAD capacity. This function is not meant to be called manually, therefore it is static.
- *  
+ * reaches SYMTABLE_MAX_LOAD capacity. This function is not meant to be called manually, therefore it is static.
+ *
  * @param htab pointer to hash table
- * 
+ *
  * @return true if resize was successful, false if memory allocation fails
  */
-static bool hashTableResize(hashTable** htab) {
+static bool symtableResize(symtable** htab) {
     // Create a new hash table with double the size
     size_t newCapacity = (*htab)->size * 2;
-    hashTable* newHtab = hashTableInit(newCapacity);
+    symtable* newHtab = symtableInit(newCapacity);
 
     // Copy all items from the old table to the new table
-    if (!copyHashTableItems(newHtab, *htab)) {
-        hashTableFree(newHtab);
+    if (!copySymtableItems(newHtab, *htab)) {
+        symtableFree(newHtab);
         return false;
     }
 
@@ -234,7 +234,7 @@ static bool hashTableResize(hashTable** htab) {
  *
  * @param htab pointer to hash table
  */
-void hashTableClear(hashTable* htab) {
+void symtableClear(symtable* htab) {
     for (int i = 0; i < htab->size; i++) {
         if (htab->table[i].key != NULL) {
             free(htab->table[i].key);
@@ -250,8 +250,8 @@ void hashTableClear(hashTable* htab) {
  *
  * @param htab pointer to hash table
 */
-void hashTableFree(hashTable* htab) {
-    hashTableClear(htab);
+void symtableFree(symtable* htab) {
+    symtableClear(htab);
     if (htab != NULL) {
         free(htab);
     }

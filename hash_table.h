@@ -1,17 +1,17 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
-* File Name:
-* Description:
-* Author:
-* Faculty: FIT VUT
-* Date:
+* File Name:    symtable.h
+* Description:  Header file for hash table for storing identifiers
+* Author:       Michal Balogh, xbalog06
+* Faculty:      FIT VUT
+* Date:         10.10.2023
 
 * Comments:
 
 ***************************************************************/
 
-#ifndef HASH_TABLE_H
-#define HASH_TABLE_H
+#ifndef SYMTABLE_H
+#define SYMTABLE_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -19,9 +19,11 @@
 #include <stdbool.h>
 #include "macros.h"
 
-// Prime number for size of hash table
-#define HASH_TABLE_SIZE 101
-#define HASH_TABLE_MAX_LOAD 0.75
+/* Prime number for size of hash table */
+#define SYMTABLE_SIZE 257   
+
+/* Max load factor for hash table */
+#define SYMTABLE_MAX_LOAD 0.75
 
 /**
  * @brief struct for hash table item
@@ -29,10 +31,10 @@
  * @param key string key
  * @param data integer data
  */
-typedef struct htableItem {
+typedef struct symtableItem {
     char* key;
     int data;
-} hashTableItem;
+} symtableItem;
 
 /**
  * @brief struct for hash table
@@ -41,26 +43,26 @@ typedef struct htableItem {
  * @param itemCount number of items in hash table
  * @param table array of hash table items
 */
-typedef struct hashTable {
+typedef struct symtable {
     int size;
     int itemCount;
-    hashTableItem *table;
-} hashTable;
+    symtableItem *table;
+} symtable;
 
 
-hashTable* hashTableInit(size_t capacity);
+symtable* symtableInit(size_t capacity);
 
-int hashTableInsert(hashTable* htab, const char* key, int data);
+int symtableInsert(symtable* tab, const char* key, int data);
 
-hashTableItem* hashTableSearch(hashTable* htab, const char* key);
+symtableItem* symtableSearch(symtable* tab, const char* key);
 
-bool copyHashTableItems(hashTable* dest, hashTable* src);
+bool copySymtableItems(symtable* dest, symtable* src);
 
-void hashTableDeleteItem(hashTable* htab, const char* key);
+void symtableDeleteItem(symtable* tab, const char* key);
 
-void hashTableClear(hashTable* htab);
+void symtableClear(symtable* tab);
 
-void hashTableFree(hashTable* htab);
+void symtableFree(symtable* tab);
 
 
-#endif // HASH_TABLE_H
+#endif // SYMTABLE_H
