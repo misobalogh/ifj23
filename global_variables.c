@@ -12,10 +12,14 @@
 ********************************************************************/
 
 #include "global_variables.h"
+#include <string.h>
+#include <stdarg.h>
 
 
-
-
+/**
+ * @brief Global table of symbols
+*/
+symtable *global_table; 
 
 /**
  * @brief Initialize global table of symbols
@@ -59,6 +63,9 @@ bool global_addVar(char* id, char* type, int value) {
     if (!symtableInsert(global_table, id, type, value)) {
         return false;
     }
+
+    //TODO: @Michal418
+    // global_generateInstruction();
     return true;
 }
 
@@ -69,8 +76,86 @@ void global_generateInstruction();
 
 
 
-//TODO:
-char* transformFuncParams();
 
-char* parseFuncParams();
+
+
+
+
+
+
+
+bool token_isFunc(char* token) {
+    return !strcmp(token, swiftKeywordToString(SWIFT_FUNC));
+}
+
+
+static char* parseOneFuncParameter(const char* type,const char* name, const char* id) {
+    size_t parsedParamLen = strlen(type) + strlen(name) + strlen(id) + 4; 
+    
+    char* parsedParam = (char*)malloc(parsedParamLen);
+    CHECK_MEMORY_ALLOC(parsedParam);
+
+    snprintf(parsedParam, parsedParamLen, "%c;%s;%s;", type[0], name, id);
+
+    return parsedParam;
+}
+
+//TODO:
+char* transformFuncParams(int numberOfTokens, ...) {
+    va_list tokens;
+    size_t length = 0;
+
+    va_start(tokens, numberOfTokens);
+
+    for (int i = 0; i < numberOfTokens / 3; i++) {
+        const char* type = va_arg(tokens, const char*);
+        const char* name = va_arg(tokens, const char*);
+        const char* id   = va_arg(tokens, const char*);
+        printf("%s, %s, %s\n", type, name, id);
+        char *parsed = parseOneFuncParameter(type, name, id);
+        printf("\nParsed arg: %s\n",parsed );
+        length += strlen(parsed);
+        free(parsed);
+    }
+    
+    va_end(tokens);
+
+    va_start(tokens, numberOfTokens);
+    char *transformedParams = malloc(sizeof(char) * (length + 3));
+    transformedParams[0] = 'f';
+    transformedParams[1] = ';';
+    transformedParams[2] = '\0';
+
+    for (int i = 0; i < numberOfTokens / 3; i++) {
+            const char* type = va_arg(tokens, const char*);
+            const char* name = va_arg(tokens, const char*);
+            const char* id   = va_arg(tokens, const char*);
+            char *parsed = parseOneFuncParameter(type, name, id);
+            transformedParams = strcat(transformedParams, parsed);
+            free(parsed);
+        }
+    va_end(tokens);
+    transformedParams[length + 1] = '\0';
+    printf("Transformed params: %s\n", transformedParams);
+
+    printf("Length of all params %ld\n", length);
+    return transformedParams;
+}
+
+char *nextToken() {
+    return ")";
+}
+
+char* parseFuncParams() {
+    const char *name = nextToken();
+
+    int numberOfTokens = 0;
+    while (nextToken() != ")") {
+        numberOfTokens++;
+    }
+    numberOfTokens++;
+
+    //char* transformedParams = transformFuncParams(numberOfTokens,);
+    // symtableInsert(global_table, name, transformedParams, numberOfTokens);
+}
 

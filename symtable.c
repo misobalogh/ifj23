@@ -243,8 +243,10 @@ void symtableClear(symtable* tab) {
     for (int i = 0; i < tab->size; i++) {
         if (tab->table[i].key != NULL) {
             free(tab->table[i].key);
+            free(tab->table[i].type);
             tab->table[i].key = NULL;
             tab->table[i].data = 0;
+            tab->table[i].type = NULL;
         }
     }
     free(tab->table);
