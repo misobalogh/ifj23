@@ -19,6 +19,8 @@
 #include "swift_keywords.h"
 #include "symtable.h"
 #include "global_variables.h"
+#include "check_function.h"
+
 
 
 void cleanup(); 
@@ -97,13 +99,20 @@ int main() {
     // workingWithHashTable();
 
     // workingWithLoadInput();
-    
 
 
 
+    char* str = funcParamsToString();
+    LOG("%s", str);
+    int numParams = 0;
+    char** params = getParamsFromString(str, &numParams);
 
+    for (int i = 0; i < numParams; i++) {
+        LOG("Param: %s", params[i]);
+        free(params[i]);
+    }
 
-    char* parsed = transformFuncParams(9, "String", "var1", "x","Int", "var2", "y","Double", "var3", "z");
-    free(parsed);
+    free(str);
+    free(params);
     return 0;
 }
