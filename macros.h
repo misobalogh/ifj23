@@ -41,7 +41,7 @@
  */
 #define LOG(fmt, ...) fprintf(stderr, RED fmt RESET "\n", __VA_ARGS__)
 
-
+#define STRING_EQ(str1, str2) (strcmp(str1, str2) == 0)
 
 
 

@@ -12,6 +12,10 @@ TEST_FILES = $(wildcard tests/*.c)
 UNIT_TESTS = $(basename $(TEST_FILES))
 
 
+synt_precedence_parser:
+	$(CC) $(CFLAGS) synt_precedence_parser.c -o synt_precedence_parser
+	./synt_precedence_parser
+
 help:
 	@echo ""
 	@echo "Usage:"
@@ -51,4 +55,4 @@ tests/%: tests/%.o $(filter-out main.o, $(OBJ_FILES))
 clean:
 	rm -f $(OBJ_FILES) $(EXEC) $(UNIT_TESTS) tests/*.o
 
-.PHONY: all clean main run
+.PHONY: all clean main run synt_precedence_parser

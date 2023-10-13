@@ -64,7 +64,7 @@ enum operator_precedence {
 /**
  * @brief Macro for getting precedence of operator.
 */
-#define PRECEDENCE(operator) ( strcmp(operator, NOT)            == 0 ? OP_NOT :         \
+#define PRECEDENCE(operator) (  strcmp(operator, NOT)           == 0 ? OP_NOT :         \
                                 strcmp(operator, MUL)           == 0 ? OP_MUL_DIV :     \
                                 strcmp(operator, DIV)           == 0 ? OP_MUL_DIV :     \
                                 strcmp(operator, PLUS)          == 0 ? OP_PLUS_MINUS :  \
@@ -79,5 +79,13 @@ enum operator_precedence {
 
 
 
+bool IsOperator(char *operator) {
+    return strcmp(operator, NOT) == 0 || strcmp(operator, MUL) == 0 || strcmp(operator, DIV) == 0 ||
+           strcmp(operator, PLUS) == 0 || strcmp(operator, MINUS) == 0 ||
+           strcmp(operator, REL_EQ) == 0 || strcmp(operator, REL_NEQ) == 0 ||
+           strcmp(operator, REL_LESS) == 0 || strcmp(operator, REL_MORE) == 0 ||
+           strcmp(operator, REL_LESS_EQ) == 0 || strcmp(operator, REL_MORE_EQ) == 0 ||
+           strcmp(operator, CONCAT) == 0;
+}
 
 #endif // OPERATOR_PRECEDENCE_H
