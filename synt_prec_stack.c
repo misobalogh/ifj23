@@ -13,7 +13,6 @@
 void stackInit(stack* s) {
     s->size = 0;
     s->top = NULL;
-    stackPush(s, token_DOLLAR);
 }
 
 /**
@@ -27,6 +26,7 @@ void stackPush(stack* s, tokenType type) {
     CHECK_MEMORY_ALLOC(newItem);
     newItem->type = type;
     newItem->lower = s->top;
+    newItem->flag = false;
     s->top = newItem;
     s->size++;
 }
@@ -96,6 +96,20 @@ stackItem* stackTopTerminal(stack* s) {
 }
 
 /**
+ * @brief Sets flag of first terminal on stack.
+ * means: change 'a' to 'a<'
+ * 
+ * @param s Pointer to stack.
+ */
+void stackTopTerminalSetFlag(stack* s) {
+    stackItem* item = s->top;
+    while (item && !isTerminal(item->type)) { 
+        item = item->lower;
+    }
+    item->flag = true; 
+}
+
+/**
  * @brief Returns first item from stack. (top)
  * 
  * @param s Pointer to stack.
@@ -135,4 +149,20 @@ stackItem* stackThird(stack* s) {
         return NULL;
     }
     return s->top->lower->lower;
+}
+
+
+//========== DEBUG ==========
+/**
+ * @brief Prints stack.
+ * 
+ * @param s Pointer to stack.
+*/
+void stackPrint(stack* s) {
+    stackItem* item = s->top;
+    while (item) {
+        printf("%d ", item->type);
+        item = item->lower;
+    }
+    printf("\n");
 }

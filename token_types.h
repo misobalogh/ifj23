@@ -27,10 +27,14 @@
  * @param token_ID identifier
  */
 typedef enum {
-    token_FORCE_UNWRAP, 
-    token_MUL,  
-    token_DIV, 
     token_PLUS,
+    token_MUL,  
+    token_PARENTHESES_L,
+    token_PARENTHESES_R,
+    token_ID, 
+    token_DOLLAR,
+    token_FORCE_UNWRAP, 
+    token_DIV, 
     token_MINUS,
     token_EQ,
     token_NEQ,
@@ -39,10 +43,6 @@ typedef enum {
     token_LESS_EQ,
     token_MORE_EQ,
     token_CONCAT,
-    token_DOLLAR,
-    token_PARENTHESES_L,
-    token_PARENTHESES_R,
-    token_ID, 
     // ...
     token_TERMINAL,
     // ...
@@ -64,15 +64,13 @@ bool isNonterminal(tokenType type);
 
 
 // ================ DEBUGGING ================
-
-
 /**
  * @brief For debugging, delete later - assigns name to token type
  * 
  * @param type type of token u want to get name of
 */
 #define TOKEN_TYPE_NAME(type) tokenTypeNames[type]
-
+// also for debugging
 extern const char* tokenTypeNames[];
 
 

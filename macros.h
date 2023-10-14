@@ -25,24 +25,36 @@
  *
  * @param ptr Pointer to allocated memory
  */
-#define CHECK_MEMORY_ALLOC(ptr)                      \
-    do {                                                         \
-        if (!(ptr)) {                                            \
+#define CHECK_MEMORY_ALLOC(ptr)                                                                 \
+    do {                                                                                        \
+        if (!(ptr)) {                                                                           \
             fprintf(stderr, "ERR_CODE: %d - Memory allocation failed\n", INTERNAL_ERROR);       \
-            exit(INTERNAL_ERROR);                                    \
-        }                                                        \
-    } while (0)
+            exit(INTERNAL_ERROR);                                                               \
+        }                                                                                       \
+    } while (0)                                                                                 \
 
 
+/**
+ * @brief Compares two strings, if they are equal, returns true.
+ */
+#define STRING_EQ(str1, str2) (strcmp(str1, str2) == 0)
 
-
+//================= DEBUGGING =================
 /**
  * @brief Debug macro for printing to stderr.
  */
 #define LOG(fmt, ...) fprintf(stderr, RED fmt RESET "\n", __VA_ARGS__)
 
-#define STRING_EQ(str1, str2) (strcmp(str1, str2) == 0)
 
+#define LOG_ERR(message) do {                           \
+    FILE *logFile = fopen("error.log", "a");            \
+    if (logFile) {                                      \
+        fprintf(logFile, "ERR: %s\n", message);         \
+        fclose(logFile);                                \
+    } else {                                            \
+        fprintf(stderr, "Failed to open log file.\n");  \
+    }                                                   \
+} while (0)                                             \
 
 
 #endif // MACROS_H

@@ -22,6 +22,8 @@
 #include "check_function.h"
 #include "synt_prec_stack.h"
 #include "token_types.h"
+#include "synt_prec_table.h"
+#include "synt_analysis.h"
 
 
 
@@ -157,7 +159,15 @@ int main() {
 
     // workingWithParamsToString();
     
-    workingWithStack();
+    // workingWithStack();
 
+
+    if(precedenceParser() == false) {
+        LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+        return SYNTAX_ANALYSIS_ERR;
+    }
+    else {
+        LOG("MAIN: Expression syntax is correct: code %d", 0);
+    }
     return 0;
 }
