@@ -12,25 +12,26 @@
 ********************************************************************/
 
 /*
-+-----------+---------------+--------------+
-| Priorita  |   Operátory   | Asociativita |
-+-----------+---------------+--------------+
-|     0     |      !        |   bez asoc.  |
-+-----------+---------------+--------------+
-|     1     |     * /       |     levá     |
-+-----------+---------------+--------------+
-|     2     |     + -       |     levá     |
-+-----------+---------------+--------------+
-|     3     |== != < > <= >=|   bez asoc.  |
-+-----------+---------------+--------------+
-|     4     |      ??       |    pravá     |
-+-----------+---------------+--------------+
++-----------+---------------+--------------+-----------------+
+| Priorita  |   Operátory   | Asociativita |      Enum       |
++-----------+---------------+--------------+-----------------+
+|     0     |      !        |   bez asoc.  | OP_FORCE_UNWRAP |
++-----------+---------------+--------------+-----------------+
+|     1     |     * /       |     levá     |   OP_MUL_DIV    |
++-----------+---------------+--------------+-----------------+
+|     2     |     + -       |     levá     |  OP_PLUS_MINUS  |
++-----------+---------------+--------------+-----------------+
+|     3     |== != < > <= >=|   bez asoc.  |      OP_REL     |
++-----------+---------------+--------------+-----------------+
+|     4     |      ??       |    pravá     |    OP_CONCAT    |
++-----------+---------------+--------------+-----------------+
 */
 
 #ifndef OPERATOR_PRECEDENCE_H
 #define OPERATOR_PRECEDENCE_H
 
 #include <string.h>
+#include "macros.h"
 /**
  * @brief Enum of operator precedence.
  *
@@ -40,52 +41,58 @@
  * is higher (not lower) than precedence of operator2.
 */
 enum operator_precedence {
-    OP_NOT =        4,
-    OP_MUL_DIV =    3,
-    OP_PLUS_MINUS = 2,
-    OP_REL =        1,
-    OP_CONCAT =     0
+    OP_FORCE_UNWRAP = 4,
+    OP_MUL_DIV      = 3,
+    OP_PLUS_MINUS   = 2,
+    OP_REL          = 1,
+    OP_CONCAT       = 0
 };
 
 /* Operators */
-#define NOT     "!"
-#define MUL     "*" 
-#define DIV     "/"
-#define PLUS    "+"
-#define MINUS   "-"
-#define REL_EQ  "==" 
-#define REL_NEQ "!="
-#define REL_LESS "<"
-#define REL_MORE ">"
-#define REL_LESS_EQ "<="
-#define REL_MORE_EQ ">="
-#define CONCAT "??"
+#define MUL             "*" 
+#define DIV             "/"
+#define PLUS            "+"
+#define MINUS           "-"
+#define REL_EQ          "==" 
+#define REL_NEQ         "!="
+#define REL_LESS        "<"
+#define REL_MORE        ">"
+#define REL_LESS_EQ     "<="
+#define REL_MORE_EQ     ">="
+#define CONCAT          "??"
+#define FORCE_UNWRAP    "!"
 
 /**
  * @brief Macro for getting precedence of operator.
 */
-#define PRECEDENCE(operator) (  strcmp(operator, NOT)           == 0 ? OP_NOT :         \
-                                strcmp(operator, MUL)           == 0 ? OP_MUL_DIV :     \
-                                strcmp(operator, DIV)           == 0 ? OP_MUL_DIV :     \
-                                strcmp(operator, PLUS)          == 0 ? OP_PLUS_MINUS :  \
-                                strcmp(operator, MINUS)         == 0 ? OP_PLUS_MINUS :  \
-                                strcmp(operator, REL_EQ)        == 0 ? OP_REL :         \
-                                strcmp(operator, REL_NEQ)       == 0 ? OP_REL :         \
-                                strcmp(operator, REL_LESS)      == 0 ? OP_REL :         \
-                                strcmp(operator, REL_MORE)      == 0 ? OP_REL :         \
-                                strcmp(operator, REL_LESS_EQ)   == 0 ? OP_REL :         \
-                                strcmp(operator, REL_MORE_EQ)   == 0 ? OP_REL :         \
-                                strcmp(operator, CONCAT) == 0 ? OP_CONCAT : -1 )
+#define PRECEDENCE(operator) ( STRING_EQ(operator, MUL)             ? OP_MUL_DIV :      \
+                               STRING_EQ(operator, DIV)             ? OP_MUL_DIV :      \
+                               STRING_EQ(operator, PLUS)            ? OP_PLUS_MINUS :   \
+                               STRING_EQ(operator, MINUS)           ? OP_PLUS_MINUS :   \
+                               STRING_EQ(operator, REL_EQ)          ? OP_REL :          \
+                               STRING_EQ(operator, REL_NEQ)         ? OP_REL :          \
+                               STRING_EQ(operator, REL_LESS)        ? OP_REL :          \
+                               STRING_EQ(operator, REL_MORE)        ? OP_REL :          \
+                               STRING_EQ(operator, REL_LESS_EQ)     ? OP_REL :          \
+                               STRING_EQ(operator, REL_MORE_EQ)     ? OP_REL :          \
+                               STRING_EQ(operator, CONCAT)          ? OP_CONCAT :       \
+                               STRING_EQ(operator, FORCE_UNWRAP)    ? OP_FORCE_UNWRAP : \
+                               -1 )
 
 
-
-bool IsOperator(char *operator) {
-    return strcmp(operator, NOT) == 0 || strcmp(operator, MUL) == 0 || strcmp(operator, DIV) == 0 ||
-           strcmp(operator, PLUS) == 0 || strcmp(operator, MINUS) == 0 ||
-           strcmp(operator, REL_EQ) == 0 || strcmp(operator, REL_NEQ) == 0 ||
-           strcmp(operator, REL_LESS) == 0 || strcmp(operator, REL_MORE) == 0 ||
-           strcmp(operator, REL_LESS_EQ) == 0 || strcmp(operator, REL_MORE_EQ) == 0 ||
-           strcmp(operator, CONCAT) == 0;
-}
+// bool IsOperator(char* operator) {
+//     return STRING_EQ(operator, MUL)          ||
+//            STRING_EQ(operator, DIV)          ||
+//            STRING_EQ(operator, PLUS)         ||
+//            STRING_EQ(operator, MINUS)        ||
+//            STRING_EQ(operator, REL_EQ)       ||
+//            STRING_EQ(operator, REL_NEQ)      ||
+//            STRING_EQ(operator, REL_LESS)     ||
+//            STRING_EQ(operator, REL_MORE)     ||
+//            STRING_EQ(operator, REL_LESS_EQ)  ||
+//            STRING_EQ(operator, REL_MORE_EQ)  ||
+//            STRING_EQ(operator, CONCAT)       ||
+//            STRING_EQ(operator, FORCE_UNWRAP);
+// }
 
 #endif // OPERATOR_PRECEDENCE_H

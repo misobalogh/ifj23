@@ -1,6 +1,6 @@
 
-#ifndef GLOBAL_VARIABLES_H
-#define GLOBAL_VARIABLES_H
+#ifndef IFJ23_GLOBAL_VARIABLES_H
+#define IFJ23_GLOBAL_VARIABLES_H
 
 #include "symtable.h"
 #include <stdbool.h>
@@ -14,4 +14,4 @@ bool global_addVar(char* id, char* type, int value);
 
 void global_generateInstruction();
 
-#endif // GLOBAL_VARIABLES_H
+#endif // IFJ23_GLOBAL_VARIABLES_H

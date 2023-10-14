@@ -1,6 +1,8 @@
 #ifndef _TOKEN_TYPES_H
 #define _TOKEN_TYPES_H
 
+#include <stdbool.h>
+
 #define PARENTHESES_LEFT "("
 #define PARENTHESES_RIGHT ")"
 
@@ -25,7 +27,7 @@
  * @param token_ID identifier
  */
 typedef enum {
-    token_NOT, 
+    token_FORCE_UNWRAP, 
     token_MUL,  
     token_DIV, 
     token_PLUS,
@@ -49,7 +51,6 @@ typedef enum {
     token_EOF,
 } tokenType;
 
-
 typedef struct token
 {
     tokenType type;
@@ -59,6 +60,20 @@ typedef struct token
 
 bool isTerminal(tokenType type);
 bool isNonterminal(tokenType type);
+
+
+
+// ================ DEBUGGING ================
+
+
+/**
+ * @brief For debugging, delete later - assigns name to token type
+ * 
+ * @param type type of token u want to get name of
+*/
+#define TOKEN_TYPE_NAME(type) tokenTypeNames[type]
+
+extern const char* tokenTypeNames[];
 
 
 #endif // _TOKEN_TYPES_H

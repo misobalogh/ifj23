@@ -20,6 +20,8 @@
 #include "symtable.h"
 #include "global_variables.h"
 #include "check_function.h"
+#include "synt_prec_stack.h"
+#include "token_types.h"
 
 
 
@@ -93,15 +95,7 @@ void workingWithHashTable() {
     symtableFree(tab); // free
 }
 
-int main() {
-    // workingWithSwiftKeywords();
-
-    // workingWithHashTable();
-
-    // workingWithLoadInput();
-
-
-
+void workingWithParamsToString(){
     char* str = funcParamsToString();
     LOG("%s", str);
     int numParams = 0;
@@ -114,5 +108,56 @@ int main() {
 
     free(str);
     free(params);
+}
+
+void workingWithStack(){
+    stack* s = malloc(sizeof(stack));
+    CHECK_MEMORY_ALLOC(s);
+    stackInit(s);
+
+    stackPush(s, token_ID);
+    stackPush(s, token_PLUS);
+    stackPush(s, token_MUL);
+    stackPush(s, token_PARENTHESES_L);
+    stackPush(s, token_PARENTHESES_R);
+
+    if (stackFirst(s)) {
+        LOG("%s", TOKEN_TYPE_NAME(stackFirst(s)->type));
+    }
+    if (stackSecond(s)) {
+        LOG("%s", TOKEN_TYPE_NAME(stackSecond(s)->type));
+    }
+    if (stackThird(s)) {
+        LOG("%s", TOKEN_TYPE_NAME(stackThird(s)->type));
+    }
+
+    stackPop(s);
+    stackPop(s);
+    stackPop(s);
+    stackPop(s);
+    stackPop(s);
+
+    stackPush(s, token_NONTERMINAL);
+    stackPush(s, token_NONTERMINAL);
+    stackPush(s, token_NONTERMINAL);
+    stackPush(s, token_NONTERMINAL);
+
+    if(stackTopTerminal(s))
+        LOG("Terminal %s", TOKEN_TYPE_NAME(stackTopTerminal(s)->type));
+    stackFreeItems(s);
+    free(s);
+}
+
+int main() {
+    // workingWithSwiftKeywords();
+
+    // workingWithHashTable();
+
+    // workingWithLoadInput();
+
+    // workingWithParamsToString();
+    
+    workingWithStack();
+
     return 0;
 }
