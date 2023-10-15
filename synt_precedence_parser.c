@@ -1,4 +1,14 @@
-// Implementation of precedence parser for expressions
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: synt_precedence_parser.c
+* Description: Precedence syntactic analysis (parser for expression)
+* Author: MICHAL BALOGH, xbalog06
+* Faculty: FIT VUT
+* Date: 14.10.2023
+
+* Comments: 
+
+***************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,9 +20,16 @@
 #include "macros.h"
 #include "rules.h"
 
-
-
-
+/**
+ * @brief Reduce items on stack with one of defined rules.
+ * Called when ">" sign is in precedence table.
+ * It gets top three items from stack and calls rule function, and then chooses,
+ * which rule should be applied, according to types of items.
+ * 
+ * @param s Pointer to stack.
+ * 
+ * @return True if rule was applied, false otherwise if rule does not exist
+*/
 bool reduce(stack* s) {
     stackItem* top = stackTopTerminal(s);
     stackItem* first = stackFirst(s);
@@ -73,33 +90,34 @@ bool precedenceParser() {
     stackInit(&s);
     stackPush(&s, token_DOLLAR);
 
-    printf("INIT: ");
+    // debug
+    printf("INIT: "); 
     stackPrint(&s);
 
     token* t = mock_nextToken();
     while (!(t->type == token_DOLLAR && stackTopTerminal(&s)->type == token_DOLLAR)) {
         switch (precedenceTable[stackTopTerminal(&s)->type][t->type])
         {
-        case EQUAL:
+        case EQUAL: // "="
             printf("EQUAL: ");
             stackPrint(&s);
             stackPush(&s, t->type);
             t = mock_nextToken();
             break;
-        case LOW: // expand 
+        case LOW: // expand  "<"
             stackPush(&s, t->type);
             stackTopTerminalSetFlag(&s);
             t = mock_nextToken();
             printf("LOW: ");
             stackPrint(&s);
             break;
-        case HIGH: // reduce
+        case HIGH: // reduce ">"
             printf("HIGH: ");
             stackPrint(&s);
             if (reduce(&s)) {
                 break;
             }
-        case EMPTY:
+        case EMPTY: // error
             printf("EMPTY: ");
             stackPrint(&s);
             stackFreeItems(&s);

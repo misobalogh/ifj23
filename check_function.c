@@ -1,4 +1,14 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: check_function.c
+* Description: functions for checking function parameters
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 10.10.2023
 
+* Comments: 
+
+***************************************************************/
 
 
 #include "check_function.h"

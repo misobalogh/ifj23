@@ -1,3 +1,15 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: token_types.c
+* Description: types of tokens, which are used in syntactic analysis, to know, which rule to apply
+* Author: MICHAL BALOGH, xbalog06
+* Faculty: FIT VUT
+* Date: 15.10.2023
+
+* Comments: 
+
+***************************************************************/
+
 #ifndef _TOKEN_TYPES_H
 #define _TOKEN_TYPES_H
 
