@@ -1,3 +1,15 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: swift_keywords.c
+* Description: Functions for work with swift keywords and types for semantic analysis
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 10.10.2023
+
+* Comments: 
+
+***************************************************************/
+
 #include "swift_keywords.h"
 
 /**

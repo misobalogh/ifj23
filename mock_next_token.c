@@ -1,3 +1,16 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: mock_next_token.c
+* Description: mocking function nextToken
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 15.10.2023
+
+* Comments: 
+
+***************************************************************/
+
+
 
 #include "synt_analysis.h"
 

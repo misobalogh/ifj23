@@ -1,3 +1,14 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: synt_analysis.h
+* Description: Header file for syntactic analysis
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 15.10.2023
+
+* Comments: 
+
+***************************************************************/
 
 #ifndef _SYNT_ANALYSIS_H
 #define _SYNT_ANALYSIS_H

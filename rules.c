@@ -1,3 +1,16 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: rules.c
+* Description: rules for syntactic analysis
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 15.10.2023
+
+* Comments: 
+
+***************************************************************/
+
+
 #include "rules.h"
 
 // const precedenceType precedenceTable[6][6] = {

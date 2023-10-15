@@ -1,3 +1,15 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: synt_prec_stack.h
+* Description: Function declarations for stack for state machine in syntactic analysis
+* Author: MICHAL BALOGH, xbalog06
+* Faculty: FIT VUT
+* Date: 13.10.2023
+
+* Comments: 
+
+***************************************************************/
+
 #ifndef IFJ23_SYNT_PREC_STACK_H_
 #define IFJ23_SYNT_PREC_STACK_H_
 
@@ -17,6 +29,12 @@ typedef struct stackItem {
     struct stackItem *lower;
 } stackItem;
 
+/**
+ * @brief Stack struct for state machine in syntactic analysis.
+ * 
+ * @param top Pointer to top item of stack.
+ * @param size Size of stack.
+*/
 typedef struct stack {
     stackItem* top;
     unsigned size;
@@ -44,6 +62,7 @@ stackItem* stackSecond(stack *s);
 
 stackItem* stackThird(stack *s);
 
+//========= DEBUG =========
 void stackPrint(stack *s);  
 
 

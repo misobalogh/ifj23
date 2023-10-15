@@ -1,10 +1,10 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: swift_types.h
-* Description: data types for swift and key words
-* Author:
+* Description: data types for swift and keywords
+* Author: MICHAL BALOGH xbalog06
 * Faculty: FIT VUT
-* Date:
+* Date: 10.10.2023
 
 * Comments:
 

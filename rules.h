@@ -1,3 +1,14 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: rules.h
+* Description: header file for rules.c
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 15.10.2023
+
+* Comments: 
+
+***************************************************************/
 
 #ifndef IFJ23_RULES_H
 #define IFJ23_RULES_H

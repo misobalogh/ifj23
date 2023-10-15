@@ -1,3 +1,15 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: synt_prec_stack.c
+* Description: Stack for state machine in syntactic analysis
+* Author: MICHAL BALOGH
+* Faculty: FIT VUT
+* Date: 13.10.2023
+
+* Comments: 
+
+***************************************************************/
+
 #include "synt_prec_stack.h"
 #include "token_types.h"
 #include <stdlib.h>
@@ -6,7 +18,6 @@
 
 /**
  * @brief Initialize stack.
- * Pushes $ on stack. - TODO: maybe not necessary, maybe we can just check if stack is empty.
  * 
  * @param s Pointer to stack. 
  */
