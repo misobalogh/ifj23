@@ -5,8 +5,12 @@ CFLAGS = -g -Wextra -Wall -pedantic -std=c11
 CC = gcc
 TESTLIB = cunit
 
-SRC_FILES = $(wildcard *.c)
-OBJ_FILES = $(SRC_FILES:.c=.o)
+SRC_DIR = .
+OBJ_DIR = obj
+TARGET = main
+
+SRC_FILES = $(filter-out $(SRC_DIR)/main.c, $(wildcard $(SRC_DIR)/*.c))
+OBJ_FILES = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
 EXEC = $(basename $(SRC_FILES))
 TEST_FILES = $(wildcard tests/*.c)
 UNIT_TESTS = $(basename $(TEST_FILES))
@@ -37,18 +41,20 @@ runtests: $(UNIT_TESTS)
 run: main
 	./main
 
-main: $(OBJ_FILES)
-	$(CC) $(CFLAGS) $^ -o $@
+$(TARGET): $(OBJ_FILES) $(SRC_DIR)/main.c
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ_FILES) $(SRC_DIR)/main.c
 
-%.o: %.c
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 tests: $(UNIT_TESTS)
 
-tests/%: tests/%.o $(filter-out main.o, $(OBJ_FILES))
+tests/%: tests/%.o $(filter-out $(OBJ_DIR)/main.o, $(OBJ_FILES))
 	$(CC) $(CFLAGS) $^ -o $@ -l$(TESTLIB)
 
 clean:
-	rm -f $(OBJ_FILES) $(EXEC) $(UNIT_TESTS) tests/*.o
+	rm -rf $(OBJ_DIR) $(TARGET) $(EXEC) $(UNIT_TESTS)
 
-.PHONY: all clean main run
+.PHONY: all clean

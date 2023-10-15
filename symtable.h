@@ -28,13 +28,18 @@
 /**
  * @brief struct for hash table item
  * 
- * @param key string key
- * @param data integer data
+ * @param key name of variable
+ * @param type  type of variable, for functions it is first letter of return type,
+ * types and parameters names, identifiers (e.g. func concat(_ x : String, with y : String) -> String) 
+ * will be stored as "f;S;S;_;x;S;with;y" because "function" returns :String", has parameters "String" named "_" with "id" "x", and "String" named "with" with id "y"
+ * @param data value of variable, for functions it is number of parameters
  */
 typedef struct symtableItem {
-    char* key;
-    int data;
+    char* key;  
+    char* type; 
+    int data;    
 } symtableItem;
+
 
 /**
  * @brief struct for hash table
@@ -52,7 +57,7 @@ typedef struct symtable {
 
 symtable* symtableInit(size_t capacity);
 
-int symtableInsert(symtable* tab, const char* key, int data);
+int symtableInsert(symtable* tab, const char* key, const char* type, int data);
 
 symtableItem* symtableSearch(symtable* tab, const char* key);
 

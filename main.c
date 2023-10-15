@@ -17,8 +17,17 @@
 #include "error_codes.h"
 #include "load_input.h"
 #include "swift_keywords.h"
-#include "hash_table.h"
+#include "symtable.h"
+#include "global_variables.h"
+#include "check_function.h"
+#include "synt_prec_stack.h"
+#include "token_types.h"
+#include "synt_prec_table.h"
+#include "synt_analysis.h"
 
+
+
+void cleanup(); 
 
 void workingWithLoadInput() {
     char* buffer = NULL;
@@ -63,7 +72,7 @@ void workingWithHashTable() {
         char* key = (char*)malloc(sizeof(char) * 10);
         CHECK_MEMORY_ALLOC(key);
         sprintf(key, "key%d", i);
-        if (!symtableInsert(tab, key, i)) { // insert with automatic resize
+        if (!symtableInsert(tab, key, "String", i)) { // insert with automatic resize
             fprintf(stderr, "Error - symtableInsert\n");
             symtableFree(tab); 
             return;
@@ -88,13 +97,77 @@ void workingWithHashTable() {
     symtableFree(tab); // free
 }
 
+void workingWithParamsToString(){
+    char* str = funcParamsToString();
+    LOG("%s", str);
+    int numParams = 0;
+    char** params = getParamsFromString(str, &numParams);
+
+    for (int i = 0; i < numParams; i++) {
+        LOG("Param: %s", params[i]);
+        free(params[i]);
+    }
+
+    free(str);
+    free(params);
+}
+
+void workingWithStack(){
+    stack* s = malloc(sizeof(stack));
+    CHECK_MEMORY_ALLOC(s);
+    stackInit(s);
+
+    stackPush(s, token_ID);
+    stackPush(s, token_PLUS);
+    stackPush(s, token_MUL);
+    stackPush(s, token_PARENTHESES_L);
+    stackPush(s, token_PARENTHESES_R);
+
+    if (stackFirst(s)) {
+        LOG("%s", TOKEN_TYPE_NAME(stackFirst(s)->type));
+    }
+    if (stackSecond(s)) {
+        LOG("%s", TOKEN_TYPE_NAME(stackSecond(s)->type));
+    }
+    if (stackThird(s)) {
+        LOG("%s", TOKEN_TYPE_NAME(stackThird(s)->type));
+    }
+
+    stackPop(s);
+    stackPop(s);
+    stackPop(s);
+    stackPop(s);
+    stackPop(s);
+
+    stackPush(s, token_NONTERMINAL);
+    stackPush(s, token_NONTERMINAL);
+    stackPush(s, token_NONTERMINAL);
+    stackPush(s, token_NONTERMINAL);
+
+    if(stackTopTerminal(s))
+        LOG("Terminal %s", TOKEN_TYPE_NAME(stackTopTerminal(s)->type));
+    stackFreeItems(s);
+    free(s);
+}
+
 int main() {
     // workingWithSwiftKeywords();
 
-    workingWithHashTable();
+    // workingWithHashTable();
 
     // workingWithLoadInput();
 
+    // workingWithParamsToString();
+    
+    // workingWithStack();
 
+
+    if(precedenceParser() == false) {
+        LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+        return SYNTAX_ANALYSIS_ERR;
+    }
+    else {
+        LOG("MAIN: Expression syntax is correct: code %d", 0);
+    }
     return 0;
 }

@@ -1,5 +1,13 @@
+
+#ifndef _SYNT_ANALYSIS_H
+#define _SYNT_ANALYSIS_H
+
+#include <stdbool.h>
+#include "macros.h"
+#include "token_types.h" // remove later
+
 // Main function
-bool SyntacticAnalysis();
+bool syntacticAnalysis();
 
 
 // Two methods - one for expressions, second for others
@@ -17,3 +25,10 @@ bool parseDeclaration();
 bool parseIfStatement();
 bool parseWhileLoop();
 bool parseFunctionCall();
+
+/**
+ * @brief Mocking function for testing purposes
+*/
+token *mock_nextToken();
+
+#endif // _SYNT_ANALYSIS_H
