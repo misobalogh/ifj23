@@ -14,7 +14,7 @@ typedef enum precedenceTypes {
 } precedenceType;
 
 
-extern const precedenceType precedenceTable[6][6];
+extern const precedenceType precedenceTable[9][9];
 
 
 //========== DEBUGGING ==========//

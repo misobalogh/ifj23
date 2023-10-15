@@ -27,27 +27,31 @@
  * @param token_ID identifier
  */
 typedef enum {
-    token_PLUS,
-    token_MUL,  
-    token_PARENTHESES_L,
-    token_PARENTHESES_R,
-    token_ID, 
-    token_DOLLAR,
-    token_FORCE_UNWRAP, 
-    token_DIV, 
-    token_MINUS,
-    token_EQ,
-    token_NEQ,
-    token_LESS,
-    token_MORE,
-    token_LESS_EQ,
-    token_MORE_EQ,
-    token_CONCAT,
+    token_PLUS_MINUS = 0,
+    token_PLUS = 0,
+    token_MINUS = 0,
+    token_MUL_DIV = 1,
+    token_MUL = 1,
+    token_DIV = 1,  
+    token_CONCAT = 2,
+    token_FORCE_UNWRAP = 3,
+    token_REL = 4,
+    token_EQ = 4,
+    token_NEQ = 4,
+    token_LESS = 4,
+    token_MORE = 4,
+    token_LESS_EQ = 4,
+    token_MORE_EQ = 4,  
+    token_PARENTHESES_L = 5,
+    token_PARENTHESES_R = 6,
+    token_ID = 7,
+    token_DOLLAR = 8,
+   
     // ...
-    token_TERMINAL,
+    token_TERMINAL = 9,
     // ...
+    token_NONTERMINAL = 10,
 
-    token_NONTERMINAL,
     token_EOF,
 } tokenType;
 
