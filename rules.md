@@ -69,8 +69,21 @@
 ```
 <input_param> -> <input_param_name> : <id>          (id = const/variable, not expr)
 <input_param> -> <input_param_name> : CONST         (id = const/variable, not expr)
-<input_param_name> => <id>
+<input_param_name> => id
 <input_param_name> => EPSILON
+```
+
+# Expressions
+```
+<expression> -> id
+<expression> -> ( <expression> )
+<expression> -> <expression> arithm_op <expression>
+<expression> -> <expression> ?? <expression>
+<expression> -> <expression>!                       (force unwrap)
+<expression> -> <expression> rel_op <expression>    (not 100% correct)
+
+something like this instead:
+<expression> -> <not_rel_expression> rel_op <not_rel_expression>  
 ```
 
 # Types
@@ -79,6 +92,7 @@
 <type> -> Double
 <type> -> String
 ```
+
 
 ## Terms
 
@@ -110,3 +124,4 @@ COMMA  ,
 ARROW  ->
 COLON  :
 ```
+
