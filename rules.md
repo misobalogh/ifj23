@@ -32,7 +32,7 @@
 # Statements
 ### stat_list
 ```
-<stat_list> -> <statement> NEW_LINE <stat_list>
+<stat_list> -> <statement> EOL <stat_list>
 <stat_list> -> EPSILON
 ```
 
@@ -67,8 +67,8 @@
 
 ### input_param
 ```
-<input_param> -> <input_param_name> : <id>          (id = const/variable, not expr)
-<input_param> -> <input_param_name> : CONST         (id = const/variable, not expr)
+<input_param> -> <input_param_name> : id            (id = const/variable, not expr)
+<input_param> -> <input_param_name> : const         (id = const/variable, not expr)
 <input_param_name> => id
 <input_param_name> => EPSILON
 ```
@@ -89,8 +89,11 @@ something like this instead:
 # Types
 ```
 <type> -> Int
+<type> -> Int?
 <type> -> Double
+<type> -> Double?
 <type> -> String
+<type> -> String?
 ```
 
 
