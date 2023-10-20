@@ -14,30 +14,6 @@ EMPTY(input_param_next)
 EMPTY(with_name) 
 
 
-FIRST(param)          = {id}
-FIRST(param_list)     = {id}
-FIRST(input_param)    = {id, const}
-FIRST(id_or_const)    = {id, const}
-FIRST(function)       = {func}
-FIRST(return_type)    = {->}
-FIRST(return_stat)    = {return}
-FIRST(param_next)     = {","}
-FIRST(input_param_next) = {","}
-FIRST(with_name)      = {":"}
-FIRST(var_assigment)  = {"=", ":"}
-FIRST(val_assigment)  = {"="}
-FIRST(var_definition) = {let, var}
-FIRST(input_param_list) = {id, const}
-FIRST(statement)      = {func,   let, var, id, expression, if, while, EOL}
-FIRST(stat_list)      = {func,   let, var, id, expression, if, while, EOL}
-FIRST(program)        = {func,   let, var, id, expression, if, while, EOL, EOF}
-FIRST(func_stat)      = {return, let, var, id, expression, if, while, EOL}
-FIRST(func_stat_list) = {return, let, var, id, expression, if, while, EOL}
-FIRST(condition) = {expression, let}
-FIRST(ret_value) = {expression}
-
-
-
 FOLLOW(return_type)     = { "{" }
 FOLLOW(type)            = { "{" }
 FOLLOW(condition)       = { "{" }
@@ -61,15 +37,37 @@ FOLLOW(with_name)       = { "," , id, const }
 FOLLOW(id_or_const)     = { "," , id, const }
 
 
+FIRST(param)          = {id}
+FIRST(param_list)     = {id}
+FIRST(input_param)    = {id, const}
+FIRST(id_or_const)    = {id, const}
+FIRST(function)       = {func}
+FIRST(return_type)    = {->}
+FIRST(return_stat)    = {return}
+FIRST(param_next)     = {","}
+FIRST(input_param_next) = {","}
+FIRST(with_name)      = {":"}
+FIRST(var_assigment)  = {"=", ":"}
+FIRST(val_assigment)  = {"="}
+FIRST(var_definition) = {let, var}
+FIRST(input_param_list) = {id, const}
+FIRST(statement)      = {func,   let, var, id, expression, if, while, EOL}
+FIRST(stat_list)      = {func,   let, var, id, expression, if, while, EOL}
+FIRST(program)        = {func,   let, var, id, expression, if, while, EOL, EOF}
+FIRST(func_stat)      = {return, let, var, id, expression, if, while, EOL}
+FIRST(func_stat_list) = {return, let, var, id, expression, if, while, EOL}
+FIRST(condition) = {expression, let}
+FIRST(ret_value) = {expression}
 
-PREDICT(1) = stat_list
+
+PREDICT(1) = func, let, var, id, expression, if, while, EOL
 PREDICT(2) = func
 PREDICT(3) = ->
 PREDICT(4) = "{"
-PREDICT(5) = func_stat
+PREDICT(5) = return, let, var, id, expression, if, while, EOL
 PREDICT(6) = EOL, "}" 
-PREDICT(7) = return_stat
-PREDICT(8) = var_definition
+PREDICT(7) = return
+PREDICT(8) = let, var
 PREDICT(9) = id
 PREDICT(10) = expression
 PREDICT(11) = if
@@ -83,14 +81,14 @@ PREDICT(18) = EOL
 PREDICT(19) = expression
 PREDICT(20) = EOL
 PREDICT(21) = ")"
-PREDICT(22) = param
+PREDICT(22) = id
 PREDICT(23) = ","
 PREDICT(24) = ")"
 PREDICT(25) = id
-PREDICT(26) = statement
+PREDICT(26) = func, let, var, id, expression, if, while, EOL
 PREDICT(27) = EOL, "}", EOF
-PREDICT(28) = function
-PREDICT(29) = var_definition
+PREDICT(28) = func
+PREDICT(29) = let, var
 PREDICT(30) = id
 PREDICT(31) = expression
 PREDICT(32) = if
@@ -104,7 +102,7 @@ PREDICT(39) = "="
 PREDICT(40) = "="
 PREDICT(41) = EOL
 PREDICT(42) = ")"
-PREDICT(43) = input_param
+PREDICT(43) = id, const
 PREDICT(44) = ","
 PREDICT(45) = ")"
 PREDICT(46) = const
