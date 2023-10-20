@@ -21,26 +21,34 @@
 
 ### function_stat_list
 ```
-5. <func_stat_list> -> <stat_list> EOL <return_stat> 
-6. <func_stat_list> -> <return_stat>
-7. <func_stat_list> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
-8. <func_stat_list> -> while <expression> { <func_stat_list> }
-9. <func_stat_list> -> EPSILON
+5. <func_stat_list> -> <func_stat> EOL <func_stat_list>
+6. <func_stat_list> -> EPSILON 
+```
+### func_stat
+```
+ 7. <func_stat> -> <return_stat>
+ 8. <func_stat> -> <var_definition> <var_assigment> 
+ 9. <func_stat> -> id = <expression>
+10. <func_stat> -> <expression> 
+11. <func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
+12. <func_stat> -> while <expression> { <func_stat_list> }
+13. <func_stat> -> EOL
+14. <func_stat> -> EPSILON
 ```
 ### condition
 ```
-10. <condition> -> <expression>
-11. <condtion>  -> let id
+15. <condition> -> <expression>
+16. <condtion>  -> let id
 ```
 ### return_stat
 ```
-12. <return_stat> -> return <ret_value> EOL <func_stat_list>
-13. <return_stat> -> EPSILON
+17. <return_stat> -> return <ret_value> EOL <func_stat_list>
+18. <return_stat> -> EPSILON
 ```
 ### ret_value
 ```
-14. <ret_value> -> <expression>
-15. <ret_value> -> EPSILON
+19. <ret_value> -> <expression>
+20. <ret_value> -> EPSILON
 ```
 
 

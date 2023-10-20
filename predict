@@ -1,39 +1,50 @@
 
-EMPTY(EPSILON) = {EPSILON}
-EMPTY(program) = {}
-EMPTY(function) = {}
-EMPTY(return_type) = {EPSILON}
-EMPTY(func_stat_list) = {EPSILON}
-EMPTY(return_stat) = {EPSILON}
-EMPTY(param_list) = {EPSILON}
-EMPTY(param_next) = {EPSILON}
-EMPTY(param) = {}
-EMPTY(stat_list) = {EPSILON}
-EMPTY(statement) = {EPSILON}
-EMPTY(definition_keyword) = {}
-EMPTY(input_param_list) = {EPSILON}
-EMPTY(input_param_next) = {EPSILON}
-EMPTY(input_param) = {}
-EMPTY(expression) = {}
-EMPTY(type) = {}
+EMPTY(EPSILON) = {EPSILON} ...
+EMPTY(return_type) 
+EMPTY(func_stat_list) 
+EMPTY(func_stat) 
+EMPTY(return_stat) 
+EMPTY(ret_value) 
+EMPTY(param_list) 
+EMPTY(param_next) 
+EMPTY(stat_list) 
+EMPTY(statement) 
+EMPTY(val_assigment) 
+EMPTY(input_param_list) 
+EMPTY(input_param_next) 
+EMPTY(with_name) 
+
 
 
 FIRST(program) = {stat_list, EOF}
 FIRST(function) = {func}
 FIRST(return_type) = {->}
-FIRST(func_stat_list) = {stat_list, return_stat, if, while, EOL}
+FIRST(func_stat_list) = {func_stat, EOL}
+FIRST(func_stat) = {return_stat, var_definition, id, expression, if, while, EOL}
+FIRST(condition) = {expression, let}
 FIRST(return_stat) = {return}
+FIRST(ret_value) = {expression}
 FIRST(param_list) = {param}
 FIRST(param_next) = {","}
 FIRST(param) = {id}
 FIRST(stat_list) = {statement, EOL}
-FIRST(statement) = {function, definition_keyword, id, expression, if, while, EOL}
-FIRST(definition_keyword) = {let, var}
+FIRST(statement) = {function, var_definition, id, expression, if, while, EOL}
+FIRST(var_definition) = {let, var}
+FIRST(var_assigment) = {":", "="}
+FIRST(val_assigment) = {"="}
 FIRST(input_param_list) = {input_param}
 FIRST(input_param_next) = {","}
 FIRST(input_param) = {id, const}
-FIRST(expression) = {id, const, "(" }
-FIRST(type) = {Int, Int?, Double, Double?, String, String?}
+FIRST(with_name) = {":"}
+FIRST(id_or_const) = {id, const}
+
+
+
+
+
+
+
+
 
 FOLLOW(program) = {}
 FOLOW(stat_list) = {EOF, FOLLOW(statement)}
