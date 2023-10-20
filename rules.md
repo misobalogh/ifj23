@@ -55,85 +55,85 @@
 ### param_list
 
 ```
-16. <param_list> -> EPSILON
-17. <param_list> -> <param> <param_next>
+21. <param_list> -> EPSILON
+22. <param_list> -> <param> <param_next>
 ```
 ### param_next
 ```
-18. <param_next> -> , <param> <param_next>
-19. <param_next> -> EPSILON
+23. <param_next> -> , <param> <param_next>
+24. <param_next> -> EPSILON
 ```
 
 ### param
 ```
-20. <param> -> id id : <type>
+25. <param> -> id id : <type>
 ```
 
 # Statements
 
 ### stat_list
 ```
-21. <stat_list> -> <statement> EOL <stat_list>
-22. <stat_list> -> EPSILON
+26. <stat_list> -> <statement> EOL <stat_list>
+27. <stat_list> -> EPSILON
 ```
 
 ### statement
 ```
-23. <statement> -> <function> EOL <stat_list>
-24. <statement> -> <var_definition> <var_assigment> 
-25. <statement> -> id = <expression>
-26. <statement> -> <expression> 
-27. <statement> -> if <condition> { <stat_list> } else { <stat_list> }
-28. <statement> -> while <expression> { <stat_list> }
-29. <statement> -> EOL
-30. <statement> -> EPSILON
+28. <statement> -> <function> EOL <stat_list>
+29. <statement> -> <var_definition> <var_assigment> 
+30. <statement> -> id = <expression>
+31. <statement> -> <expression> 
+32. <statement> -> if <condition> { <stat_list> } else { <stat_list> }
+33. <statement> -> while <expression> { <stat_list> }
+34. <statement> -> EOL
+35. <statement> -> EPSILON
 ```
 
 ### var_definition
 ```
-31. <var_definition> -> let id
-32. <var_definition> -> var id
+36. <var_definition> -> let id
+37. <var_definition> -> var id
 ```
 
 ### var_assigment
 ```
-33. <var_assigment> -> : <type> <val_assigment>
-34. <var_assigment> -> = <expression>
+38. <var_assigment> -> : <type> <val_assigment>
+39. <var_assigment> -> = <expression>
 ```
 
 ### val_assigment
 ```
-35. <val_assigment> -> = <expression>
-36. <val_assigment> -> EPSILON
+40. <val_assigment> -> = <expression>
+41. <val_assigment> -> EPSILON
 ```
 
 ### input_param_list
 ```
-37. <input_param_list> -> EPSILON
-38. <input_param_list> -> <input_param> <input_param_next>
+42. <input_param_list> -> EPSILON
+43. <input_param_list> -> <input_param> <input_param_next>
 ```
 ### input_param_next
 ```
-39. <input_param_next> -> , <input_param> <input_param_next>
-40. <input_param_next> -> EPSILON
+44. <input_param_next> -> , <input_param> <input_param_next>
+45. <input_param_next> -> EPSILON
 ```
 
 ### input_param
 ```
-41. <input_param> -> const        
-42. <input_param> -> id <with_name>
+46. <input_param> -> const        
+47. <input_param> -> id <with_name>
 ```
 
 ### with_name
 ```
-43. <with_name> -> EPSILON 
-44. <with_name> -> : <id_or_const>
+48. <with_name> -> EPSILON 
+49. <with_name> -> : <id_or_const>
 ```
 
 ### id_or_const
 ```
-45. <id_or_const> -> id
-46. <id_or_const> -> const
+50. <id_or_const> -> id
+51. <id_or_const> -> const
 ```
 
 
