@@ -71,40 +71,37 @@
 
 ### statement
 ```
- - Variable definition
 23. <statement> -> <function> EOL <stat_list>
-23. <statement> -> <definition_keyword> id : <type> = <expression>
-24. <statement> -> <definition_keyword> id : <type>
-25. <statement> -> <definition_keyword> id = <expression>
-
-23. <statement> -> <definition_keyword> id <variable_definition> 
-24. <variable_definition> -> : <type> <var_assigment>
-25. <variable_definition> -> = <expression>
-
-26. <var_assigment> -> <expression>
-27. <var_assigment> -> EPSILON
-
-
- - Assignment
-27. <statement> -> id = <expression>
-28. <statement> -> <expression> 
- - If statement
-29. <statement> -> if <expression> { <stat_list> } else { <stat_list> }
-30. <statement> -> if let id { <stat_list> } else { <stat_list> }
-31. <statement> -> while <expression> { <stat_list> }
-32. <statement> -> EOL
-33. <statement> -> EPSILON
+24. <statement> -> <var_definition> <var_assigment> 
+25. <statement> -> id = <expression>
+26. <statement> -> <expression> 
+27. <statement> -> if <condition> { <stat_list> } else { <stat_list> }
+28. <statement> -> while <expression> { <stat_list> }
+29. <statement> -> EOL
+30. <statement> -> EPSILON
 ```
-### definition_keyword
+
+### var_definition
 ```
-34. <definition_keyword> -> let
-35. <definition_keyword> -> var
+31. <var_definition> -> let id
+32. <var_definition> -> var id
+```
+
+### var_assigment
+```
+33. <var_assigment> -> : <type> <val_assigment>
+34. <var_assigment> -> = <expression>
+```
+
+### val_assigment
+```
+35. <val_assigment> -> = <expression>
+36. <val_assigment> -> EPSILON
 ```
 
 ### input_param_list
 ```
-36. <input_param_list> -> EPSILON
-37. <input_param_list> -> <input_param>
+37. <input_param_list> -> EPSILON
 38. <input_param_list> -> <input_param> <input_param_next>
 ```
 ### input_param_next
@@ -115,11 +112,29 @@
 
 ### input_param
 ```
-41. <input_param> -> id : id            (id = const/variable, not expr)
-42. <input_param> -> id      
-43. <input_param> -> id : const         
-44. <input_param> -> const        
+41. <input_param> -> const        
+42. <input_param> -> id <with_name>
 ```
+
+### with_name
+```
+43. <with_name> -> EPSILON 
+44. <with_name> -> : <id_or_const>
+```
+
+### id_or_const
+```
+45. <id_or_const> -> id
+46. <id_or_const> -> const
+```
+
+
+
+
+
+# --------------------------------------------------------------
+
+# Precedence syntacitc analysis
 
 # Expressions
 ```
