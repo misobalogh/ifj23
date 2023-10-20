@@ -6,6 +6,8 @@
 - [ ] rename ! to NOT_NIL
 - [ ] concat operator +   (string + string)
 - [ ] Built-in functions
+- [ ] is 2+2 valid statement?
+- [ ] add negative numbers to expression parser (1-(-2))
 
 
 # Notes
@@ -31,3 +33,5 @@ func g(x1 x: Int) -> Int { // name and id cannot be the same!
 
 - when to switch to precedence parser?  if i have `<expression>` in rule
 - when switching to precedece parser, i need to store the token i switched on, so i can use it in the expression, (2 options - store it in the stack, or in cache, or as paramater for `precedence_parser(param)` function)
+
+

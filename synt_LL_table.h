@@ -11,6 +11,7 @@
  * @param EOF       EOF
 
  * @param ID        id
+ * @param CONST
 
  * @param LET       let
  * @param VAR       var
@@ -53,6 +54,7 @@ typedef enum terms {
     EOL,
     EOF,
     ID,
+    CONST,
     LET,
     VAR,
     ASSIGN,
@@ -88,13 +90,12 @@ typedef enum terms {
 /**
  * @brief NONTERMINALS
  * 
+ * @param program
  * @param function          
  * @param param_list        
  * @param return_type       
  * @param func_stat_list    
  * @param param             
- * @param param_name        
- * @param param_id          
  * @param type              
  * @param stat_list         
  * @param statement         
@@ -103,25 +104,21 @@ typedef enum terms {
  * @param statement_list    
  * @param input_param_list  
  * @param input_param       
- * @param input_param_name  
- * @param not_rel_expression    
+ * ////@param not_rel_expression    
  */
 typedef enum nonterminals {
+    program,
     function,
     param_list,
     return_type,
     func_stat_list,
     param,
-    param_name,
-    param_id,
     type,
     stat_list,
     statement,
     definition_keyword,
     expression,
-    statement_list,
     input_param_list,
     input_param,
-    input_param_name,
-    not_rel_expression,
+    // not_rel_expression,
 } nonterminals;

@@ -1,99 +1,151 @@
 
 # Rules for syntactic analysis 
 
+### program
+```
+1. <program> -> <stat_list> EOF
+```
+
 # Functions
 
 ### function
 ```
-<function> -> func id ( <param_list> ) -> <return_type> { <func_stat_list> }
-<function> -> func id ( <param_list> ) { <func_stat_list> }
+2. <function> -> func id ( <param_list> ) <return_type> { <func_stat_list> }
+```
+
+### return_type
+```
+3. <return_type> => -> <type>
+4. <return_type> => EPSILON
 ```
 
 ### function_stat_list
 ```
-<func_stat_list> -> <stat_list>
-<func_stat_list> -> return <expression>
+5. <func_stat_list> -> <stat_list> EOL <return_stat> 
+6. <func_stat_list> -> <return_stat>
+7. <func_stat_list> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
+8. <func_stat_list> -> while <expression> { <func_stat_list> }
+9. <func_stat_list> -> EPSILON
+```
+### condition
+```
+10. <condition> -> <expression>
+11. <condtion>  -> let id
+```
+### return_stat
+```
+12. <return_stat> -> return <ret_value> EOL <func_stat_list>
+13. <return_stat> -> EPSILON
+```
+### ret_value
+```
+14. <ret_value> -> <expression>
+15. <ret_value> -> EPSILON
 ```
 
 
 ### param_list
 
 ```
-<param_list> -> <param> , <param_list>
-<param_list> -> <param>
-<param_list> -> EPSILON
+16. <param_list> -> EPSILON
+17. <param_list> -> <param> <param_next>
+```
+### param_next
+```
+18. <param_next> -> , <param> <param_next>
+19. <param_next> -> EPSILON
 ```
 
 ### param
 ```
-<param> -> <param_name> <param_id> : <type> <param_list> 
+20. <param> -> id id : <type>
 ```
 
 # Statements
+
 ### stat_list
 ```
-<stat_list> -> <statement> EOL <stat_list>
-<stat_list> -> EPSILON
+21. <stat_list> -> <statement> EOL <stat_list>
+22. <stat_list> -> EPSILON
 ```
 
-##  
 ### statement
 ```
-1. Variable definition
-<statement> -> <definition_keyword> id : type = <expression>
-<statement> -> <definition_keyword> id : type
-<statement> -> <definition_keyword> id = <expression>
-2. Assignment
-<statement> -> id = <expression>
-3. If statement
-<statement> -> if <expression> { <statement_list> } else { <statement_list> }
-<statement> -> if let id { <statement_list> } else { <statement_list> }
-<statement> -> while <expression> { <statement_list> }
-<statement> -> id = function_id(input_param_list)
-<statement> -> function_id(input_param_list)
+ - Variable definition
+23. <statement> -> <function> EOL <stat_list>
+23. <statement> -> <definition_keyword> id : <type> = <expression>
+24. <statement> -> <definition_keyword> id : <type>
+25. <statement> -> <definition_keyword> id = <expression>
+
+23. <statement> -> <definition_keyword> id <variable_definition> 
+24. <variable_definition> -> : <type> <var_assigment>
+25. <variable_definition> -> = <expression>
+
+26. <var_assigment> -> <expression>
+27. <var_assigment> -> EPSILON
+
+
+ - Assignment
+27. <statement> -> id = <expression>
+28. <statement> -> <expression> 
+ - If statement
+29. <statement> -> if <expression> { <stat_list> } else { <stat_list> }
+30. <statement> -> if let id { <stat_list> } else { <stat_list> }
+31. <statement> -> while <expression> { <stat_list> }
+32. <statement> -> EOL
+33. <statement> -> EPSILON
 ```
 ### definition_keyword
 ```
-<definition_keyword> -> let
-<definition_keyword> -> var
+34. <definition_keyword> -> let
+35. <definition_keyword> -> var
 ```
 
 ### input_param_list
 ```
-<input_param_list> -> <input_param>
-<input_param_list> -> <input_param>, <input_param_list>
-<input_param_list> -> EPSILON
+36. <input_param_list> -> EPSILON
+37. <input_param_list> -> <input_param>
+38. <input_param_list> -> <input_param> <input_param_next>
+```
+### input_param_next
+```
+39. <input_param_next> -> , <input_param> <input_param_next>
+40. <input_param_next> -> EPSILON
 ```
 
 ### input_param
 ```
-<input_param> -> <input_param_name> : id            (id = const/variable, not expr)
-<input_param> -> <input_param_name> : const         (id = const/variable, not expr)
-<input_param_name> => id
-<input_param_name> => EPSILON
+41. <input_param> -> id : id            (id = const/variable, not expr)
+42. <input_param> -> id      
+43. <input_param> -> id : const         
+44. <input_param> -> const        
 ```
 
 # Expressions
 ```
-<expression> -> id
-<expression> -> ( <expression> )
-<expression> -> <expression> arithm_op <expression>
-<expression> -> <expression> ?? <expression>
-<expression> -> <expression>!                       (force unwrap)
-<expression> -> <expression> rel_op <expression>    (not 100% correct)
+45. <expression> -> id
+46. <expression> -> const
+47. <expression> -> ( <expression> )
+48. <expression> -> <expression> arithm_op <expression>
+49. <expression> -> <expression> ?? <expression>
+50. <expression> -> <expression>!                       (force unwrap)
+51. <expression> -> <expression> rel_op <expression>    (not 100% correct)
 
 something like this instead:
 <expression> -> <not_rel_expression> rel_op <not_rel_expression>  
+
+52. <expression> -> id(input_param_list)
+
 ```
 
 # Types
 ```
-<type> -> Int
-<type> -> Int?
-<type> -> Double
-<type> -> Double?
-<type> -> String
-<type> -> String?
+53. <type> -> Int
+54. <type> -> Int?
+55. <type> -> Double
+56. <type> -> Double?
+57. <type> -> String
+58. <type> -> String?
 ```
 
 
@@ -127,4 +179,5 @@ COMMA  ,
 ARROW  ->
 COLON  :
 ```
+
 
