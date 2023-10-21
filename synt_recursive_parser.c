@@ -18,7 +18,7 @@
 #include "operator_precedence.h"
 #include "token_types.h"
 #include "macros.h"
-#include "rules.h"
+#include "synt_recur_rules.h"
 
 bool recursiveParser() {
     return rule_PROGRAM();

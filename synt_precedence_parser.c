@@ -18,7 +18,7 @@
 #include "operator_precedence.h"
 #include "token_types.h"
 #include "macros.h"
-#include "rules.h"
+#include "synt_prec_rules.h"
 
 /**
  * @brief Reduce items on stack with one of defined rules.
