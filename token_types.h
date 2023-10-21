@@ -63,8 +63,13 @@ typedef enum {
     token_TERMINAL = 9,
     // ...
     token_NONTERMINAL = 10,
-
+    token_LET,
+    token_VAR,
+    token_ASSIGN, // "="
+    token_EXPRESSION,
+    token_EOL,
     token_EOF,
+
 } tokenType;
 
 typedef struct token

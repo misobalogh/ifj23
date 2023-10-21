@@ -103,7 +103,7 @@ int main() {
         return CU_get_error();
     }
 
-    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_set_mode(CU_BRM_SILENT);
 
     CU_basic_run_tests();
     if (CU_get_number_of_failures() == 0) {

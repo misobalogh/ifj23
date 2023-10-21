@@ -25,8 +25,8 @@ FOLLOW(function)        = { EOL }
 FOLLOW(val_assigment)   = { EOL }
 FOLLOW(ret_value)       = { EOL }
 FOLLOW(return_stat)     = { EOL }
-FOLLOW(func_stat_list)   = { EOL, "}" }
-FOLLOW(stat_list)        = { EOL, "}", EOF }
+FOLLOW(func_stat_list)  = { EOL, "}" }
+FOLLOW(stat_list)       = { EOL, "}", EOF }
 FOLLOW(type)            = { EOL , "," , ")", "=" }
 FOLLOW(var_definition)  = { ":", "=" }
 FOLLOW(param_list)      = { ")" }

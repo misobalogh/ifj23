@@ -74,7 +74,7 @@
 ### stat_list
 ```
 26. <stat_list> -> <statement> EOL <stat_list>
-27. <stat_list> -> EPSILON
+27. <stat_list> -> EPSILON // remove?
 ```
 
 ### statement

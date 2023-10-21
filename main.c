@@ -162,12 +162,21 @@ int main() {
     // workingWithStack();
 
 
-    if(precedenceParser() == false) {
-        LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+    // if(precedenceParser() == false) {
+    //     LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+    //     return SYNTAX_ANALYSIS_ERR;
+    // }
+    // else {
+    //     LOG("MAIN: Expression syntax is correct: code %d", 0);
+    // }
+
+
+    if(recursiveParser() == false) {
+        LOG("Syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
         return SYNTAX_ANALYSIS_ERR;
     }
     else {
-        LOG("MAIN: Expression syntax is correct: code %d", 0);
+        LOG("Program syntax is correct: code %d", 0);
     }
     return 0;
 }

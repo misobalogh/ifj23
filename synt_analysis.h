@@ -40,6 +40,7 @@ bool parseFunctionCall();
 /**
  * @brief Mocking function for testing purposes
 */
-token *mock_nextToken();
+token *mock_precedence_nextToken();
+token *mock_recursive_nextToken();
 
 #endif // _SYNT_ANALYSIS_H

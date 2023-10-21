@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 15.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -16,7 +16,22 @@
 #include "synt_prec_table.h"
 #include "synt_prec_stack.h"
 
+bool rule_PROGRAM();
+bool rule_STAT_LIST();
+bool rule_STATEMENT();
+bool rule_EOF();
+bool rule_EOL();
+bool rec_rule_ID();
+bool rule_VAR_DEFINITION();
+bool rule_VAR_ASSIGNMENT();
+bool rule_LET();
+bool rule_VAR();
+bool rule_EXPRESSION();
+bool rule_ASSIGN();
 
+
+
+/* EXPRESSIONS */
 void rule_ID(stack* s);
 
 void rule_ID_OP_ID(stack* s);

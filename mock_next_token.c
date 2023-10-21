@@ -14,7 +14,7 @@
 
 #include "synt_analysis.h"
 
-token* mock_nextToken() {
+token* mock_precedence_nextToken() {
     static token tokens[] = {
         // TEST 1
         {token_ID, "a"},
@@ -64,4 +64,19 @@ token* mock_nextToken() {
     };
     static int mock_i = 0;
     return &tokens[mock_i++];
+}
+
+
+token* mock_recursive_nextToken() {
+    static token tokensRec[] = {
+        // TEST 1
+        {token_LET, "let"},
+        {token_ID, "a"},
+        {token_ASSIGN, "="},
+        {token_EXPRESSION, "10"},
+        {token_EOL, "\n"},
+        {token_EOF, "EOF"},
+    };
+    static int mock_j = 0;
+    return &tokensRec[mock_j++];
 }

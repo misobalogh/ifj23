@@ -38,45 +38,45 @@ bool reduce(stack* s) {
 
 
     if (top->type == token_ID && top->flag == true) {
-        printf("rule ID\n");
+        PLOG("rule ID\n");
         rule_ID(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
         (second->type == token_PLUS_MINUS || second->type == token_MUL_DIV) &&
         third->type == token_NONTERMINAL) {
-        printf("rule E op E\n");
+        PLOG("rule E op E\n");
         rule_ID_OP_ID(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
         second->type == token_CONCAT &&
         third->type == token_NONTERMINAL) {
-        printf("rule E ?? E\n");
+        PLOG("rule E ?? E\n");
         rule_ID_CONCAT_ID(s);
     }
     else if (
         first->type == token_PARENTHESES_R && 
         second->type == token_NONTERMINAL && 
         third->type == token_PARENTHESES_L) {
-        printf("rule (E)\n");
+        PLOG("rule (E)\n");
         rule_PAR_ID_PAR(s);
     }
     else if (
         first->type == token_FORCE_UNWRAP &&
         second->type == token_NONTERMINAL) {
-        printf("rule E!\n");
+        PLOG("rule E!\n");
         rule_ID_FORCE_UNWRAP(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
         second->type == token_REL &&
         third->type == token_NONTERMINAL) {
-        printf("rule ID rel ID\n");
+        PLOG("rule ID rel ID\n");
         rule_ID_REL_ID(s);
     }
     else {
-        printf("ERROR: unknown rule\n");
+        PLOG("ERROR: unknown rule\n");
         return false;
     }
 
@@ -91,34 +91,38 @@ bool precedenceParser() {
     stackPush(&s, token_DOLLAR);
 
     // debug
-    printf("INIT: "); 
+    PLOG("INIT: "); 
     stackPrint(&s);
 
-    token* t = mock_nextToken();
+    token* t = mock_precedence_nextToken();
     while (!(t->type == token_DOLLAR && stackTopTerminal(&s)->type == token_DOLLAR)) {
         switch (precedenceTable[stackTopTerminal(&s)->type][t->type])
         {
         case EQUAL: // "="
-            printf("EQUAL: ");
+            PLOG("EQUAL: ");
             stackPrint(&s);
             stackPush(&s, t->type);
-            t = mock_nextToken();
+            t = mock_precedence_nextToken();
             break;
         case LOW: // expand  "<"
             stackPush(&s, t->type);
             stackTopTerminalSetFlag(&s);
-            t = mock_nextToken();
-            printf("LOW: ");
+            t = mock_precedence_nextToken();
+            PLOG("LOW: ");
             stackPrint(&s);
             break;
         case HIGH: // reduce ">"
-            printf("HIGH: ");
+            PLOG("HIGH: ");
             stackPrint(&s);
             if (reduce(&s)) {
                 break;
             }
+            else {
+                stackFreeItems(&s);
+                return false;
+            }
         case EMPTY: // error
-            printf("EMPTY: ");
+            PLOG("EMPTY: ");
             stackPrint(&s);
             stackFreeItems(&s);
             return false;

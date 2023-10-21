@@ -57,4 +57,25 @@
 } while (0)                                             \
 
 
+#define PLOG(message) do {                           \
+    FILE *logFile = fopen("precedenceParser.log", "a");            \
+    if (logFile) {                                      \
+        fprintf(logFile, "%s\n", message);         \
+        fclose(logFile);                                \
+    } else {                                            \
+        fprintf(stderr, "Failed to open log file.\n");  \
+    }                                                   \
+} while (0)
+
+#define RLOG(message) do {                           \
+    FILE *logFile = fopen("recursiveParser.log", "a");            \
+    if (logFile) {                                      \
+        fprintf(logFile, "%s\n", message);         \
+        fclose(logFile);                                \
+    } else {                                            \
+        fprintf(stderr, "Failed to open log file.\n");  \
+    }                                                   \
+} while (0)
+
+
 #endif // MACROS_H
