@@ -1,7 +1,7 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: synt_recur_rules.c
-* Description: rules for syntactic top-down syntactic analysis
+* Description: rules for top-down syntactic analysis
 * Author: MICHAL BALOGH
 * Faculty: FIT VUT
 * Date: 21.10.2023
