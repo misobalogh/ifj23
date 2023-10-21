@@ -32,7 +32,7 @@ const precedenceType precedenceTable[9][9] = {
 /**
  * @brief Rule: E -> id
 */
-void rule_ID(stack* s) {
+void rule_E_ID(stack* s) {
     stackItem* top = stackTopTerminal(s);
     top->flag = false;
     top->type = token_NONTERMINAL;

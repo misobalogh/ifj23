@@ -42,13 +42,13 @@
 ```
 ### return_stat
 ```
-17. <return_stat> -> return <ret_value> EOL <func_stat_list>
+17. <return_stat> -> return <ret_val> EOL <func_stat_list>
 18. <return_stat> -> EPSILON
 ```
-### ret_value
+### ret_val
 ```
-19. <ret_value> -> <expression>
-20. <ret_value> -> EPSILON
+19. <ret_val> -> <expression>
+20. <ret_val> -> EPSILON
 ```
 
 

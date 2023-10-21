@@ -26,21 +26,14 @@ bool syntacticAnalysis();
 bool precedenceParser();
 bool recursiveParser();
 
-
-// private functions called by precedenceParser(); and recursiveParser();
-bool parseStatement();
-bool parseExpression();
-bool parseFactor();
-bool parseTerm();
-bool parseDeclaration();
-bool parseIfStatement();
-bool parseWhileLoop();
-bool parseFunctionCall();
+/**
+ * @brief Mocking function for testing purposes
+*/
+tokenStruct *mock_precedence_nextToken();
 
 /**
  * @brief Mocking function for testing purposes
 */
-token *mock_precedence_nextToken();
-token *mock_recursive_nextToken();
+tokenStruct *mock_recursive_nextToken();
 
 #endif // _SYNT_ANALYSIS_H

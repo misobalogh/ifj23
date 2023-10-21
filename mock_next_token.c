@@ -14,8 +14,8 @@
 
 #include "synt_analysis.h"
 
-token* mock_precedence_nextToken() {
-    static token tokens[] = {
+tokenStruct* mock_precedence_nextToken() {
+    static tokenStruct tokens[] = {
         // TEST 1
         {token_ID, "a"},
         {token_DOLLAR, "$"},
@@ -67,15 +67,38 @@ token* mock_precedence_nextToken() {
 }
 
 
-token* mock_recursive_nextToken() {
-    static token tokensRec[] = {
-        // TEST 1
+tokenStruct* mock_recursive_nextToken() {
+    static tokenStruct tokensRec[] = {
+        
+        // VARIALBE DECLARATION
         {token_LET, "let"},
         {token_ID, "a"},
         {token_ASSIGN, "="},
         {token_EXPRESSION, "10"},
         {token_EOL, "\n"},
         {token_EOF, "EOF"},
+
+        // FUNCTION 
+        {token_FUNC, "func"},
+        {token_ID, "id"}, 
+        {token_PARENTHESES_L, "("}, 
+        {token_DOLLAR, "param_list"},
+        {token_PARENTHESES_R, ")"},
+        {token_ARROW, "->"},
+        {token_TYPE, "Int"},
+        {token_BRACKET_L, "{"},
+        {token_DOLLAR, "func_stat_list"},
+        {token_BRACKET_R, "}"},
+        
+        // VOID FUNCTION
+        {token_FUNC, "func"},
+        {token_ID, "id"}, 
+        {token_PARENTHESES_L, "("}, 
+        {token_DOLLAR, "param_list"},
+        {token_PARENTHESES_R, ")"},
+        {token_BRACKET_L, "{"},
+        {token_DOLLAR, "func_stat_list"},
+        {token_BRACKET_R, "}"},
     };
     static int mock_j = 0;
     return &tokensRec[mock_j++];

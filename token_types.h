@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 15.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -20,7 +20,7 @@
 
 /**
  * @brief Enum of token types.
- * 
+ *
  * @param token_NOT negation
  * @param token_MUL multiplication
  * @param token_DIV division
@@ -44,7 +44,7 @@ typedef enum {
     token_MINUS = 0,
     token_MUL_DIV = 1,
     token_MUL = 1,
-    token_DIV = 1,  
+    token_DIV = 1,
     token_CONCAT = 2,
     token_FORCE_UNWRAP = 3,
     token_REL = 4,
@@ -53,30 +53,40 @@ typedef enum {
     token_LESS = 4,
     token_MORE = 4,
     token_LESS_EQ = 4,
-    token_MORE_EQ = 4,  
+    token_MORE_EQ = 4,
     token_PARENTHESES_L = 5,
     token_PARENTHESES_R = 6,
     token_ID = 7,
     token_DOLLAR = 8,
-   
     // ...
     token_TERMINAL = 9,
     // ...
     token_NONTERMINAL = 10,
     token_LET,
     token_VAR,
+    token_IF,
+    token_ELSE,
+    token_WHILE,
+    token_CONST,
+    token_FUNC,
+    token_RETURN,
+    token_BRACKET_L,
+    token_BRACKET_R,
+    token_COMMA,
+    token_ARROW,
     token_ASSIGN, // "="
+    token_COLON,
     token_EXPRESSION,
+    token_TYPE,
     token_EOL,
     token_EOF,
-
 } tokenType;
 
 typedef struct token
 {
     tokenType type;
-    char *value;
-} token;
+    char* value;
+} tokenStruct;
 
 
 bool isTerminal(tokenType type);
@@ -87,7 +97,7 @@ bool isNonterminal(tokenType type);
 // ================ DEBUGGING ================
 /**
  * @brief For debugging, delete later - assigns name to token type
- * 
+ *
  * @param type type of token u want to get name of
 */
 #define TOKEN_TYPE_NAME(type) tokenTypeNames[type]

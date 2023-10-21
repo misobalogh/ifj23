@@ -18,7 +18,7 @@
 
 
 /* EXPRESSIONS */
-void rule_ID(stack* s);
+void rule_E_ID(stack* s);
 
 void rule_ID_OP_ID(stack* s);
 

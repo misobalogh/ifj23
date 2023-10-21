@@ -39,7 +39,7 @@ bool reduce(stack* s) {
 
     if (top->type == token_ID && top->flag == true) {
         PLOG("rule ID\n");
-        rule_ID(s);
+        rule_E_ID(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
@@ -94,7 +94,7 @@ bool precedenceParser() {
     PLOG("INIT: "); 
     stackPrint(&s);
 
-    token* t = mock_precedence_nextToken();
+    tokenStruct* t = mock_precedence_nextToken();
     while (!(t->type == token_DOLLAR && stackTopTerminal(&s)->type == token_DOLLAR)) {
         switch (precedenceTable[stackTopTerminal(&s)->type][t->type])
         {
