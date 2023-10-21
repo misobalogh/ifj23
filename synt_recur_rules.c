@@ -131,6 +131,7 @@ bool rule_FUNC_STAT() {
         }
         return false;
     case token_EXPRESSION:
+        t = mock_recursive_nextToken();
         return true; // replace with switching to precedence parser
     case token_IF:
         t = mock_recursive_nextToken();
@@ -181,6 +182,7 @@ bool rule_FUNC_STAT() {
 
 bool rule_CONDITION() {
     if (t->type == token_EXPRESSION) {
+        t = mock_recursive_nextToken();
         return true;
     }
     if (t->type == token_LET) {
@@ -215,6 +217,7 @@ bool rule_RETURN_STAT() {
 bool rule_RET_VAL() {
     // <ret_val> -> <expression>
     if (t->type == token_EXPRESSION) {
+        t = mock_recursive_nextToken();
         return true;
     }
     // <ret_value> -> EPSILON
@@ -294,7 +297,7 @@ bool rule_STAT_LIST() {
 
 bool rule_STATEMENT() {
     switch (t->type) {
-    // <statement> -> <function> EOL <stat_list>    
+        // <statement> -> <function> EOL <stat_list>    
     case token_FUNC:
         if (rule_FUNCTION()) {
             t = mock_recursive_nextToken();
@@ -304,21 +307,22 @@ bool rule_STATEMENT() {
             }
         }
         return false;
-    // <statement> -> <var_definition> <var_assigment>
+        // <statement> -> <var_definition> <var_assigment>
     case token_LET:
     case token_VAR:
         return rule_VAR_DEFINITION() && rule_VAR_ASSIGNMENT();
-    //  <statement> -> id = <expression>
+        //  <statement> -> id = <expression>
     case token_ID:
         t = mock_recursive_nextToken();
         if (t->type == token_ASSIGN) {
             return rule_EXPRESSION();
         }
         return false;
-    //  <statement> -> <expression> 
+        //  <statement> -> <expression> 
     case token_EXPRESSION:
+        t = mock_recursive_nextToken();
         return true; // replace with switching to precedence parser
-    // <statement> -> if <condition> { <stat_list> } else { <stat_list> }
+        // <statement> -> if <condition> { <stat_list> } else { <stat_list> }
     case token_IF:
         t = mock_recursive_nextToken();
         if (rule_CONDITION()) {
@@ -345,7 +349,7 @@ bool rule_STATEMENT() {
             }
         }
         return false;
-    // <statement> -> while <expression> { <stat_list> }
+        // <statement> -> while <expression> { <stat_list> }
     case token_WHILE:
         if (rule_EXPRESSION()) {
             t = mock_recursive_nextToken();
@@ -358,57 +362,18 @@ bool rule_STATEMENT() {
             }
         }
         return false;
-    // <statement> -> EOL
+        // <statement> -> EOL
     case token_EOL:
         return true;
     default:
         return false;
     }
     return false;
-
 }
 
-
-
-bool rule_VAR_ASSIGNMENT();
-bool rule_VAR_DEFINITION();
-bool rule_VAL_ASSIGNMENT();
-bool rule_INPUT_PARAM_LIST();
-bool rule_INPUT_PARAM_NEXT();
-bool rule_INPUT_PARAM();
-bool rule_WITH_NAME();
-bool rule_ID_OR_CONST();
-
-
-bool rule_STAT_LIST() {
-    RLOG("rule_STAT_LIST\n");
-    // <stat_list> -> EPSILON
-    if (t->type == token_EOF) {
-        return true;
-    }
-    // <stat_list> -> <statement> <EOL> <stat_list>
-    else if (rule_STATEMENT()) {
-        t = mock_recursive_nextToken();
-        if (t->type == token_EOL) {
-            RLOG("EOL\n");
-            t = mock_recursive_nextToken();
-            return rule_STAT_LIST();
-        }
-    }
-    return false;
-}
-
-bool rule_STATEMENT() {
-    RLOG("rule_STATEMENT\n");
-    // rule 29
-    if (t->type == token_LET || t->type == token_VAR) {
-        return rule_VAR_DEFINITION() && rule_VAR_ASSIGNMENT();
-    }
-    return false;
-}
 
 bool rule_VAR_DEFINITION() {
-    RLOG("rule_VAR_DEFINITION\n");
+    // <var_definition> -> let id
     if (t->type == token_LET) {
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
@@ -416,6 +381,7 @@ bool rule_VAR_DEFINITION() {
             return true;
         }
     }
+    // <var_definition> -> var id
     else if (t->type == token_VAR) {
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
@@ -426,41 +392,128 @@ bool rule_VAR_DEFINITION() {
     return false;
 }
 
-
 bool rule_VAR_ASSIGNMENT() {
-    RLOG("rule_VAR_ASSIGNMENT\n");
-    // <var_assignment> -> = <expression>
-    if (t->type == token_ASSIGN) {
-        RLOG("rule_ASSIGN\n");
+    // <var_assigment> -> : <type> <val_assigment>
+    if (t->type == token_COLON) {
         t = mock_recursive_nextToken();
-        return rule_EXPRESSION();
+        if (t->type == token_TYPE) {
+            return rule_VAL_ASSIGNMENT();
+        }
     }
-    // else if (t->type == token_COLON) {
-    //     return rule_TYPE() && rule_VAL_ASSIGNMENT();
-    // }
+    // <var_assigment> -> = <expression>
+    else if (t->type == token_ASSIGN) {
+        t = mock_recursive_nextToken();
+        if (t->type == token_EXPRESSION) {
+            t = mock_recursive_nextToken();
+            return true;
+        }
+    }
     return false;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-bool rule_EXPRESSION() {
-    if (t->type == token_EXPRESSION) {
-        RLOG("rule_EXPRESSION\n");
+bool rule_VAL_ASSIGNMENT() {
+    // <val_assigment> -> = <expression>
+    if (t->type == token_ASSIGN) {
+        t = mock_recursive_nextToken();
+        if (t->type == token_EXPRESSION) {
+            t = mock_recursive_nextToken();
+            return true;
+        }
+    }
+    // <val_assigment> -> EPSILON
+    else if (t->type == token_EOL) {
         return true;
     }
     return false;
 }
+
+
+bool rule_INPUT_PARAM_LIST() {
+    // <input_param_list> -> EPSILON
+    if (t->type == token_PARENTHESES_R) {
+        return true;
+    }
+    // <input_param_list> -> <input_param> <input_param_next>
+    else if (t->type == token_ID || t->type == token_CONST) {
+        return rule_INPUT_PARAM && rule_INPUT_PARAM_NEXT();
+    }
+    return false;
+}
+
+
+bool rule_INPUT_PARAM_NEXT() {
+    // <input_param_next> -> , <input_param> <input_param_next>
+    if (t->type == token_COMMA) {
+        t = mock_recursive_nextToken();
+        return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
+    }
+    // <input_param_next> -> EPSILON
+    else if (t->type == token_PARENTHESES_R) {
+        return true;
+    }
+    return false;
+}
+
+
+bool rule_INPUT_PARAM() {
+    // <input_param> -> const        
+    if (t->type == token_CONST) {
+        t = mock_recursive_nextToken();
+        return true;
+    }
+    // <input_param> -> id <with_name>
+    else if (t->type == token_ID) {
+        t = mock_recursive_nextToken();
+        return rule_WITH_NAME();
+    }
+    return false;
+}
+
+
+bool rule_WITH_NAME() {
+    // <with_name> -> EPSILON 
+    if (t->type == token_COMMA ||
+        t->type == token_ID ||
+        t->type == token_CONST) {
+        return true;
+    }
+    // <with_name> -> : <id_or_const>
+    else if (t->type == token_COLON) {
+        t = mock_recursive_nextToken();
+        return rule_ID_OR_CONST();
+    }
+    return false;
+}
+
+bool rule_ID_OR_CONST() {
+    // <id_or_const> -> id
+    if(t->type == token_ID) {
+        t = mock_recursive_nextToken();
+        return true;
+    }
+    // <id_or_const> -> const
+    else if(t->type == token_CONST) {
+        t = mock_recursive_nextToken();
+        return true;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
