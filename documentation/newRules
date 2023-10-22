@@ -1,0 +1,67 @@
+ <program> -> <stat_list> EOF
+ <function> -> func id ( <param_list> ) <return_type> { <func_stat_list> }
+ <param_list> -> <param> <param_next>
+ <param_list> -> EPSILON
+ <param> -> id id : <type>
+ <param_next> -> , <param> <param_next>
+ <param_next> -> EPSILON
+ <return_type> => -> <type>
+ <return_type> => EPSILON
+ <func_stat_list> -> <func_stat> EOL <func_stat_list>
+ <func_stat_list> -> EPSILON 
+ <func_stat> -> <return_stat>
+ <func_stat> -> <let_or_var> <var_assignment>
+ <func_stat> -> id <after_id>
+ <func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
+ <func_stat> -> while <expression> { <func_stat_list> }
+ <func_stat> -> EPSILON
+ <let_or_var> -> let id
+ <let_or_var> -> var id
+ <var_assignment> -> : <type> <val_assigment>
+ <var_assignment> -> = id <fn_or_exp>
+ <val_assignment> -> = id <fn_or_exp>
+ <val_assignment> -> EPSILON
+ <after_id> -> = id <fn_or_exp> // assign value
+ <after_id> -> ( <input_param_list> ) // function call
+ <fn_or_exp> -> <expression> // (need SECOND(expression))
+ <fn_or_exp> -> ( <input_param_list> )
+ <condition> -> <expression>
+ <condtion> -> let id
+ <return_stat> -> return <ret_val> EOL <func_stat_list>
+ <return_stat> -> EPSILON
+ <ret_val> -> <expression>
+ <ret_val> -> EPSILON
+ <stat_list> -> <statement> EOL <stat_list>
+ <stat_list> -> EPSILON // remove?
+ <statement> -> <function> EOL <stat_list>
+ <statement> -> <var_definition> <var_assignment> 
+ <statement> -> id = <expression>
+ <statement> -> <expression> 
+ <statement> -> if <condition> { <stat_list> } else { <stat_list> }
+ <statement> -> while <expression> { <stat_list> }
+ <statement> -> EPSILON
+ <input_param_list> -> EPSILON
+ <input_param_list> -> <input_param> <input_param_next>
+ <input_param_next> -> , <input_param> <input_param_next>
+ <input_param_next> -> EPSILON
+ <input_param> -> const
+ <input_param> -> id <with_name>
+ <with_name> -> EPSILON 
+ <with_name> -> : <id_or_const>
+ <id_or_const> -> id
+ <id_or_const> -> const
+ <expression> -> id
+ <expression> -> const
+ <expression> -> ( <expression> )
+ <expression> -> <expression> arithm_op <expression>
+ <expression> -> <expression> ?? <expression>
+ <expression> -> <expression>!  (force unwrap)
+ <expression> -> <expression> rel_op <expression>   (not 100% correct)
+something like this instead:
+<expression> -> <not_rel_expression> rel_op <not_rel_expression> 
+ <type> -> Int
+ <type> -> Int?
+ <type> -> Double
+ <type> -> Double?
+ <type> -> String
+ <type> -> String?

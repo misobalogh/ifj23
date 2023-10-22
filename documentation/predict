@@ -1,4 +1,3 @@
-EMPTY(EPSILON) = {EPSILON} ...
 EMPTY(return_type) 
 EMPTY(func_stat_list) 
 EMPTY(func_stat) 
@@ -36,35 +35,36 @@ FOLLOW(input_param)     = { "," , id, const }
 FOLLOW(with_name)       = { "," , id, const }
 FOLLOW(id_or_const)     = { "," , id, const }
 
-
-FIRST(param)          = {id}
-FIRST(param_list)     = {id}
-FIRST(input_param)    = {id, const}
-FIRST(id_or_const)    = {id, const}
+FIRST(program)        = {func,   let, var, id, if, while, EOL, EOF }
 FIRST(function)       = {func}
-FIRST(return_type)    = {->}
-FIRST(return_stat)    = {return}
+FIRST(param_list)     = {id}
+FIRST(param)          = {id}
 FIRST(param_next)     = {","}
+FIRST(return_type)    = {->}
+FIRST(func_stat_list) = {return, let, var, id, if, while, EOL }
+FIRST(func_stat)      = {return, let, var, id, if, while }
+FIRST(let_or_var)     = {let, var}
+FIRST(id_or_const)    = {id, const}
+FIRST(expression)     = {id, const, "("}
+FIRST(input_param)    = {id, const}
+FIRST(return_stat)    = {return}
 FIRST(input_param_next) = {","}
 FIRST(with_name)      = {":"}
 FIRST(var_assigment)  = {"=", ":"}
 FIRST(val_assigment)  = {"="}
 FIRST(var_definition) = {let, var}
 FIRST(input_param_list) = {id, const}
-FIRST(statement)      = {func,   let, var, id, expression, if, while, EOL}
-FIRST(stat_list)      = {func,   let, var, id, expression, if, while, EOL}
-FIRST(program)        = {func,   let, var, id, expression, if, while, EOL, EOF}
-FIRST(func_stat)      = {return, let, var, id, expression, if, while, EOL}
-FIRST(func_stat_list) = {return, let, var, id, expression, if, while, EOL}
+FIRST(statement)      = {func,   let, var, id, if, while }
+FIRST(stat_list)      = {func,   let, var, id, if, while, EOL }
 FIRST(condition) = {expression, let}
 FIRST(ret_value) = {expression}
 
 
-PREDICT(1) = func, let, var, id, expression, if, while, EOL
+PREDICT(1) = func, let, var, id, if, while, EOL, EOF
 PREDICT(2) = func
 PREDICT(3) = ->
 PREDICT(4) = "{"
-PREDICT(5) = return, let, var, id, expression, if, while, EOL
+PREDICT(5) = return, let, var, id, expression, if, while
 PREDICT(6) = EOL, "}" 
 PREDICT(7) = return
 PREDICT(8) = let, var

@@ -127,7 +127,7 @@ bool rule_FUNC_STAT() {
     case token_ID:
         t = mock_recursive_nextToken();
         if (t->type == token_ASSIGN) {
-            return rule_EXPRESSION();
+            return t->type == token_EXPRESSION;
         }
         return false;
     case token_EXPRESSION:
@@ -160,7 +160,7 @@ bool rule_FUNC_STAT() {
         }
         return false;
     case token_WHILE:
-        if (rule_EXPRESSION()) {
+        if (t->type == token_EXPRESSION) {
             t = mock_recursive_nextToken();
             if (t->type == token_PARENTHESES_L) {
                 t = mock_recursive_nextToken();
@@ -297,8 +297,8 @@ bool rule_STAT_LIST() {
 
 bool rule_STATEMENT() {
     switch (t->type) {
-        // <statement> -> <function> EOL <stat_list>    
-    case token_FUNC:
+
+    case token_FUNC: // <statement> -> <function> EOL <stat_list>    
         if (rule_FUNCTION()) {
             t = mock_recursive_nextToken();
             if (t->type == token_EOL) {
@@ -307,23 +307,23 @@ bool rule_STATEMENT() {
             }
         }
         return false;
-        // <statement> -> <var_definition> <var_assigment>
-    case token_LET:
+
+    case token_LET: // <statement> -> <var_definition> <var_assigment>
     case token_VAR:
         return rule_VAR_DEFINITION() && rule_VAR_ASSIGNMENT();
-        //  <statement> -> id = <expression>
-    case token_ID:
+
+    case token_ID: //  <statement> -> id = <expression>
         t = mock_recursive_nextToken();
         if (t->type == token_ASSIGN) {
-            return rule_EXPRESSION();
+            return t->type == token_EXPRESSION;
         }
         return false;
-        //  <statement> -> <expression> 
-    case token_EXPRESSION:
+
+    case token_EXPRESSION: //  <statement> -> <expression> 
         t = mock_recursive_nextToken();
         return true; // replace with switching to precedence parser
-        // <statement> -> if <condition> { <stat_list> } else { <stat_list> }
-    case token_IF:
+
+    case token_IF: // <statement> -> if <condition> { <stat_list> } else { <stat_list> }
         t = mock_recursive_nextToken();
         if (rule_CONDITION()) {
             t = mock_recursive_nextToken();
@@ -349,9 +349,9 @@ bool rule_STATEMENT() {
             }
         }
         return false;
-        // <statement> -> while <expression> { <stat_list> }
-    case token_WHILE:
-        if (rule_EXPRESSION()) {
+
+    case token_WHILE: // <statement> -> while <expression> { <stat_list> }
+        if (t->type == token_EXPRESSION) {
             t = mock_recursive_nextToken();
             if (t->type == token_PARENTHESES_L) {
                 t = mock_recursive_nextToken();
@@ -362,9 +362,10 @@ bool rule_STATEMENT() {
             }
         }
         return false;
-        // <statement> -> EOL
-    case token_EOL:
+
+    case token_EOL: // <statement> -> EOL
         return true;
+        
     default:
         return false;
     }
@@ -488,12 +489,12 @@ bool rule_WITH_NAME() {
 
 bool rule_ID_OR_CONST() {
     // <id_or_const> -> id
-    if(t->type == token_ID) {
+    if (t->type == token_ID) {
         t = mock_recursive_nextToken();
         return true;
     }
     // <id_or_const> -> const
-    else if(t->type == token_CONST) {
+    else if (t->type == token_CONST) {
         t = mock_recursive_nextToken();
         return true;
     }

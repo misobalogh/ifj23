@@ -8,6 +8,7 @@
 - [ ] Built-in functions
 - [ ] is 2+2 valid statement?
 - [ ] add negative numbers to expression parser (1-(-2))
+- [ ] add rule for optional EOL - it **can be** nearly anywhere, but it **has to be** after certain statements (there can also be tab, space...)
 
 
 # Notes
