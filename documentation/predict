@@ -1,17 +1,3 @@
-EMPTY(return_type) 
-EMPTY(func_stat_list) 
-EMPTY(func_stat) 
-EMPTY(return_stat) 
-EMPTY(ret_value) 
-EMPTY(param_list) 
-EMPTY(param_next) 
-EMPTY(stat_list) 
-EMPTY(statement) 
-EMPTY(val_assigment) 
-EMPTY(input_param_list) 
-EMPTY(input_param_next) 
-EMPTY(with_name) 
-
 
 FOLLOW(return_type)     = { "{" }
 FOLLOW(type)            = { "{" }
@@ -31,83 +17,144 @@ FOLLOW(var_definition)  = { ":", "=" }
 FOLLOW(param_list)      = { ")" }
 FOLLOW(param_next)      = { ")" }
 FOLLOW(param)           = { ")", "," }
-FOLLOW(input_param)     = { "," , id, const }
 FOLLOW(with_name)       = { "," , id, const }
 FOLLOW(id_or_const)     = { "," , id, const }
+FOLLOW(input_param)     = { "," , id, const }
+FOLLOW(input_param_list)= { ")" }
+FOLLOW(input_param_next)= { ")" }
 
-FIRST(program)        = {func,   let, var, id, if, while, EOL, EOF }
-FIRST(function)       = {func}
-FIRST(param_list)     = {id}
-FIRST(param)          = {id}
-FIRST(param_next)     = {","}
+
+
+EMPTY(return_type) 
+EMPTY(func_stat_list) 
+EMPTY(func_stat) 
+EMPTY(return_stat) 
+EMPTY(ret_value) 
+EMPTY(param_list) 
+EMPTY(param_next) 
+EMPTY(stat_list) 
+EMPTY(statement) 
+EMPTY(val_assigment) 
+EMPTY(input_param_list) 
+EMPTY(input_param_next) 
+EMPTY(with_name) 
+
+
+FIRST(program)        = { let, var, id, func, if, while, EOL, EOF }
+FIRST(stat_list)      = { let, var, id, func, if, while, EOL }
+FIRST(statement)      = { let, var, id, func, if, while }
+FIRST(let_or_var)     = { let, var}
+FIRST(var_assigment)  = { "=", ":"}
+FIRST(val_assigment)  = { "="}
+FIRST(fn_or_exp)      = { Operator, "(" } // SECOND(expression)
+FIRST(after_id)       = { "=", "(" }
+FIRST(input_param_list) = { id, const }
+FIRST(input_param_next) = { ","}
+FIRST(input_param)    = { id, const }
+FIRST(with_name)      = { ":" }
+FIRST(id_or_const)    = { id, const }
+FIRST(param_list)     = { id }
+FIRST(param)          = { id }
+FIRST(param_next)     = { "," }
 FIRST(return_type)    = {->}
-FIRST(func_stat_list) = {return, let, var, id, if, while, EOL }
-FIRST(func_stat)      = {return, let, var, id, if, while }
-FIRST(let_or_var)     = {let, var}
-FIRST(id_or_const)    = {id, const}
-FIRST(expression)     = {id, const, "("}
-FIRST(input_param)    = {id, const}
-FIRST(return_stat)    = {return}
-FIRST(input_param_next) = {","}
-FIRST(with_name)      = {":"}
-FIRST(var_assigment)  = {"=", ":"}
-FIRST(val_assigment)  = {"="}
-FIRST(var_definition) = {let, var}
-FIRST(input_param_list) = {id, const}
-FIRST(statement)      = {func,   let, var, id, if, while }
-FIRST(stat_list)      = {func,   let, var, id, if, while, EOL }
-FIRST(condition) = {expression, let}
-FIRST(ret_value) = {expression}
+FIRST(func_stat_list) = { let, var, id, return, if, while, EOL }
+FIRST(func_stat)      = { let, var, id, return, if, while }
+FIRST(return_stat)    = { return }
+FIRST(ret_value)      = { id, const, "(" }
+FIRST(condition)      = { id, const, "(", let}
+FIRST(expression)     = { id, const, "("}
 
+program
+PREDICT(1) = let, var, id, func, if, while, EOL, EOF
 
-PREDICT(1) = func, let, var, id, if, while, EOL, EOF
-PREDICT(2) = func
-PREDICT(3) = ->
-PREDICT(4) = "{"
-PREDICT(5) = return, let, var, id, expression, if, while
-PREDICT(6) = EOL, "}" 
-PREDICT(7) = return
-PREDICT(8) = let, var
-PREDICT(9) = id
-PREDICT(10) = expression
-PREDICT(11) = if
-PREDICT(12) = while
-PREDICT(13) = EOL
-PREDICT(14) = EOL
-PREDICT(15) = expression
-PREDICT(16) = let
-PREDICT(17) = return
-PREDICT(18) = EOL
-PREDICT(19) = expression
-PREDICT(20) = EOL
+stat_list
+PREDICT(2) = let, var, id, func, if, while
+PREDICT(3) = EOL, "}", EOF
+
+statement
+PREDICT(4) = let, var
+PREDICT(5) = id
+PREDICT(6) = func
+PREDICT(7) = if
+PREDICT(8) = while
+PREDICT(9) = EOL
+
+let_or_var
+PREDICT(10) = let
+PREDICT(11) = var
+
+var_assigment
+PREDICT(12) = ":"
+PREDICT(13) = "="
+
+val_assigment
+PREDICT(14) = "="
+PREDICT(15) = EOL
+
+fn_or_exp
+PREDICT(16) = Operator
+PREDICT(17) = "("
+
+after_id
+PREDICT(18) = "="
+PREDICT(19) = "("
+
+input_param_list
+PREDICT(20) = id, const
 PREDICT(21) = ")"
-PREDICT(22) = id
-PREDICT(23) = ","
-PREDICT(24) = ")"
-PREDICT(25) = id
-PREDICT(26) = func, let, var, id, expression, if, while, EOL
-PREDICT(27) = EOL, "}", EOF
-PREDICT(28) = func
-PREDICT(29) = let, var
+
+input_param_next
+PREDICT(22) = ","
+PREDICT(23) = ")"
+
+input_param
+PREDICT(24) = id
+PREDICT(25) = const
+
+with_name
+PREDICT(26) = ":"
+PREDICT(27) = "," , id, const
+
+id_or_const
+PREDICT(28) = id
+PREDICT(29) = const
+
+param_list
 PREDICT(30) = id
-PREDICT(31) = expression
-PREDICT(32) = if
-PREDICT(33) = while
-PREDICT(34) = EOL
-PREDICT(35) = EOL
-PREDICT(36) = let
-PREDICT(37) = var
-PREDICT(38) = ":"
-PREDICT(39) = "="
-PREDICT(40) = "="
-PREDICT(41) = EOL
-PREDICT(42) = ")"
-PREDICT(43) = id, const
-PREDICT(44) = ","
+PREDICT(31) = ")"
+
+param
+PREDICT(32) = id
+
+param_next
+PREDICT(33) = ","
+PREDICT(34) = ")"
+
+return_type
+PREDICT(35) = "->"
+PREDICT(36) = "{" 
+
+func_stat_list
+PREDICT(37) = let, var, id, return, if, while
+PREDICT(38) = EOL, "}"
+
+func_stat
+PREDICT(39) = let, var
+PREDICT(40) = id
+PREDICT(41) = return
+PREDICT(42) = if
+PREDICT(43) = while
+PREDICT(44) = EOL
+
+return_stat
 PREDICT(45) = ")"
-PREDICT(46) = const
-PREDICT(47) = id
-PREDICT(48) = "," , id, const
-PREDICT(49) = ":"
-PREDICT(50) = id
-PREDICT(51) = const
+PREDICT(46) = EOL
+
+ret_val
+PREDICT(47) = id, const, "("
+PREDICT(48) = EOL
+
+condition
+PREDICT(49) = id, const, "("
+PREDICT(50) = let
+

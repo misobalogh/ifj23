@@ -39,6 +39,7 @@
  * @param token_ID identifier
  */
 typedef enum {
+    token_OP_START = 0,
     token_PLUS_MINUS = 0,
     token_PLUS = 0,
     token_MINUS = 0,
@@ -54,6 +55,7 @@ typedef enum {
     token_MORE = 4,
     token_LESS_EQ = 4,
     token_MORE_EQ = 4,
+    token_OP_END = 4,
     token_PARENTHESES_L = 5,
     token_PARENTHESES_R = 6,
     token_ID = 7,

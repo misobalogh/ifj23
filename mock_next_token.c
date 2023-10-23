@@ -69,7 +69,15 @@ tokenStruct* mock_precedence_nextToken() {
 
 tokenStruct* mock_recursive_nextToken() {
     static tokenStruct tokensRec[] = {
-        
+        {token_LET, "let"},
+        {token_ID, "a"},
+        {token_ASSIGN, "="},
+        {token_ID, "10"},
+        {token_EOL, "EOL"},
+        {token_EOF, "EOF"},
+        {token_EOL, "EOL"},
+        {token_EOF, "EOF"},
+
         // VARIALBE DECLARATION
         {token_LET, "let"},
         {token_ID, "a"},

@@ -9,8 +9,8 @@
 4. <statement> -> <let_or_var> <var_assignment>
 5. <statement> -> id <after_id>
 6. <statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> } 
-7. <statement> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
-8. <statement> -> while <expression> { <func_stat_list> }
+7. <statement> -> if <condition> { <stat_list> } else { <stat_list> }
+8. <statement> -> while <expression> { <stat_list> }
 9. <statement> -> EPSILON
 ```
 ```
@@ -36,6 +36,8 @@
 ```
 20. <input_param_list> -> <input_param> <input_param_next>
 21. <input_param_list> -> EPSILON
+```
+```
 22. <input_param_next> -> , <input_param> <input_param_next>
 23. <input_param_next> -> EPSILON
 ```
@@ -57,6 +59,8 @@
 ```
 ```
 32. <param> -> id id : <type>
+```
+```
 33. <param_next> -> , <param> <param_next>
 34. <param_next> -> EPSILON
 ```
@@ -109,8 +113,6 @@
 64. <not_rel_exp> -> <not_rel_exp> ?? <not_rel_exp>
 65. <not_rel_exp> -> <not_rel_exp>!  (force unwrap)
 ```
-
-
 
 ```
 60. //?
