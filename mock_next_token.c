@@ -69,12 +69,27 @@ tokenStruct* mock_precedence_nextToken() {
 
 tokenStruct* mock_recursive_nextToken() {
     static tokenStruct tokensRec[] = {
+        // EXPRESSION ASSIGNMENT
         {token_LET, "let"},
         {token_ID, "a"},
         {token_ASSIGN, "="},
+        {token_ID, "1220"},
+        {token_PLUS, "+"},
         {token_ID, "10"},
         {token_EOL, "EOL"},
+        {token_EOL, "EOL"},
         {token_EOF, "EOF"},
+
+        // FUNCTION DEFINITION
+        {token_FUNC, "func"},
+        {token_ID, "id"}, 
+        {token_PARENTHESES_L, "("}, 
+        {token_PARENTHESES_R, ")"},
+        {token_ARROW, "->"},
+        {token_TYPE, "Int"},
+        {token_BRACKET_L, "{"},
+        {token_EOL, "func_stat_list"},
+        {token_BRACKET_R, "}"},
         {token_EOL, "EOL"},
         {token_EOF, "EOF"},
 
@@ -82,31 +97,21 @@ tokenStruct* mock_recursive_nextToken() {
         {token_LET, "let"},
         {token_ID, "a"},
         {token_ASSIGN, "="},
-        {token_EXPRESSION, "10"},
+        {token_ID, "10"},
         {token_EOL, "\n"},
-        {token_EOF, "EOF"},
-
-        // FUNCTION 
-        {token_FUNC, "func"},
-        {token_ID, "id"}, 
-        {token_PARENTHESES_L, "("}, 
-        {token_DOLLAR, "param_list"},
-        {token_PARENTHESES_R, ")"},
-        {token_ARROW, "->"},
-        {token_TYPE, "Int"},
-        {token_BRACKET_L, "{"},
-        {token_DOLLAR, "func_stat_list"},
-        {token_BRACKET_R, "}"},
-        
+        {token_EOF, "EOF"},      
+                
         // VOID FUNCTION
         {token_FUNC, "func"},
         {token_ID, "id"}, 
         {token_PARENTHESES_L, "("}, 
-        {token_DOLLAR, "param_list"},
+        {token_EOL, "param_list"},
         {token_PARENTHESES_R, ")"},
         {token_BRACKET_L, "{"},
-        {token_DOLLAR, "func_stat_list"},
+        {token_EOL, "func_stat_list"},
         {token_BRACKET_R, "}"},
+        {token_EOL, "EOL"},
+        {token_EOF, "EOF"},
     };
     static int mock_j = 0;
     return &tokensRec[mock_j++];

@@ -15,15 +15,9 @@
 #include "synt_recur_rules.h"
 
 
-// #define token_is t->type == 
-
-tokenStruct* t;
-
-
 bool rule_EXPRESSION() {
-    RLOG("<expression>\n");
-    // TODO: return token back to scaner from stash, switch to precedence parser
-    return true;
+    RLOG("<expression> => switching to precedence parser\n");
+    return precedenceParser();
 }
 
 bool rule_PROGRAM() {
@@ -101,7 +95,6 @@ bool rule_STATEMENT() {
         if (!rule_PARAM_LIST()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_PARENTHESES_R) {
             return false;
         }
@@ -109,7 +102,6 @@ bool rule_STATEMENT() {
         if (!rule_RETURN_TYPE()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_L) {
             return false;
         }
@@ -117,10 +109,10 @@ bool rule_STATEMENT() {
         if (!rule_FUNC_STAT_LIST()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_R) {
             return false;
         }
+        t = mock_recursive_nextToken();
         return true;
     case token_IF:
         RLOG("<statement> -> if <condition> { <stat_list> } else { <stat_list> }\n");
@@ -160,6 +152,7 @@ bool rule_STATEMENT() {
     case token_WHILE:
         RLOG("<statement> -> while <expression> { <stat_list> }\n");
         t = mock_recursive_nextToken();
+        stash = t;
         if (!rule_EXPRESSION()) {
             return false;
         }
@@ -175,7 +168,6 @@ bool rule_STATEMENT() {
         if (t->type != token_BRACKET_R) {
             return false;
         }
-        RLOG("AOKAS");
         return true;
     case token_EOL:
         RLOG("<statement> -> EPSILON\n");
@@ -220,6 +212,7 @@ bool rule_VAR_ASSIGNMENT() {
         RLOG("<var_assignment> -> = id <fn_or_exp>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
+            stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
         }
@@ -233,6 +226,7 @@ bool rule_VAL_ASSIGNMENT() {
         RLOG("<val_assignment> -> = id <fn_or_exp>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
+            stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
         }
@@ -246,9 +240,12 @@ bool rule_VAL_ASSIGNMENT() {
 }
 
 bool rule_FN_OR_EXP() {
+    // <fn_or_exp> -> EOL
+    if (t->type == token_EOL) {
+        return true;
+    }
     // <fn_or_exp> -> <expression> 
-    if ((t->type >= token_OP_START && t->type <= token_OP_END)
-    || t->type == token_EOL) { // TODO: is it correct for every case?
+    if ((t->type >= token_OP_START && t->type <= token_OP_END)) { // TODO: is it correct for every case?
         RLOG("<fn_or_exp> -> <expression>\n");
         return rule_EXPRESSION();
     }
@@ -275,7 +272,7 @@ bool rule_AFTER_ID() {
         RLOG("<after_id> -> = id <fn_or_exp>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
-            //TODO: store token in stash
+            stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
         }
@@ -455,7 +452,8 @@ bool rule_FUNC_STAT_LIST() {
         }
     }
     // <func_stat_list> -> EPSILON    
-    else if (t->type == token_BRACKET_R) {
+    if (t->type == token_BRACKET_R) {
+        RLOG("<func_stat_list> -> EPSILON\n");
         return true;
     }
     return false;
@@ -513,6 +511,7 @@ bool rule_FUNC_STAT() {
     case token_WHILE:
         RLOG("<func_stat> -> while <expression> { <stat_list> }\n");
         t = mock_recursive_nextToken();
+        stash = t;
         if (!rule_EXPRESSION()) {
             return false;
         }

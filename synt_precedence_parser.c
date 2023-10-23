@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 14.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -25,9 +25,9 @@
  * Called when ">" sign is in precedence table.
  * It gets top three items from stack and calls rule function, and then chooses,
  * which rule should be applied, according to types of items.
- * 
+ *
  * @param s Pointer to stack.
- * 
+ *
  * @return True if rule was applied, false otherwise if rule does not exist
 */
 bool reduce(stack* s) {
@@ -56,8 +56,8 @@ bool reduce(stack* s) {
         rule_ID_CONCAT_ID(s);
     }
     else if (
-        first->type == token_PARENTHESES_R && 
-        second->type == token_NONTERMINAL && 
+        first->type == token_PARENTHESES_R &&
+        second->type == token_NONTERMINAL &&
         third->type == token_PARENTHESES_L) {
         PLOG("rule (E)\n");
         rule_PAR_ID_PAR(s);
@@ -84,6 +84,7 @@ bool reduce(stack* s) {
 }
 
 
+
 bool precedenceParser() {
     // prepare stack
     stack s;
@@ -91,23 +92,41 @@ bool precedenceParser() {
     stackPush(&s, token_DOLLAR);
 
     // debug
-    PLOG("INIT: "); 
+    PLOG("INIT: ");
     stackPrint(&s);
-
-    tokenStruct* t = mock_precedence_nextToken();
-    while (!(t->type == token_DOLLAR && stackTopTerminal(&s)->type == token_DOLLAR)) {
-        switch (precedenceTable[stackTopTerminal(&s)->type][t->type])
+    tokenStruct* temp = t;
+    if (stash != NULL) {
+        t = stash;
+    }
+    while (!((t->type == token_EOL || t->type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
+        tokenType tType = t->type;
+        if(t->type == token_EOL || t->type == token_BRACKET_L) {
+            tType = token_DOLLAR;
+        }
+        switch (precedenceTable[stackTopTerminal(&s)->type][tType])
         {
         case EQUAL: // "="
             PLOG("EQUAL: ");
             stackPrint(&s);
             stackPush(&s, t->type);
-            t = mock_precedence_nextToken();
+            if (stash != NULL) {
+                t = temp;
+                stash = NULL;
+            }
+            else {
+                t = mock_recursive_nextToken();
+            }
             break;
         case LOW: // expand  "<"
             stackPush(&s, t->type);
             stackTopTerminalSetFlag(&s);
-            t = mock_precedence_nextToken();
+            if (stash != NULL) {
+                t = temp;
+                stash = NULL;
+            }
+            else {
+                t = mock_recursive_nextToken();
+            }
             PLOG("LOW: ");
             stackPrint(&s);
             break;
@@ -130,6 +149,8 @@ bool precedenceParser() {
             //     break;
         }
     }
+    stackPrint(&s);
+    PLOG("END: ");
     stackFreeItems(&s);
     return true;
 }

@@ -21,9 +21,25 @@
 bool syntacticAnalysis();
 
 
-// Two methods - one for expressions, second for others
+/**
+ * @brief Stash for token for expression parser 
+ * when switching from recursive parser when deciding,
+ * whether it is expression or function call
+ */
+tokenStruct *stash; 
 
+
+/**
+ * @brief Most recent token from scanner
+ */
+tokenStruct* t;     
+
+// Two methods - one for expressions, second for everything else
+
+// Expression parser
 bool precedenceParser();
+
+// Recursive descent parser
 bool recursiveParser();
 
 /**
