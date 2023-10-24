@@ -69,6 +69,43 @@ tokenStruct* mock_precedence_nextToken() {
 
 tokenStruct* mock_recursive_nextToken() {
     static tokenStruct tokensRec[] = {
+                
+        // <statement> -> if <condition> { <stat_list> } else { <stat_list> }
+        {token_IF, "if"},
+        {token_PARENTHESES_L, "("},
+        {token_ID, "b"},
+        {token_EQ, "=="},
+        {token_PARENTHESES_L, "("},
+        {token_CONST, "10"},
+        {token_NEQ, "!="},
+        {token_CONST, "20"},
+        {token_PARENTHESES_R, ")"},
+        {token_PARENTHESES_R, ")"},
+        {token_BRACKET_L, "{"},
+        {token_EOL, "stat_list"},
+        {token_BRACKET_R, "}"},
+        {token_ELSE, "else"},
+        {token_BRACKET_L, "{"},
+        {token_EOL, "stat_list"},
+        {token_BRACKET_R, "}"},
+        {token_EOL, "EOL"},
+        {token_EOF, "EOF"},
+
+        // <statement> -> while <condition> { <stat_list> }
+        {token_WHILE, "while"},
+        {token_PARENTHESES_L, "("},
+        {token_ID, "a"},
+        {token_PLUS, "+"},
+        {token_ID, "b"},
+        {token_PARENTHESES_R, ")"},
+        {token_BRACKET_L, "{"},
+        {token_EOL, "stat_list"},
+        {token_BRACKET_R, "}"},
+        {token_EOL, "EOL"},
+        {token_EOF, "EOF"},
+        
+
+
         // EXPRESSION ASSIGNMENT
         {token_LET, "let"},
         {token_ID, "a"},

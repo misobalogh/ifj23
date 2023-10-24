@@ -15,6 +15,19 @@
 #include "synt_recur_rules.h"
 
 
+/**
+ * @brief Stash for token for expression parser
+ * when switching from recursive parser when deciding,
+ * whether it is expression or function call
+ */
+tokenStruct* stash;
+
+
+/**
+ * @brief Most recent token from scanner
+ */
+tokenStruct* t;
+
 bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
     return precedenceParser();
@@ -47,9 +60,8 @@ bool rule_STAT_LIST() {
         t->type == token_IF ||
         t->type == token_WHILE ||
         t->type == token_ID ||
-        t->type == token_FUNC || t->type == token_EOL
-
-        ) {
+        t->type == token_FUNC ||
+        t->type == token_EOL) {
         RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
         if (rule_STATEMENT()) {
             if (t->type == token_EOL) {
@@ -58,14 +70,36 @@ bool rule_STAT_LIST() {
             }
         }
     }
-    else if (t->type == token_BRACKET_R) {
-        RLOG("<stat_list> -> EPSILON\n");
-        return true;
-    }
     // 3. <stat_list> -> EPSILON
     else if (t->type == token_EOF) {
         t = mock_recursive_nextToken();
         RLOG("<stat_list> -> EPSILON\n");
+        return true;
+    }
+    return false;
+}
+
+
+bool rule_BRACK_STAT_LIST() {
+    // 2. <brack_stat_list> -> <brack_statement> EOL <between_brackets>
+    if (t->type == token_LET ||
+        t->type == token_VAR ||
+        t->type == token_IF ||
+        t->type == token_WHILE ||
+        t->type == token_ID ||
+        t->type == token_FUNC || t->type == token_EOL
+
+        ) {
+        RLOG("<brack_stat_list> -> <statement> EOL <brack_stat_list>\n");
+        if (rule_STATEMENT()) {
+            if (t->type == token_EOL) {
+                t = mock_recursive_nextToken();
+                return rule_BRACK_STAT_LIST();
+            }
+        }
+    }
+    if (t->type == token_BRACKET_R) {
+        RLOG("<brack_stat_list> -> EPSILON\n");
         return true;
     }
     return false;
@@ -120,15 +154,13 @@ bool rule_STATEMENT() {
         if (!rule_CONDITION()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_L) {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_STAT_LIST()) {
+        if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_R) {
             return false;
         }
@@ -141,33 +173,31 @@ bool rule_STATEMENT() {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_STAT_LIST()) {
+        if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_R) {
             return false;
         }
+        t = mock_recursive_nextToken();
         return true;
     case token_WHILE:
-        RLOG("<statement> -> while <expression> { <stat_list> }\n");
+        RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         t = mock_recursive_nextToken();
-        stash = t;
         if (!rule_EXPRESSION()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_L) {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_STAT_LIST()) {
+        if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_BRACKET_R) {
             return false;
         }
+        t = mock_recursive_nextToken();
         return true;
     case token_EOL:
         RLOG("<statement> -> EPSILON\n");
@@ -439,8 +469,7 @@ bool rule_FUNC_STAT_LIST() {
         t->type == token_IF ||
         t->type == token_WHILE ||
         t->type == token_ID ||
-        t->type == token_RETURN ||
-        t->type == token_EXPRESSION) {
+        t->type == token_RETURN) {
         RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
         if (rule_FUNC_STAT()) {
             t = mock_recursive_nextToken();
@@ -484,7 +513,7 @@ bool rule_FUNC_STAT() {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_STAT_LIST()) {
+        if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = mock_recursive_nextToken();
@@ -500,7 +529,7 @@ bool rule_FUNC_STAT() {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_STAT_LIST()) {
+        if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = mock_recursive_nextToken();
@@ -520,7 +549,7 @@ bool rule_FUNC_STAT() {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_STAT_LIST()) {
+        if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = mock_recursive_nextToken();
@@ -560,10 +589,9 @@ bool rule_RETURN_STAT() {
 
 bool rule_RET_VAL() {
     // <ret_val> -> <expression>
-    if (t->type == token_EXPRESSION) {
+    if (t->type == token_ID || t->type == token_PARENTHESES_L || t->type == token_CONST ) {
         RLOG("<ret_val> -> <expression>\n");
-        t = mock_recursive_nextToken();
-        return true;
+        return rule_EXPRESSION();
     }
     // <ret_value> -> EPSILON
     else if (t->type == token_EOL) {
@@ -575,10 +603,9 @@ bool rule_RET_VAL() {
 
 bool rule_CONDITION() {
     //<condition> -> <expression>
-    if (t->type == token_EXPRESSION) {
+    if (t->type == token_ID || t->type == token_PARENTHESES_L || t->type == token_CONST ) {
         RLOG("<condition> -> <expression>\n");
-        t = mock_recursive_nextToken();
-        return true;
+        return rule_EXPRESSION();
     }
     // <condtion> -> let id
     if (t->type == token_LET) {

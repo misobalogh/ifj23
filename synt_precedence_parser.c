@@ -100,8 +100,19 @@ bool precedenceParser() {
     }
     while (!((t->type == token_EOL || t->type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
         tokenType tType = t->type;
+        // treat EOL and BRACKET_L as DOLLAR
         if(t->type == token_EOL || t->type == token_BRACKET_L) {
             tType = token_DOLLAR;
+        }
+        // treat CONST as ID
+        else if(t->type == token_CONST) {
+            // TODO: Might cause issues in semantic analysis
+            t->type = token_ID;
+            tType = token_ID;
+        }
+        // invalid token handling
+        else if(t->type < token_OP_START || t->type > token_TERMINAL) {
+            return false;
         }
         switch (precedenceTable[stackTopTerminal(&s)->type][tType])
         {
@@ -147,6 +158,8 @@ bool precedenceParser() {
             return false;
             // default:
             //     break;
+        default:
+            return false;
         }
     }
     stackPrint(&s);

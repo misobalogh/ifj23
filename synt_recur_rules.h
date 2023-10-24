@@ -4,7 +4,6 @@
 #include "token_types.h"
 
 bool rule_PROGRAM();
-bool rule_FUNCTION();
 bool rule_RETURN_TYPE();
 bool rule_FUNC_STAT_LIST();
 bool rule_FUNC_STAT();
@@ -17,7 +16,6 @@ bool rule_PARAM();
 bool rule_STAT_LIST();
 bool rule_STATEMENT();
 bool rule_VAR_ASSIGNMENT();
-bool rule_VAR_DEFINITION();
 bool rule_VAL_ASSIGNMENT();
 bool rule_INPUT_PARAM_LIST();
 bool rule_INPUT_PARAM_NEXT();
@@ -28,10 +26,6 @@ bool rule_LET_OR_VAR();
 bool rule_EXPRESSION();
 bool rule_AFTER_ID();
 bool rule_FN_OR_EXP();
+bool rule_BRACK_STAT_LIST();
 
-
-
-
-// switch to precedence parser
-bool rule_EXPRESSION();
 

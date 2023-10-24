@@ -59,6 +59,7 @@ typedef enum {
     token_PARENTHESES_L = 5,
     token_PARENTHESES_R = 6,
     token_ID = 7,
+    token_ID_OR_CONST = 7,
     token_DOLLAR = 8,
     // ...
     token_TERMINAL = 9,

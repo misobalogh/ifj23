@@ -26,13 +26,13 @@ bool syntacticAnalysis();
  * when switching from recursive parser when deciding,
  * whether it is expression or function call
  */
-tokenStruct *stash; 
+extern tokenStruct *stash; 
 
 
 /**
  * @brief Most recent token from scanner
  */
-tokenStruct* t;     
+extern tokenStruct* t;     
 
 // Two methods - one for expressions, second for everything else
 
