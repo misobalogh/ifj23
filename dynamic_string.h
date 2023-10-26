@@ -1,3 +1,8 @@
+/*
+ * Implementace překladače imperativního jazyka IFJ23
+ * Michal Cenek xcenek04
+ */
+
 #ifndef DYNAMIC_STRING_H
 #define DYNAMIC_STRING_H
 

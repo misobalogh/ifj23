@@ -1,3 +1,8 @@
+/*
+ * Implementace překladače imperativního jazyka IFJ23
+ * Michal Cenek xcenek04
+ */
+
 #include "dynamic_string.h"
 
 #include <string.h>
@@ -55,3 +60,4 @@ void stringFree(String* string) {
   string->size = 0;
   string->capacity = 0;
 }
+
