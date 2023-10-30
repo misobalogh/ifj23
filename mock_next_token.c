@@ -73,10 +73,13 @@ tokenStruct* mock_recursive_nextToken() {
         // EXPRESSION ASSIGNMENT
         {token_LET, "let"},
         {token_ID, "a"},
+        {token_COLON, ":"},
+        {token_TYPE, "Int"},
         {token_ASSIGN, "="},
         {token_CONST, "const"},
         {token_EOL, "EOL"},
         {token_EOF, "EOF"},
+        {token_ID, "a"},
         {token_PARENTHESES_L, "("},
         {token_ID, "a"},
         {token_PARENTHESES_R, ")"},

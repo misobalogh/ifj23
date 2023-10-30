@@ -234,6 +234,7 @@ bool rule_VAR_ASSIGNMENT() {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_TYPE) {
+            t = mock_recursive_nextToken();
             return rule_VAL_ASSIGNMENT();
         }
     }
@@ -263,6 +264,10 @@ bool rule_VAL_ASSIGNMENT() {
             stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
+        }
+        else if (t->type == token_CONST) {
+        RLOG("<val_assignment> -> = const <expression>\n");
+            return rule_EXPRESSION();
         }
     }
     // <val_assigment> -> EPSILON
