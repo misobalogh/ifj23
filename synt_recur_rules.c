@@ -248,17 +248,22 @@ bool rule_VAR_ASSIGNMENT() {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_TYPE) {
+            t = mock_recursive_nextToken();
             return rule_VAL_ASSIGNMENT();
         }
     }
     // <var_assigment> -> = id <fn_or_exp>
     else if (t->type == token_ASSIGN) {
-        RLOG("<var_assignment> -> = id <fn_or_exp>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
+        RLOG("<var_assignment> -> = id <fn_or_exp>\n");
             stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
+        }
+        else if (t->type == token_CONST) {
+        RLOG("<var_assignment> -> = const <expression>\n");
+            return rule_EXPRESSION();
         }
     }
     return false;
@@ -273,6 +278,10 @@ bool rule_VAL_ASSIGNMENT() {
             stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
+        }
+        else if (t->type == token_CONST) {
+        RLOG("<val_assignment> -> = const <expression>\n");
+            return rule_EXPRESSION();
         }
     }
     // <val_assigment> -> EPSILON
@@ -300,7 +309,6 @@ bool rule_FN_OR_EXP() {
         if (!rule_INPUT_PARAM_LIST()) {
             return false;
         }
-        t = mock_recursive_nextToken();
         if (t->type != token_PARENTHESES_R) {
             return false;
         }
@@ -346,10 +354,12 @@ bool rule_AFTER_ID() {
 bool rule_INPUT_PARAM_LIST() {
     // <input_param_list> -> EPSILON
     if (t->type == token_PARENTHESES_R) {
+        RLOG("<input_param_list> -> EPSILON\n");
         return true;
     }
     // <input_param_list> -> <input_param> <input_param_next>
     else if (t->type == token_ID || t->type == token_CONST) {
+        RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
     return false;
@@ -371,11 +381,13 @@ bool rule_INPUT_PARAM_NEXT() {
 bool rule_INPUT_PARAM() {
     // <input_param> -> const        
     if (t->type == token_CONST) {
+        RLOG("<input_param> -> const\n");
         t = mock_recursive_nextToken();
         return true;
     }
     // <input_param> -> id <with_name>
     else if (t->type == token_ID) {
+        RLOG("<input_param> -> id <with_name>\n");
         t = mock_recursive_nextToken();
         return rule_WITH_NAME();
     }
@@ -385,8 +397,7 @@ bool rule_INPUT_PARAM() {
 bool rule_WITH_NAME() {
     // <with_name> -> EPSILON 
     if (t->type == token_COMMA ||
-        t->type == token_ID ||
-        t->type == token_CONST) {
+        t->type == token_PARENTHESES_R) {
         RLOG("<with_name> -> EPSILON\n");
         return true;
     }

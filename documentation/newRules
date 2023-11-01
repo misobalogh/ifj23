@@ -17,12 +17,14 @@
 10. <let_or_var> -> let id
 11. <let_or_var> -> var id
 ```
-```
+```c
 12. <var_assignment> -> : type <val_assigment>
-13. <var_assignment> -> = id <fn_or_exp>
+13. <var_assignment> -> = id <fn_or_exp> // (if id == const -> expression), 
+// change id to id_or_const, and make new rule rest_of_assignment, in which we can have expression or function call if its id, or just expression if its const
 ```
-```
-14. <val_assignment> -> = id <fn_or_exp>
+```c
+14. <val_assignment> -> = id <fn_or_exp> 
+// (if id == const -> expression), same as above
 15. <val_assignment> -> EPSILON
 ```
 ```
