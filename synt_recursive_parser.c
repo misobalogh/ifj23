@@ -19,8 +19,13 @@
 #include "token_types.h"
 #include "macros.h"
 #include "synt_recur_rules.h"
+#include "semantic_analysis.h"
 
 bool recursiveParser() {
+    if (semanticAnalysisInit() != SUCCESS) {
+      return false;
+    }
+
     return rule_PROGRAM();
 }
 

@@ -41,7 +41,7 @@ bool stringConcat(String* a, const String* const b);
 /**
  * @brief Free all string allocated memory.
  *
- * @param string String whichs data memory should be freed
+ * @param string String to free
  */
 void stringFree(String* string);
 

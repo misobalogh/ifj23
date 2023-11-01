@@ -13,6 +13,8 @@
 #include "synt_analysis.h"
 #include "macros.h"
 #include "synt_recur_rules.h"
+#include "semantic_analysis.h"
+#include "generator.h"
 
 
 /**
@@ -121,6 +123,9 @@ bool rule_STATEMENT() {
         if (t->type != token_ID) {
             return false;
         }
+
+        char* key = t->value;
+
         t = mock_recursive_nextToken();
         if (t->type != token_PARENTHESES_L) {
             return false;
@@ -136,6 +141,14 @@ bool rule_STATEMENT() {
         if (!rule_RETURN_TYPE()) {
             return false;
         }
+
+        if (analyseFunction(key) != SUCCESS) {
+          return false;
+        }
+        if (!genFunction(key)) {
+          return false;
+        }
+
         if (t->type != token_BRACKET_L) {
             return false;
         }
@@ -147,6 +160,7 @@ bool rule_STATEMENT() {
             return false;
         }
         t = mock_recursive_nextToken();
+
         return true;
     case token_IF:
         RLOG("<statement> -> if <condition> { <stat_list> } else { <stat_list> }\n");
@@ -297,11 +311,16 @@ bool rule_FN_OR_EXP() {
 }
 
 bool rule_AFTER_ID() {
+    char* left = t->value;
+
     // <after_id> -> = id <fn_or_exp> 
     if (t->type == token_ASSIGN) {
         RLOG("<after_id> -> = id <fn_or_exp>\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
+            char* right = t->value;
+            analyseAssignment(left, right);
+
             stash = t;
             t = mock_recursive_nextToken();
             return rule_FN_OR_EXP();
@@ -428,19 +447,25 @@ bool rule_PARAM_NEXT() {
 bool rule_PARAM() {
     // <param> -> id id : <type>
     RLOG("<param> -> id id : <type>\n");
+
     if (t->type != token_ID) {
         return false;
     }
+    semStackPushToken(semStack, *t);
     t = mock_recursive_nextToken();
     if (t->type != token_ID) {
         return false;
     }
+    semStackPushToken(semStack, *t);
     t = mock_recursive_nextToken();
     if (t->type != token_COLON) {
         return false;
     }
+    semStackPushToken(semStack, *t);
     t = mock_recursive_nextToken();
+    semStackPushToken(semStack, *t);
     return t->type == token_TYPE;
+
 }
 
 bool rule_RETURN_TYPE() {
@@ -449,6 +474,8 @@ bool rule_RETURN_TYPE() {
         RLOG("<return_type> -> -> type\n");
         t = mock_recursive_nextToken();
         if (t->type == token_TYPE) {
+            semStackPushToken(semStack, *t);
+
             t = mock_recursive_nextToken();
             return true;
         }
