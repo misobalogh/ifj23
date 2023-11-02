@@ -27,39 +27,6 @@ error_codes semanticAnalysisInit(void) {
   return SUCCESS;
 }
 
-error_codes analyseFunction(const char* idname) {
-  symtableItem* item = symtableSearch(global_table, idname);
-
-  if (item != NULL) {
-    // redefinition
-    return SEMANTIC_ERR;
-  }
-
-  String typeString;
-  stringInit(&typeString, "f;");
-
-  int paramCount = 0;
-
-  while (!semStackIsEmpty(semStack)) {
-    SemStackElement* elem = semStackPopTop(semStack);
-
-    if (elem->value.valueType != SEM_STACK_TOKEN) {
-      return INTERNAL_ERROR;
-    }
-
-    paramCount++;
-
-    stringConcatCStr(&typeString, elem->value.key);
-    stringConcatChar(&typeString, ';');
-  }
-
-  symtableInsert(global_table, idname, stringCStr(&typeString), paramCount);
-
-  stringFree(&typeString);
-
-  return SUCCESS;
-}
-
 error_codes analyseLet(const char* idname) {
   symtableItem* item = symtableSearch(global_table, idname);
 
