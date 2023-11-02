@@ -77,12 +77,15 @@ error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida, const
   stringConcatChar(&typeStr, ';');
   stringConcatCStr(&typeStr, idb);
   stringConcatChar(&typeStr, ';');
-  stringConcatChar(&typeStr, *type);
-  stringConcatChar(&typeStr, ';');
 
-  if (!isValidType(type)) {
+  char temp[3];
+  if (!parseType(type, temp)) {
+    stringFree(&typeStr);
     return SEMANTIC_ERR;
   }
+
+  stringConcatCStr(&typeStr, temp);
+  stringConcatChar(&typeStr, ';');
 
   symtableInsert(global_table, fn->key, stringCStr(&typeStr), fn->data + 1);
 
@@ -106,17 +109,37 @@ error_codes analyseFunctionAddReturn(const char* fnIdname, const char* type) {
     return INTERNAL_ERROR;
   }
 
-  if (!isValidType(type)) {
+  char temp[3];
+  if (!parseType(type, temp)) {
+    stringFree(&typeStr);
     return SEMANTIC_ERR;
   }
 
-  stringConcatChar(&typeStr, *type);
+  stringConcatCStr(&typeStr, temp);
   stringConcatChar(&typeStr, ';');
+
+  symtableInsert(global_table, fnIdname, stringCStr(&typeStr), fn->data);
+  stringFree(&typeStr);
+
   return SUCCESS;
 }
 
-bool isValidType(const char* typeStr) {
-  return strcmp(typeStr, "String") == 0
-    || strcmp(typeStr, "Int")
-    || strcmp(typeStr, "Double");
+bool parseType(const char* typeStr, char out[3]) {
+  const char* map[][2] = {
+    { "Int", "I" },
+    { "Double", "D" },
+    { "String", "S" },
+    { "Int?", "I?" },
+    { "Double?", "D?" },
+    { "String?", "S?" }
+  };
+
+  for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
+    if (strcmp(typeStr, map[i][0]) == 0) {
+      strncpy(out, map[i][1], 3);
+      return true;
+    }
+  }
+
+  return false;
 }

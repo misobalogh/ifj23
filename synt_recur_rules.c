@@ -610,7 +610,6 @@ bool rule_FUNC_STAT() {
 }
 
 bool rule_RETURN_STAT() {
-
     // <return_stat> -> return <ret_val> EOL <func_stat_list>
     if (t->type == token_RETURN) {
         RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
