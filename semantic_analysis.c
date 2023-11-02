@@ -61,9 +61,7 @@ error_codes analyseFunctionAddId(const char* idname) {
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida,
-    const char* idb, const char* type)
-{
+error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida, const char* idb, const char* type) {
   symtableItem* fn = symtableSearch(global_table, fnIdname);
 
   if (fn == NULL) {
@@ -82,7 +80,9 @@ error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida,
   stringConcatChar(&typeStr, *type);
   stringConcatChar(&typeStr, ';');
 
-  // TODO: check if type string is valid type
+  if (!isValidType(type)) {
+    return SEMANTIC_ERR;
+  }
 
   symtableInsert(global_table, fn->key, stringCStr(&typeStr), fn->data + 1);
 
@@ -106,9 +106,17 @@ error_codes analyseFunctionAddReturn(const char* fnIdname, const char* type) {
     return INTERNAL_ERROR;
   }
 
-  // TODO: check if type is valid
+  if (!isValidType(type)) {
+    return SEMANTIC_ERR;
+  }
 
   stringConcatChar(&typeStr, *type);
   stringConcatChar(&typeStr, ';');
   return SUCCESS;
+}
+
+bool isValidType(const char* typeStr) {
+  return strcmp(typeStr, "String") == 0
+    || strcmp(typeStr, "Int")
+    || strcmp(typeStr, "Double");
 }

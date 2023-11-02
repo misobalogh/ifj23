@@ -19,3 +19,5 @@ error_codes analyseAssignment(const char* left, const char* right);
 error_codes analyseLet(const char* idname);
 error_codes analyseVar(const char* idname);
 error_codes analyseId(const char* idname);
+
+bool isValidType(const char* typestr);
