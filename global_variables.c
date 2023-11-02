@@ -23,7 +23,7 @@ symtable *global_table;
 /**
  * @brief Initialize global table of symbols
  */
-static void global_initSymtable() {
+void global_initSymtable(void) {
     global_table = symtableInit(SYMTABLE_SIZE);
 }
 

@@ -16,14 +16,14 @@ SemStack* semStack;
 stack* semanticStack;
 
 error_codes semanticAnalysisInit(void) {
-  global_table = symtableInit(SYMTABLE_SIZE);
+  global_initSymtable();
 
-  semStack = malloc(sizeof(SemStack));
-  if (semStack == NULL) {
-    return INTERNAL_ERROR;
-  }
+  /* semStack = malloc(sizeof(SemStack)); */
+  /* if (semStack == NULL) { */
+  /*   return INTERNAL_ERROR; */
+  /* } */
 
-  semStackInit(semStack);
+  /* semStackInit(semStack); */
   return SUCCESS;
 }
 
@@ -60,20 +60,88 @@ error_codes analyseFunction(const char* idname) {
   return SUCCESS;
 }
 
-/* error_codes analyseAssignment(const char* leftkey, const char* rightkey) { */
-/*   symtableItem* leftvar = symtableSearch(global_table, leftkey); */
-/*   symtableItem* rightvar = symtableSearch(global_table, rightkey); */
+error_codes analyseLet(const char* idname) {
+  symtableItem* item = symtableSearch(global_table, idname);
 
-/*   if (leftvar == NULL) { */
-/*     if (rightvar == NULL) { */
-/*       return TYPE_COMPATIBILITY_ERR; */
-/*     } */
+  if (item != NULL) {
+    return SEMANTIC_ERR;
+  }
 
-/*     symtableInsert(global_table, leftkey, rightvar->type, 0); */
-/*     return SUCCESS; */
-/*   } */
+  /* symtableInsert(global_table, idname, ) */
+}
 
-/*   return leftvar->type[0] == rightvar->type[0] */
-/*     ? SUCCESS */
-/*     : TYPE_COMPATIBILITY_ERR; */
-/* } */
+error_codes analyseVar(const char* idname) {
+}
+
+error_codes analyseId(const char* idname) {
+  symtableItem* item = symtableSearch(global_table, idname);
+
+  if (item == NULL) {
+    return SEMANTIC_ERR;
+  }
+
+  return SUCCESS;
+}
+
+error_codes analyseFunctionAddId(const char* idname) {
+  symtableItem* item = symtableSearch(global_table, idname);
+
+  if (item != NULL) {
+    return SEMANTIC_ERR;
+  }
+
+  symtableInsert(global_table, idname, "f;", 0);
+  return SUCCESS;
+}
+
+error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida,
+    const char* idb, const char* type)
+{
+  symtableItem* fn = symtableSearch(global_table, fnIdname);
+
+  if (fn == NULL) {
+    return INTERNAL_ERROR;
+  }
+
+  String typeStr;
+  if (!stringInit(&typeStr, fn->type)) {
+    return INTERNAL_ERROR;
+  }
+
+  stringConcatCStr(&typeStr, ida);
+  stringConcatChar(&typeStr, ';');
+  stringConcatCStr(&typeStr, idb);
+  stringConcatChar(&typeStr, ';');
+  stringConcatChar(&typeStr, *type);
+  stringConcatChar(&typeStr, ';');
+
+  // TODO: check if type string is valid type
+
+  symtableInsert(global_table, fn->key, stringCStr(&typeStr), fn->data + 1);
+
+  stringFree(&typeStr);
+  return SUCCESS;
+}
+
+error_codes analyseFunctionAddReturn(const char* fnIdname, const char* type) {
+  symtableItem* fn = symtableSearch(global_table, fnIdname);
+
+  if (fn == NULL) {
+    return INTERNAL_ERROR;
+  }
+
+  if (*type == '\0') {
+    return SUCCESS;
+  }
+
+  String typeStr;
+  if (!stringInit(&typeStr, fn->type)) {
+    return INTERNAL_ERROR;
+  }
+
+  // TODO: check if type is valid
+
+  stringConcatChar(&typeStr, *type);
+  stringConcatChar(&typeStr, ';');
+  return SUCCESS;
+}

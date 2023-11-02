@@ -124,29 +124,23 @@ bool rule_STATEMENT() {
             return false;
         }
 
-        char* key = t->value;
+        const char* idname = t->value;
+        analyseFunctionAddId(idname);
 
         t = mock_recursive_nextToken();
         if (t->type != token_PARENTHESES_L) {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_PARAM_LIST()) {
+        if (!rule_PARAM_LIST(idname)) {
             return false;
         }
         if (t->type != token_PARENTHESES_R) {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_RETURN_TYPE()) {
+        if (!rule_RETURN_TYPE(idname)) {
             return false;
-        }
-
-        if (analyseFunction(key) != SUCCESS) {
-          return false;
-        }
-        if (!genFunction(key)) {
-          return false;
         }
 
         if (t->type != token_BRACKET_L) {
@@ -223,10 +217,13 @@ bool rule_STATEMENT() {
 }
 
 bool rule_LET_OR_VAR() {
+    /* semStackPushToken(semStack, *t); */
+
     if (t->type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
+            /* semStackPushToken(semStack, *t); */
             t = mock_recursive_nextToken();
             return true;
         }
@@ -235,6 +232,7 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> var id\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
+            /* semStackPushToken(semStack, *t); */
             t = mock_recursive_nextToken();
             return true;
         }
@@ -426,7 +424,7 @@ bool rule_ID_OR_CONST() {
     return false;
 }
 
-bool rule_PARAM_LIST() {
+bool rule_PARAM_LIST(const char* fnIdname) {
     // <param_list> -> EPSILON
     if (t->type == token_PARENTHESES_R) {
         RLOG("<param_list> -> EPSILON\n");
@@ -435,17 +433,17 @@ bool rule_PARAM_LIST() {
     // <param_list> -> <param> <param_next>
     else if (t->type == token_ID) {
         RLOG("<param_list> -> <param> <param_next>\n");
-        return rule_PARAM() && rule_PARAM_NEXT();
+        return rule_PARAM(fnIdname) && rule_PARAM_NEXT(fnIdname);
     }
     return false;
 }
 
-bool rule_PARAM_NEXT() {
+bool rule_PARAM_NEXT(const char* fnIdname) {
     // <param_next> -> , <param> <param_next>
     if (t->type == token_COMMA) {
         RLOG("<param_next> -> , <param> <param_next>\n");
         t = mock_recursive_nextToken();
-        return rule_PARAM() && rule_PARAM_NEXT();
+        return rule_PARAM(fnIdname) && rule_PARAM_NEXT(fnIdname);
     }
     // <param_next> -> EPSILON
     else if (t->type == token_PARENTHESES_R) {
@@ -455,44 +453,51 @@ bool rule_PARAM_NEXT() {
     return false;
 }
 
-bool rule_PARAM() {
+bool rule_PARAM(const char* fnIdname) {
     // <param> -> id id : <type>
     RLOG("<param> -> id id : <type>\n");
+
+    const char* ida, * idb, * type;
 
     if (t->type != token_ID) {
         return false;
     }
-    semStackPushToken(semStack, *t);
+    ida = t->value;
     t = mock_recursive_nextToken();
     if (t->type != token_ID) {
         return false;
     }
-    semStackPushToken(semStack, *t);
+    idb = t->value;
     t = mock_recursive_nextToken();
     if (t->type != token_COLON) {
         return false;
     }
-    semStackPushToken(semStack, *t);
     t = mock_recursive_nextToken();
-    semStackPushToken(semStack, *t);
+    type = t->value;
+
+    error_codes semanticResult = analyseFunctionAddParam(fnIdname, ida, idb, type);
+    if (semanticResult != SUCCESS) {
+      return false; //semanticResult;
+    }
+
     return t->type == token_TYPE;
 
 }
 
-bool rule_RETURN_TYPE() {
+bool rule_RETURN_TYPE(const char* fnIdname) {
     // <return_type> -> "-> type"
     if (t->type == token_ARROW) {
         RLOG("<return_type> -> -> type\n");
         t = mock_recursive_nextToken();
         if (t->type == token_TYPE) {
-            semStackPushToken(semStack, *t);
-
+            analyseFunctionAddReturn(fnIdname, t->value);
             t = mock_recursive_nextToken();
             return true;
         }
     }
     // <return_type> -> EPSILON
     else if (t->type == token_BRACKET_L) {
+        analyseFunctionAddReturn(fnIdname, "");
         RLOG("<return_type> -> EPSILON");
         return true;
     }

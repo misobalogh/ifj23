@@ -4,15 +4,15 @@
 #include "token_types.h"
 
 bool rule_PROGRAM();
-bool rule_RETURN_TYPE();
+bool rule_RETURN_TYPE(const char* fnIdname);
 bool rule_FUNC_STAT_LIST();
 bool rule_FUNC_STAT();
 bool rule_CONDITION();
 bool rule_RETURN_STAT();
 bool rule_RET_VAL();
-bool rule_PARAM_LIST();
-bool rule_PARAM_NEXT();
-bool rule_PARAM();
+bool rule_PARAM_LIST(const char* fnIdname);
+bool rule_PARAM_NEXT(const char* fnIdname);
+bool rule_PARAM(const char* fnIdname);
 bool rule_STAT_LIST();
 bool rule_STATEMENT();
 bool rule_VAR_ASSIGNMENT();
