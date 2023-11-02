@@ -15,16 +15,20 @@
 #define IFJ23_GLOBAL_VARIABLES_H
 
 #include "symtable.h"
+#include "symtablestack.h"
 #include <stdbool.h>
 
 /**
  * @brief Global table of symbols
 */
-extern symtable *global_table; 
+extern symtable *global_table;
+extern symtableStack* global_symtableStack;
 
 void global_initSymtable(void);
 bool global_addVar(char* id, char* type, int value);
 
 void global_generateInstruction();
+
+symtableItem* global_symbolSearch(const char* key);
 
 #endif // IFJ23_GLOBAL_VARIABLES_H

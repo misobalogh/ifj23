@@ -217,13 +217,10 @@ bool rule_STATEMENT() {
 }
 
 bool rule_LET_OR_VAR() {
-    /* semStackPushToken(semStack, *t); */
-
     if (t->type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
-            /* semStackPushToken(semStack, *t); */
             t = mock_recursive_nextToken();
             return true;
         }
@@ -232,7 +229,6 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> var id\n");
         t = mock_recursive_nextToken();
         if (t->type == token_ID) {
-            /* semStackPushToken(semStack, *t); */
             t = mock_recursive_nextToken();
             return true;
         }

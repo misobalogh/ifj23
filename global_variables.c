@@ -19,6 +19,7 @@
  * @brief Global table of symbols
 */
 symtable *global_table; 
+symtableStack* global_symtableStack;
 
 /**
  * @brief Initialize global table of symbols
@@ -73,7 +74,11 @@ bool global_addVar(char* id, char* type, int value) {
  */
 void global_generateInstruction();
 
+symtableItem* global_symbolSearch(const char* key) {
+  symtableItem* result = symtableStackSearch(global_symtableStack, key);
+  if (result != NULL) {
+    return result;
+  }
 
-
-
-
+  return symtableSearch(global_table, key);
+}
