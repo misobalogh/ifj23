@@ -11,19 +11,30 @@
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
+#include "stack.h"
 
 SemStack* semStack;
 stack* semanticStack;
 
+static char* functionId = NULL;
+static char* callId = NULL;
+static String* callParams;
+
+static FunctionStack* postponedCheckStack;
+
 error_codes semanticAnalysisInit(void) {
   global_initSymtable();
 
-  /* semStack = malloc(sizeof(SemStack)); */
-  /* if (semStack == NULL) { */
-  /*   return INTERNAL_ERROR; */
-  /* } */
+  postponedCheckStack = stringStackInit();
+  if (postponedCheckStack == NULL) {
+    return INTERNAL_ERROR;
+  }
 
-  /* semStackInit(semStack); */
+  callParams = malloc(sizeof(String));
+  if (callParams == NULL || !stringInit(callParams, "")) {
+    return INTERNAL_ERROR;
+  }
+
   return SUCCESS;
 }
 
@@ -51,6 +62,13 @@ error_codes analyseId(const char* idname) {
 }
 
 error_codes analyseFunctionAddId(const char* idname) {
+  functionId = malloc(strlen(idname));
+  if (functionId == NULL) {
+    return INTERNAL_ERROR;
+  }
+
+  strcpy(functionId, idname);
+
   symtableItem* item = symtableSearch(global_table, idname);
 
   if (item != NULL) {
@@ -61,8 +79,8 @@ error_codes analyseFunctionAddId(const char* idname) {
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida, const char* idb, const char* type) {
-  symtableItem* fn = symtableSearch(global_table, fnIdname);
+error_codes analyseFunctionAddParam(const char* ida, const char* idb, const char* type) {
+  symtableItem* fn = symtableSearch(global_table, functionId);
 
   if (fn == NULL) {
     return INTERNAL_ERROR;
@@ -93,8 +111,8 @@ error_codes analyseFunctionAddParam(const char* fnIdname, const char* ida, const
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddReturn(const char* fnIdname, const char* type) {
-  symtableItem* fn = symtableSearch(global_table, fnIdname);
+error_codes analyseFunctionAddReturn(const char* type) {
+  symtableItem* fn = symtableSearch(global_table, functionId);
 
   if (fn == NULL) {
     return INTERNAL_ERROR;
@@ -118,8 +136,52 @@ error_codes analyseFunctionAddReturn(const char* fnIdname, const char* type) {
   stringConcatCStr(&typeStr, typeShort);
   stringConcatChar(&typeStr, ';');
 
-  symtableInsert(global_table, fnIdname, stringCStr(&typeStr), fn->data);
+  symtableInsert(global_table, functionId, stringCStr(&typeStr), fn->data);
   stringFree(&typeStr);
+
+  return SUCCESS;
+}
+
+error_codes analyseFunctionEnd(void) {
+  free(functionId);
+  functionId = NULL;
+  return SUCCESS;
+}
+
+error_codes analyseCallId(const char* idname) {
+  callId = malloc(sizeof(strlen(idname)));
+  if (callId == NULL) {
+    return INTERNAL_ERROR;
+  }
+
+  strcpy(callId, idname);
+  return SUCCESS;
+}
+
+error_codes analyseCallParam(const char* paramIdname) {
+  symtableItem* item = global_symbolSearch(paramIdname);
+  if (item == NULL) {
+    return SEMANTIC_ERR;
+  }
+
+  stringConcatCStr(callParams, item->type);
+  stringConcatChar(callParams, ';');
+
+  return SUCCESS;
+}
+
+error_codes analyseCallEnd(void) {
+  symtableItem* item = global_symbolSearch(callId);
+  if (item == NULL) {
+    char* params = (char*) stringCStr(callParams);
+    if (!functionStackPush(postponedCheckStack, (char*) callId, params)) {
+      return INTERNAL_ERROR;
+    }
+
+    return SUCCESS;
+  }
+
+  
 
   return SUCCESS;
 }

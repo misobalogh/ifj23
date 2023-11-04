@@ -132,14 +132,14 @@ bool rule_STATEMENT() {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_PARAM_LIST(idname)) {
+        if (!rule_PARAM_LIST()) {
             return false;
         }
         if (t->type != token_PARENTHESES_R) {
             return false;
         }
         t = mock_recursive_nextToken();
-        if (!rule_RETURN_TYPE(idname)) {
+        if (!rule_RETURN_TYPE()) {
             return false;
         }
 
@@ -420,7 +420,7 @@ bool rule_ID_OR_CONST() {
     return false;
 }
 
-bool rule_PARAM_LIST(const char* fnIdname) {
+bool rule_PARAM_LIST() {
     // <param_list> -> EPSILON
     if (t->type == token_PARENTHESES_R) {
         RLOG("<param_list> -> EPSILON\n");
@@ -429,17 +429,17 @@ bool rule_PARAM_LIST(const char* fnIdname) {
     // <param_list> -> <param> <param_next>
     else if (t->type == token_ID) {
         RLOG("<param_list> -> <param> <param_next>\n");
-        return rule_PARAM(fnIdname) && rule_PARAM_NEXT(fnIdname);
+        return rule_PARAM() && rule_PARAM_NEXT();
     }
     return false;
 }
 
-bool rule_PARAM_NEXT(const char* fnIdname) {
+bool rule_PARAM_NEXT() {
     // <param_next> -> , <param> <param_next>
     if (t->type == token_COMMA) {
         RLOG("<param_next> -> , <param> <param_next>\n");
         t = mock_recursive_nextToken();
-        return rule_PARAM(fnIdname) && rule_PARAM_NEXT(fnIdname);
+        return rule_PARAM() && rule_PARAM_NEXT();
     }
     // <param_next> -> EPSILON
     else if (t->type == token_PARENTHESES_R) {
@@ -449,7 +449,7 @@ bool rule_PARAM_NEXT(const char* fnIdname) {
     return false;
 }
 
-bool rule_PARAM(const char* fnIdname) {
+bool rule_PARAM() {
     // <param> -> id id : <type>
     RLOG("<param> -> id id : <type>\n");
 
@@ -471,7 +471,7 @@ bool rule_PARAM(const char* fnIdname) {
     t = mock_recursive_nextToken();
     type = t->value;
 
-    error_codes semanticResult = analyseFunctionAddParam(fnIdname, ida, idb, type);
+    error_codes semanticResult = analyseFunctionAddParam(ida, idb, type);
     if (semanticResult != SUCCESS) {
       return false; //semanticResult;
     }
@@ -480,20 +480,20 @@ bool rule_PARAM(const char* fnIdname) {
 
 }
 
-bool rule_RETURN_TYPE(const char* fnIdname) {
+bool rule_RETURN_TYPE() {
     // <return_type> -> "-> type"
     if (t->type == token_ARROW) {
         RLOG("<return_type> -> -> type\n");
         t = mock_recursive_nextToken();
         if (t->type == token_TYPE) {
-            analyseFunctionAddReturn(fnIdname, t->value);
+            analyseFunctionAddReturn(t->value);
             t = mock_recursive_nextToken();
             return true;
         }
     }
     // <return_type> -> EPSILON
     else if (t->type == token_BRACKET_L) {
-        analyseFunctionAddReturn(fnIdname, "");
+        analyseFunctionAddReturn("");
         RLOG("<return_type> -> EPSILON");
         return true;
     }
