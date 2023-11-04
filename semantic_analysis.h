@@ -20,4 +20,4 @@ error_codes analyseLet(const char* idname);
 error_codes analyseVar(const char* idname);
 error_codes analyseId(const char* idname);
 
-bool parseType(const char* typeStr, char out[3]);
+const char* parseType(const char* typeStr);

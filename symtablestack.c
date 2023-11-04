@@ -23,6 +23,11 @@ bool symtableStackPush(symtableStack* stack) {
 
 void symtableStackPop(symtableStack* stack) {
   symtableStackItem* first = stack->first;
+
+  if (first == NULL) {
+    return;
+  }
+
   stack->first = first->next;
   symtableFree(first->table);
   free(first);
@@ -42,3 +47,4 @@ symtableItem* symtableStackSearch(symtableStack* stack, const char* key) {
 
   return NULL;
 }
+
