@@ -186,6 +186,15 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_ASSING;
             }
+            else if (c == '"')
+            {
+                current_lex_state = STATE_Q_MARK;
+                string_init(&str);
+            }
+            else if (c == ',')
+            {
+                current_lex_state = STATE_COMMA;
+            }
             else if (isdigit(c))
             {
                 current_lex_state = STATE_WHOLE_NUMBER;
@@ -419,6 +428,13 @@ lex_token get_next_token()
             return current_lex_token;
 
             break;
+
+        case STATE_COMMA:
+            current_lex_token.token_type = TYPE_COMMA;
+            ungetc(c, stdin);
+            return current_lex_token;
+
+            break;
         case STATE_LEFT_BRACKET:
             current_lex_token.token_type = TYPE_LEFT_BRACKET;
             ungetc(c, stdin);
@@ -619,7 +635,8 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = TYPE_UNDERSCORE;
+                ungetc(c, stdin);
                 return current_lex_token;
             }
             break;
@@ -892,6 +909,129 @@ lex_token get_next_token()
                 current_lex_token.token_type = KEYWORD_STRING_Q;
                 return current_lex_token;
             }
+            break;
+
+        case STATE_Q_MARK:
+            if (c == '"')
+            {
+                current_lex_state = STATE_STRING_DONE;
+            }
+            else if (c != '\n' && c != EOF)
+            {
+                current_lex_state = STATE_STRING_ASSEMBLING;
+                char_insert(&str, c);
+            }
+            else
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_STRING_ASSEMBLING:
+            if (c != '"' && c != '\\')
+            {
+                char_insert(&str, c);
+            }
+            else if (c == '"')
+            {
+                current_lex_state = STATE_STRING_DONE;
+            }
+            else if (c == '\\')
+            {
+                current_lex_state = STATE_ESCAPE_SEQUENCE;
+                char_insert(&str, c);
+            }
+            else // to do
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_ESCAPE_SEQUENCE:
+            if (c == '"' || c == 'n' || c == '\\' || c == 'r' || c == 't')
+            {
+                current_lex_state = STATE_STRING_ASSEMBLING;
+                char_insert(&str, c);
+            }
+            else if (c == 'u')
+            {
+                current_lex_state = STATE_ESCAPE_U;
+                char_insert(&str, c);
+            }
+            else
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_ESCAPE_U:
+            if (c == '{')
+            {
+                current_lex_state = STATE_U_LEFT_BRACKET;
+                char_insert(&str, c);
+            }
+            else
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_U_LEFT_BRACKET:
+            if (isalpha(c) || isdigit(c))
+            {
+                current_lex_state = STATE_U_FIRST_NUM;
+                char_insert(&str, c);
+            }
+            else
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_U_FIRST_NUM:
+            if (c == '}')
+            {
+                current_lex_state = STATE_STRING_ASSEMBLING;
+                char_insert(&str, c);
+            }
+            else if (isalpha(c) || isdigit(c))
+            {
+                current_lex_state = STATE_U_SECOND_NUM;
+                char_insert(&str, c);
+            }
+            else
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_U_SECOND_NUM:
+            if (c == '}')
+            {
+                current_lex_state = STATE_STRING_ASSEMBLING;
+                char_insert(&str, c);
+            }
+            else
+            {
+                current_lex_token.token_type = TYPE_ERROR;
+                return current_lex_token;
+            }
+            break;
+
+        case STATE_STRING_DONE:
+
+            ungetc(c, stdin);
+            current_lex_token.token_type = TYPE_STRING;
+            current_lex_token.token_value.STR_VAL = str.data;
+            // string_clear(&str);
+            return current_lex_token;
+
             break;
 
         default:

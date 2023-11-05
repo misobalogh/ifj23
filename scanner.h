@@ -58,6 +58,15 @@ typedef enum States
     STATE_String,
     STATE_String_Q,
     STATE_COLON,
+    STATE_COMMA,
+    STATE_Q_MARK,
+    STATE_STRING_ASSEMBLING,
+    STATE_ESCAPE_SEQUENCE,
+    STATE_ESCAPE_U,
+    STATE_U_LEFT_BRACKET,
+    STATE_U_FIRST_NUM,
+    STATE_U_SECOND_NUM,
+    STATE_STRING_DONE,
 } states;
 
 typedef enum Type_of_token
@@ -82,6 +91,7 @@ typedef enum Type_of_token
     TYPE_RIGHT_CURV_BRACKET,
     TYPE_LEFT_SQUARE_BRACKET,
     TYPE_RIGHT_SQUARE_BRACKET,
+    TYPE_COMMA,
     TYPE_RIGHT_ARROW,
     TYPE_LEFT_ARROW,
     TYPE_WHOLE_NUMBER,
@@ -92,6 +102,7 @@ typedef enum Type_of_token
     TYPE_EQUAL,
     TYPE_ASSING,
     TYPE_IDENTIFIER,
+    TYPE_UNDERSCORE,
     TYPE_COLON,
     TYPE_INT,
     TYPE_INT_Q,
