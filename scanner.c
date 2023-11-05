@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+// function for picking a keyword from input string
 type_of_token keyword_check(char *str)
 {
     if (strcmp(str, "Double") == 0)
@@ -105,7 +106,7 @@ lex_token get_next_token()
         switch (current_lex_state)
         {
         case STATE_START:
-            // if (isspace(c))
+
             if (c == ' ')
             {
                 continue;
@@ -240,6 +241,10 @@ lex_token get_next_token()
 
             break;
 
+            /*
+                Comments
+            */
+
         case STATE_SLASH:
             if (c == '/')
             {
@@ -292,17 +297,18 @@ lex_token get_next_token()
             }
             break;
 
+            /*
+                Operators
+            */
+
         case STATE_GREATER_THAN:
             if (c == '=')
             {
-                // moves to STATE_GREATER_OR_EQUAL_THEN
                 current_lex_state = STATE_GREATER_OR_EQUAL_THAN;
-                // current_lex_state = STATE_START;
             }
             else
             {
                 current_lex_token.token_type = TYPE_OP_GREATER_THAN;
-                // current_lex_state = STATE_START;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
@@ -517,6 +523,10 @@ lex_token get_next_token()
 
             break;
 
+            /*
+                Numbers:
+            */
+
         case STATE_WHOLE_NUMBER:
             if (isdigit(c))
             {
@@ -640,6 +650,10 @@ lex_token get_next_token()
                 return current_lex_token;
             }
             break;
+
+            /*
+                Strings:
+            */
 
         case STATE_IDENTIFIER:
             if ((isalpha(c)) || (isdigit(c)) || (c == '_'))
@@ -1029,7 +1043,6 @@ lex_token get_next_token()
             ungetc(c, stdin);
             current_lex_token.token_type = TYPE_STRING;
             current_lex_token.token_value.STR_VAL = str.data;
-            // string_clear(&str);
             return current_lex_token;
 
             break;
@@ -1041,12 +1054,3 @@ lex_token get_next_token()
 
     return (lex_token){.token_type = TYPE_EOF};
 }
-
-/*
-int main()
-{
-    current_state = STATE_START;
-    get_next_token();
-    return 0;
-}
-*/

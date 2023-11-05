@@ -37,8 +37,8 @@ typedef enum States
     STATE_NOT,
     STATE_EOF,
     STATE_EOL,
-    STATE_RIGHT_ARROW,
-    STATE_LEFT_ARROW,
+    STATE_RIGHT_ARROW, //->
+    STATE_LEFT_ARROW,  //<-
     STATE_I_Int,
     STATE_N_Int,
     STATE_Int,
@@ -69,6 +69,7 @@ typedef enum States
     STATE_STRING_DONE,
 } states;
 
+// enum of token types
 typedef enum Type_of_token
 {
     TYPE_ERROR,
@@ -126,6 +127,7 @@ typedef enum Type_of_token
     KEYWORD_WHILE,
 } type_of_token;
 
+// union for specific token data type
 typedef union Value_of_token
 {
     int INT_VAL;
@@ -133,6 +135,7 @@ typedef union Value_of_token
     char *STR_VAL;
 } value_of_token;
 
+// structure of token
 typedef struct Token
 {
     value_of_token token_value;
@@ -140,6 +143,7 @@ typedef struct Token
     int line;
 } lex_token;
 
+// structure of dynamic string
 typedef struct Dynamic_String
 {
     char *data;            // current cuntent
