@@ -82,7 +82,7 @@ int main() {
     CU_add_test(suite, BLUE "Test PRECEDENCE macro for == (OP_REL)" RESET, test_PRECEDENCE_OP_REL);
     CU_add_test(suite, BLUE "Test PRECEDENCE macro for ?? (OP_CONCAT)" RESET, test_PRECEDENCE_OP_CONCAT);
     CU_add_test(suite, BLUE "Test operator precedence" RESET, test_operator_precedence);
-    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_set_mode(CU_BRM_SILENT);
 
     CU_basic_run_tests();
     if (CU_get_number_of_failures() == 0) {

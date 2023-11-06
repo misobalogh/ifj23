@@ -47,7 +47,7 @@ int main() {
     CU_add_test(suite, BLUE"test_stack_init"RESET, test_expr6);
     CU_pSuite suite2 = CU_add_suite(YELLOW"EXPRESSIONS - SHOULD BE FALSE"RESET, NULL, NULL);
     CU_add_test(suite2, BLUE"test_stack_init"RESET, test_expr7);
-    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_set_mode(CU_BRM_SILENT);
     CU_basic_run_tests();
     if (CU_get_number_of_failures() == 0) {
         printf(GREEN "All tests passed\n" RESET);

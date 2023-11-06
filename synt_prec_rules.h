@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 15.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -17,7 +17,8 @@
 #include "synt_prec_stack.h"
 
 
-void rule_ID(stack* s);
+/* EXPRESSIONS */
+void rule_E_ID(stack* s);
 
 void rule_ID_OP_ID(stack* s);
 

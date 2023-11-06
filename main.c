@@ -15,7 +15,6 @@
 #include <stdbool.h>
 #include "macros.h"
 #include "error_codes.h"
-#include "load_input.h"
 #include "swift_keywords.h"
 #include "symtable.h"
 #include "global_variables.h"
@@ -28,13 +27,6 @@
 
 
 void cleanup(); 
-
-void workingWithLoadInput() {
-    char* buffer = NULL;
-    buffer = load_input(stdin);
-    printf("%s\n", buffer);
-    free(buffer);
-}
 
 void workingWithSwiftKeywords() {
     const char* str = swiftTypeToString(2);
@@ -155,19 +147,26 @@ int main() {
 
     // workingWithHashTable();
 
-    // workingWithLoadInput();
-
     // workingWithParamsToString();
     
     // workingWithStack();
 
 
-    if(precedenceParser() == false) {
-        LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+    // if(precedenceParser() == false) {
+    //     LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+    //     return SYNTAX_ANALYSIS_ERR;
+    // }
+    // else {
+    //     LOG("MAIN: Expression syntax is correct: code %d", 0);
+    // }
+
+    
+    if(recursiveParser() == false) {
+        LOG("Syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
         return SYNTAX_ANALYSIS_ERR;
     }
     else {
-        LOG("MAIN: Expression syntax is correct: code %d", 0);
+        LOG("Program syntax is correct: code %d", EXIT_SUCCESS);
     }
     return 0;
 }

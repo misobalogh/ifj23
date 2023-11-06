@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 15.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -15,12 +15,10 @@
 
 #include <stdbool.h>
 
-#define PARENTHESES_LEFT "("
-#define PARENTHESES_RIGHT ")"
 
 /**
  * @brief Enum of token types.
- * 
+ *
  * @param token_NOT negation
  * @param token_MUL multiplication
  * @param token_DIV division
@@ -32,20 +30,23 @@
  * @param token_MORE more than
  * @param token_LESS_EQ less than or equal
  * @param token_MORE_EQ more than or equal
- * @param token_CONCAT concatenation
+ * @param token_CONCAT optional
  * @param token_DOLLAR end of expression
  * @param token_PARENTHESES_L left parentheses
  * @param token_PARENTHESES_R right parentheses
  * @param token_ID identifier
  */
 typedef enum {
+    token_LEX_ERROR = -1,
+    token_OP_START = 0,
     token_PLUS_MINUS = 0,
     token_PLUS = 0,
     token_MINUS = 0,
     token_MUL_DIV = 1,
     token_MUL = 1,
-    token_DIV = 1,  
-    token_CONCAT = 2,
+    token_DIV = 1,
+    token_CONCAT = 2, 
+    token_DEFAULT_VALUE = token_CONCAT, // remove token CONCAT later
     token_FORCE_UNWRAP = 3,
     token_REL = 4,
     token_EQ = 4,
@@ -53,41 +54,54 @@ typedef enum {
     token_LESS = 4,
     token_MORE = 4,
     token_LESS_EQ = 4,
-    token_MORE_EQ = 4,  
+    token_MORE_EQ = 4,
+    token_OP_END = 4,
     token_PARENTHESES_L = 5,
     token_PARENTHESES_R = 6,
     token_ID = 7,
+    token_ID_OR_CONST = 7,
     token_DOLLAR = 8,
-   
     // ...
     token_TERMINAL = 9,
     // ...
-    token_NONTERMINAL = 10,
-
+    token_NONTERMINAL = 10, // remove later
+    token_LET,
+    token_VAR,
+    token_IF,
+    token_ELSE,
+    token_WHILE,
+    token_CONST,
+    token_CONST_WHOLE_NUMBER = token_CONST,
+    token_CONST_DEC_NUMBER = token_CONST,
+    token_CONST_SCIENTIFIC_NOTATION = token_CONST,
+    token_FUNC,
+    token_RETURN,
+    token_BRACKET_L,
+    token_BRACKET_R,
+    token_COMMA,
+    token_ARROW,
+    token_ASSIGN, // "="
+    token_COLON,
+    token_EXPRESSION,
+    token_TYPE,
+    token_TYPE_INT,
+    token_TYPE_INT_Q,
+    token_TYPE_DOUBLE,
+    token_TYPE_DOUBLE_Q,
+    token_TYPE_STRING,
+    token_TYPE_STRING_Q,
+    token_EOL,
     token_EOF,
 } tokenType;
 
 typedef struct token
 {
     tokenType type;
-    char *value;
-} token;
+    char* value;
+} tokenStruct;
 
 
 bool isTerminal(tokenType type);
-bool isNonterminal(tokenType type);
-
-
-
-// ================ DEBUGGING ================
-/**
- * @brief For debugging, delete later - assigns name to token type
- * 
- * @param type type of token u want to get name of
-*/
-#define TOKEN_TYPE_NAME(type) tokenTypeNames[type]
-// also for debugging
-extern const char* tokenTypeNames[];
 
 
 #endif // _TOKEN_TYPES_H
