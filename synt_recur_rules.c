@@ -80,31 +80,6 @@ bool rule_STAT_LIST() {
 }
 
 
-bool rule_BRACK_STAT_LIST() {
-    // 2. <brack_stat_list> -> <brack_statement> EOL <between_brackets>
-    if (t->type == token_LET ||
-        t->type == token_VAR ||
-        t->type == token_IF ||
-        t->type == token_WHILE ||
-        t->type == token_ID ||
-        t->type == token_FUNC || t->type == token_EOL
-
-        ) {
-        RLOG("<brack_stat_list> -> <statement> EOL <brack_stat_list>\n");
-        if (rule_STATEMENT()) {
-            if (t->type == token_EOL) {
-                t = mock_recursive_nextToken();
-                return rule_BRACK_STAT_LIST();
-            }
-        }
-    }
-    if (t->type == token_BRACKET_R) {
-        RLOG("<brack_stat_list> -> EPSILON\n");
-        return true;
-    }
-    return false;
-}
-
 bool rule_STATEMENT() {
     switch (t->type) {
     case token_LET:
@@ -207,6 +182,103 @@ bool rule_STATEMENT() {
         return false;
     }
 }
+
+
+bool rule_BRACK_STAT_LIST() {
+    // 2. <brack_stat_list> -> <brack_statement> EOL <between_brackets>
+    if (t->type == token_LET ||
+        t->type == token_VAR ||
+        t->type == token_IF ||
+        t->type == token_WHILE ||
+        t->type == token_ID ||
+        t->type == token_EOL
+        ) {
+        RLOG("<brack_stat_list> -> <brack_statement> EOL <brack_stat_list>\n");
+        if (rule_BRACK_STATEMENT()) {
+            if (t->type == token_EOL) {
+                t = mock_recursive_nextToken();
+                return rule_BRACK_STAT_LIST();
+            }
+        }
+    }
+    if (t->type == token_BRACKET_R) {
+        RLOG("<brack_stat_list> -> EPSILON\n");
+        return true;
+    }
+    return false;
+}
+
+
+bool rule_BRACK_STATEMENT() {
+    switch (t->type) {
+    case token_LET:
+    case token_VAR:
+        RLOG("<brack_statement> -> <let_or_var> <var_assignment>\n");
+        return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
+    case token_ID:
+        RLOG("<brack_statement> -> id <after_id>\n");
+        t = mock_recursive_nextToken();
+        return rule_AFTER_ID();
+    case token_IF:
+        RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
+        t = mock_recursive_nextToken();
+        if (!rule_CONDITION()) {
+            return false;
+        }
+        if (t->type != token_BRACKET_L) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        if (!rule_BRACK_STAT_LIST()) {
+            return false;
+        }
+        if (t->type != token_BRACKET_R) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        if (t->type != token_ELSE) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        if (t->type != token_BRACKET_L) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        if (!rule_BRACK_STAT_LIST()) {
+            return false;
+        }
+        if (t->type != token_BRACKET_R) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        return true;
+    case token_WHILE:
+        RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
+        t = mock_recursive_nextToken();
+        if (!rule_EXPRESSION()) {
+            return false;
+        }
+        if (t->type != token_BRACKET_L) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        if (!rule_BRACK_STAT_LIST()) {
+            return false;
+        }
+        if (t->type != token_BRACKET_R) {
+            return false;
+        }
+        t = mock_recursive_nextToken();
+        return true;
+    case token_EOL:
+        RLOG("<brack_statement> -> EPSILON\n");
+        return true;
+    default:
+        RLOG("ERROR: <brack_statement>\n");
+        return false;
+    }
+}
+
 
 bool rule_LET_OR_VAR() {
     if (t->type == token_LET) {
@@ -437,12 +509,11 @@ bool rule_PARAM_NEXT() {
 }
 
 bool rule_PARAM() {
-    // <param> -> id id : <type>
-    RLOG("<param> -> id id : <type>\n");
-    if (t->type != token_ID) {
+    // <param> -> <id_or_underscore> id : <type>
+    RLOG("<param> -> <id_or_underscore> id : <type>\n");
+    if (!rule_ID_OR_UNDERSCORE()) {
         return false;
     }
-    t = mock_recursive_nextToken();
     if (t->type != token_ID) {
         return false;
     }
@@ -452,6 +523,22 @@ bool rule_PARAM() {
     }
     t = mock_recursive_nextToken();
     return t->type == token_TYPE;
+}
+
+bool rule_ID_OR_UNDERSCORE() {
+    // <id_or_underscore> -> id
+    if (t->type == token_ID) {
+        RLOG("<id_or_underscore> -> id\n");
+        t = mock_recursive_nextToken();
+        return true;
+    }
+    // <id_or_underscore> -> _
+    else if (t->type == token_UNDERSCORE) {
+        RLOG("<id_or_underscore> -> _\n");
+        t = mock_recursive_nextToken();
+        return true;
+    }
+    return false;
 }
 
 bool rule_RETURN_TYPE() {
