@@ -82,7 +82,7 @@ typedef enum {
     token_ARROW,
     token_ASSIGN, // "="
     token_COLON,
-    token_EXPRESSION,
+    token_UNDERSCORE, // "_" for function param name
     token_TYPE,
     token_TYPE_INT,
     token_TYPE_INT_Q,
