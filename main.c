@@ -15,10 +15,8 @@
 #include <stdbool.h>
 #include "macros.h"
 #include "error_codes.h"
-#include "swift_keywords.h"
 #include "symtable.h"
 #include "global_variables.h"
-#include "check_function.h"
 #include "synt_prec_stack.h"
 #include "token_types.h"
 #include "synt_prec_table.h"
@@ -27,30 +25,6 @@
 
 
 void cleanup(); 
-
-void workingWithSwiftKeywords() {
-    const char* str = swiftTypeToString(2);
-    if (str == NULL) {
-        printf("NULL\n");
-        exit(INTERNAL_ERROR);
-    }
-    else {
-        printf("%s\n", str);
-    }
-
-    if (isSwiftSpecialKeyword(str)) {
-        printf("Is special keyword\n");
-        if (isSwiftType(str)) {
-            printf("Also it is type\n");
-        }
-        else {
-            printf("Only keyword\n");
-        }
-    }
-    else {
-        printf("Not special keyword\n");
-    }
-}
 
 void workingWithHashTable() {
     int prime = 101;
@@ -143,8 +117,6 @@ void workingWithStack(){
 }
 
 int main() {
-    // workingWithSwiftKeywords();
-
     // workingWithHashTable();
 
     // workingWithParamsToString();
@@ -168,5 +140,5 @@ int main() {
     else {
         LOG("Program syntax is correct: code %d", EXIT_SUCCESS);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
