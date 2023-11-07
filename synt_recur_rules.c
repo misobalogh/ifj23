@@ -149,7 +149,7 @@ bool rule_STATEMENT() {
         t = mock_recursive_nextToken();
         return true;
     case token_IF:
-        RLOG("<statement> -> if <condition> { <stat_list> } else { <stat_list> }\n");
+        RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         t = mock_recursive_nextToken();
         if (!rule_CONDITION()) {
             return false;

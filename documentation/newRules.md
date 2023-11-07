@@ -1,19 +1,31 @@
-```
+```c
 1. <program> -> <stat_list> EOF
 ```
-```
+```c
 2. <stat_list> -> <statement> EOL <stat_list>
 3. <stat_list> -> EPSILON
 ```
-```
+```c
 4. <statement> -> <let_or_var> <var_assignment>
 5. <statement> -> id <after_id>
 6. <statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> } 
-7. <statement> -> if <condition> { <stat_list> } else { <stat_list> }
-8. <statement> -> while <expression> { <stat_list> }
+7. <statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }
+8. <statement> -> while <expression> { <brack_stat_list> }
 9. <statement> -> EPSILON
 ```
+
+```c
+2. <brack_stat_list> -> <statement> EOL <brack_stat_list>
+3. <brack_stat_list> -> EPSILON
 ```
+```c
+4. <brack_statement> -> <let_or_var> <var_assignment>
+5. <brack_statement> -> id <after_id>
+7. <brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }
+8. <brack_statement> -> while <expression> { <brack_stat_list> }
+9. <brack_statement> -> EPSILON
+```
+```c
 10. <let_or_var> -> let id
 11. <let_or_var> -> var id
 ```
@@ -60,7 +72,11 @@
 31. <param_list> -> EPSILON
 ```
 ```
-32. <param> -> id id : <type>
+32. <param> -> <id_or_underscore> id : <type>
+```
+```
+34. <id_or_underscore> -> _
+33. <id_or_underscore> -> id
 ```
 ```
 33. <param_next> -> , <param> <param_next>
