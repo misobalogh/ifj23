@@ -77,4 +77,6 @@ bool stringConcatCStr(String* string, const char* cStr);
  */
 bool stringConcatChar(String* string, char c);
 
+void stringClear(String* string);
+
 #endif

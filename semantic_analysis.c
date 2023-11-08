@@ -19,11 +19,21 @@ stack* semanticStack;
 static char* functionId = NULL;
 static char* callId = NULL;
 static String* callParams;
+static String* paramLabel;
 
 static FunctionStack* postponedCheckStack;
 
 error_codes semanticAnalysisInit(void) {
   global_initSymtable();
+
+  paramLabel = malloc(sizeof(String));
+  if (paramLabel == NULL) {
+    return INTERNAL_ERROR;
+  }
+
+  if (!stringInit(paramLabel, "")) {
+    return INTERNAL_ERROR;
+  }
 
   postponedCheckStack = functionStackInit();
   if (postponedCheckStack == NULL) {
@@ -79,7 +89,7 @@ error_codes analyseFunctionAddId(const char* idname) {
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddParam(const char* ida, const char* idb, const char* type) {
+error_codes analyseFunctionAddParam(const char* label, const char* name, const char* type) {
   symtableItem* fn = symtableSearch(global_table, functionId);
 
   if (fn == NULL) {
@@ -91,9 +101,9 @@ error_codes analyseFunctionAddParam(const char* ida, const char* idb, const char
     return INTERNAL_ERROR;
   }
 
-  stringConcatCStr(&typeStr, ida);
+  stringConcatCStr(&typeStr, label);
   stringConcatChar(&typeStr, ';');
-  stringConcatCStr(&typeStr, idb);
+  stringConcatCStr(&typeStr, name);
   stringConcatChar(&typeStr, ';');
 
   const char* typeShort = parseType(type);
@@ -158,20 +168,56 @@ error_codes analyseCallId(const char* idname) {
   return SUCCESS;
 }
 
+error_codes analyseCallLabel(const char* label) {
+  stringClear(paramLabel);
+  if (!stringConcatCStr(paramLabel, label))
+    return SUCCESS;
+  return INTERNAL_ERROR;
+}
+
+static bool _callEnd(const char* param) {
+  return stringConcat(callParams, paramLabel)
+    && stringConcatChar(callParams, ':')
+    && stringConcatCStr(callParams, param)
+    && stringConcatChar(callParams, ';');
+}
+
+error_codes analyseCallParamConst(const char* data) {
+  stringClear(paramLabel);
+  if (_callEnd(data)) {
+    return SUCCESS;
+  }
+  return INTERNAL_ERROR;
+}
+
 error_codes analyseCallParam(const char* paramIdname) {
   symtableItem* item = global_symbolSearch(paramIdname);
   if (item == NULL) {
     return SEMANTIC_ERR;
   }
 
-  stringConcatCStr(callParams, item->type);
-  stringConcatChar(callParams, ';');
+  if (_callEnd(paramIdname)) {
+    return SUCCESS;
+  }
+  return INTERNAL_ERROR;
+}
 
+error_codes analyseCallEpsilon(void) {
+  if (!stringConcatCStr(callParams, "_:")
+    || !stringConcat(callParams, paramLabel)) {
+      return INTERNAL_ERROR;
+  }
   return SUCCESS;
+}
+
+bool compareParams(const char* callParams, const char* functionParams) {
+  return false;
 }
 
 error_codes analyseCallEnd(void) {
   symtableItem* item = global_symbolSearch(callId);
+
+  // function was called before declaration
   if (item == NULL) {
     const char* params = stringCStr(callParams);
     if (!functionStackPush(postponedCheckStack, callId, params)) {
@@ -181,9 +227,10 @@ error_codes analyseCallEnd(void) {
     return SUCCESS;
   }
 
-  
-
-  return SUCCESS;
+  if (compareParams(stringCStr(callParams), item->type)) {
+    return SUCCESS;
+  }
+  return SEMANTIC_ERR;
 }
 
 const char* parseType(const char* typeStr) {

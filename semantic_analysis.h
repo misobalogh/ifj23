@@ -21,7 +21,10 @@ error_codes analyseVar(const char* idname);
 error_codes analyseId(const char* idname);
 
 error_codes analyseCallId(const char* idname);
+error_codes analyseCallLabel(const char* label);
 error_codes analyseCallParam(const char* paramIdname);
+error_codes analyseCallParamConst(const char* data);
+error_codes analyseCallEpsilon(void);
 error_codes analyseCallEnd(void);
 
 const char* parseType(const char* typeStr);

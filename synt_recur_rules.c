@@ -332,6 +332,7 @@ bool rule_AFTER_ID() {
     else if (t->type == token_PARENTHESES_L) {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         t = mock_recursive_nextToken();
+        analyseCallId(t->value);
         if (!rule_INPUT_PARAM_LIST()) {
             return false;
         }
@@ -376,12 +377,15 @@ bool rule_INPUT_PARAM() {
     // <input_param> -> const        
     if (t->type == token_CONST) {
         RLOG("<input_param> -> const\n");
+        analyseCallLabel(NULL);
+        analyseCallParamConst(t->value);
         t = mock_recursive_nextToken();
         return true;
     }
     // <input_param> -> id <with_name>
     else if (t->type == token_ID) {
         RLOG("<input_param> -> id <with_name>\n");
+        analyseCallLabel(t->value);
         t = mock_recursive_nextToken();
         return rule_WITH_NAME();
     }
@@ -393,6 +397,7 @@ bool rule_WITH_NAME() {
     if (t->type == token_COMMA ||
         t->type == token_PARENTHESES_R) {
         RLOG("<with_name> -> EPSILON\n");
+
         return true;
     }
     // <with_name> -> : <id_or_const>
@@ -408,12 +413,14 @@ bool rule_ID_OR_CONST() {
     // <id_or_const> -> id
     if (t->type == token_ID) {
         RLOG("<id_or_const> -> id\n");
+        analyseCallParam(t->value);
         t = mock_recursive_nextToken();
         return true;
     }
     // <id_or_const> -> const
     else if (t->type == token_CONST) {
         RLOG("<id_or_const> -> const\n");
+        analyseCallParamConst(t->value);
         t = mock_recursive_nextToken();
         return true;
     }

@@ -90,3 +90,6 @@ bool stringConcatChar(String* string, char c) {
   return true;
 }
 
+void stringClear(String* string) {
+  string->size = 0;
+}
