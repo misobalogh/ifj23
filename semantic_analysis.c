@@ -11,7 +11,7 @@
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
-#include "stack.h"
+#include "function_stack.h"
 
 SemStack* semStack;
 stack* semanticStack;
@@ -25,7 +25,7 @@ static FunctionStack* postponedCheckStack;
 error_codes semanticAnalysisInit(void) {
   global_initSymtable();
 
-  postponedCheckStack = stringStackInit();
+  postponedCheckStack = functionStackInit();
   if (postponedCheckStack == NULL) {
     return INTERNAL_ERROR;
   }
@@ -173,8 +173,8 @@ error_codes analyseCallParam(const char* paramIdname) {
 error_codes analyseCallEnd(void) {
   symtableItem* item = global_symbolSearch(callId);
   if (item == NULL) {
-    char* params = (char*) stringCStr(callParams);
-    if (!functionStackPush(postponedCheckStack, (char*) callId, params)) {
+    const char* params = stringCStr(callParams);
+    if (!functionStackPush(postponedCheckStack, callId, params)) {
       return INTERNAL_ERROR;
     }
 
