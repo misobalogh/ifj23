@@ -39,6 +39,7 @@ runtests: $(UNIT_TESTS)
 	done
 
 run: main
+	rm -rf *.log
 	./main
 
 $(TARGET): $(OBJ_FILES) $(SRC_DIR)/main.c
@@ -55,6 +56,6 @@ tests/%: tests/%.o $(filter-out $(OBJ_DIR)/main.o, $(OBJ_FILES))
 	$(CC) $(CFLAGS) $^ -o $@ -l$(TESTLIB)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) $(EXEC) $(UNIT_TESTS)
+	rm -rf $(OBJ_DIR) $(TARGET) $(EXEC) $(UNIT_TESTS) *.log
 
 .PHONY: all clean

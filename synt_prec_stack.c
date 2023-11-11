@@ -170,10 +170,15 @@ stackItem* stackThird(stack* s) {
  * @param s Pointer to stack.
 */
 void stackPrint(stack* s) {
+    FILE *logFile = fopen("precedenceParser.log", "a"); 
+    if(!logFile) {
+        return;
+    }
     stackItem* item = s->top;
     while (item) {
-        printf("%d ", item->type);
+        fprintf(logFile, "%d ", item->type);
         item = item->lower;
     }
-    printf("\n");
+    fprintf(logFile, "\n");
+    fclose(logFile);
 }

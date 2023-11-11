@@ -11,21 +11,8 @@
 ***************************************************************/
 
 
-#include "rules.h"
-
-// const precedenceType precedenceTable[6][6] = {
-// //+-----+-----+-----+-------+-------+-------+-------+
-// //      |  +  |  *  |   (   |   )   |   id  |   $   |
-// //+-----+-----+-----+-------+-------+-------+-------+
-// /* + */ { HIGH, LOW,   LOW,    HIGH,   LOW,   HIGH  },
-// /* * */ { HIGH, HIGH,  LOW,    HIGH,   LOW,   HIGH  },
-// /* ( */ { LOW,  LOW,   LOW,    EQUAL,  LOW,   EMPTY },
-// /* ) */ { HIGH, HIGH,  EMPTY,  HIGH,   EMPTY, HIGH  },
-// /* id */{ HIGH, HIGH,  EMPTY,  HIGH,   EMPTY, HIGH  },
-// /* $  */{ LOW,  LOW,   LOW,    EMPTY,  LOW,   EMPTY },
-// //+-----+-----+-----+-------+-------+-------+------ -+
-// };
-
+#include "synt_prec_rules.h"
+#include "synt_analysis.h"
 
 const precedenceType precedenceTable[9][9] = {
 //+-----+-----+------+------+------+-------+-------+------+-------+------+
@@ -45,7 +32,7 @@ const precedenceType precedenceTable[9][9] = {
 /**
  * @brief Rule: E -> id
 */
-void rule_ID(stack* s) {
+void rule_E_ID(stack* s) {
     stackItem* top = stackTopTerminal(s);
     top->flag = false;
     top->type = token_NONTERMINAL;

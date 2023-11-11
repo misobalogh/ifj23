@@ -21,25 +21,35 @@
 bool syntacticAnalysis();
 
 
-// Two methods - one for expressions, second for others
+/**
+ * @brief Stash for token for expression parser 
+ * when switching from recursive parser when deciding,
+ * whether it is expression or function call
+ */
+extern tokenStruct *stash; 
 
+
+/**
+ * @brief Most recent token from scanner
+ */
+extern tokenStruct* t;     
+
+// Two methods - one for expressions, second for everything else
+
+// Expression parser
 bool precedenceParser();
+
+// Recursive descent parser
 bool recursiveParser();
-
-
-// private functions called by precedenceParser(); and recursiveParser();
-bool parseStatement();
-bool parseExpression();
-bool parseFactor();
-bool parseTerm();
-bool parseDeclaration();
-bool parseIfStatement();
-bool parseWhileLoop();
-bool parseFunctionCall();
 
 /**
  * @brief Mocking function for testing purposes
 */
-token *mock_nextToken();
+tokenStruct *mock_precedence_nextToken();
+
+/**
+ * @brief Mocking function for testing purposes
+*/
+tokenStruct *mock_recursive_nextToken();
 
 #endif // _SYNT_ANALYSIS_H

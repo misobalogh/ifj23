@@ -15,11 +15,8 @@
 #include <stdbool.h>
 #include "macros.h"
 #include "error_codes.h"
-#include "load_input.h"
-#include "swift_keywords.h"
 #include "symtable.h"
 #include "global_variables.h"
-#include "check_function.h"
 #include "synt_prec_stack.h"
 #include "token_types.h"
 #include "synt_prec_table.h"
@@ -28,37 +25,6 @@
 
 
 void cleanup(); 
-
-void workingWithLoadInput() {
-    char* buffer = NULL;
-    buffer = load_input(stdin);
-    printf("%s\n", buffer);
-    free(buffer);
-}
-
-void workingWithSwiftKeywords() {
-    const char* str = swiftTypeToString(2);
-    if (str == NULL) {
-        printf("NULL\n");
-        exit(INTERNAL_ERROR);
-    }
-    else {
-        printf("%s\n", str);
-    }
-
-    if (isSwiftSpecialKeyword(str)) {
-        printf("Is special keyword\n");
-        if (isSwiftType(str)) {
-            printf("Also it is type\n");
-        }
-        else {
-            printf("Only keyword\n");
-        }
-    }
-    else {
-        printf("Not special keyword\n");
-    }
-}
 
 void workingWithHashTable() {
     int prime = 101;
@@ -151,23 +117,28 @@ void workingWithStack(){
 }
 
 int main() {
-    // workingWithSwiftKeywords();
-
     // workingWithHashTable();
-
-    // workingWithLoadInput();
 
     // workingWithParamsToString();
     
     // workingWithStack();
 
 
-    if(precedenceParser() == false) {
-        LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+    // if(precedenceParser() == false) {
+    //     LOG("MAIN: syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
+    //     return SYNTAX_ANALYSIS_ERR;
+    // }
+    // else {
+    //     LOG("MAIN: Expression syntax is correct: code %d", 0);
+    // }
+
+    
+    if(recursiveParser() == false) {
+        LOG("Syntax Error: code %d\n", SYNTAX_ANALYSIS_ERR);
         return SYNTAX_ANALYSIS_ERR;
     }
     else {
-        LOG("MAIN: Expression syntax is correct: code %d", 0);
+        LOG("Program syntax is correct: code %d", EXIT_SUCCESS);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }

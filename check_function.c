@@ -47,7 +47,7 @@ char* nextToken(int position) {
  * @param token Token to check
  */
 bool token_isFunc(char* token) {
-    return !strcmp(token, swiftKeywordToString(SWIFT_FUNC));
+    return !strcmp(token, swiftKeywordToString(/* Swift function keyword code */));
 }
 
 /**
