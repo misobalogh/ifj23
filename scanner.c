@@ -4,49 +4,50 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "token_types.h"
 
 // function for picking a keyword from input string
 type_of_token keyword_check(char *str)
 {
     if (strcmp(str, "Double") == 0)
     {
-        return KEYWORD_DOUBLE;
+        return token_TYPE_DOUBLE;
     }
     else if (strcmp(str, "else") == 0)
     {
-        return KEYWORD_ELSE;
+        return token_ELSE;
     }
     else if (strcmp(str, "func") == 0)
     {
-        return KEYWORD_FUNC;
+        return token_FUNC;
     }
     else if (strcmp(str, "if") == 0)
     {
-        return KEYWORD_IF;
+        return token_IF;
     }
     else if (strcmp(str, "let") == 0)
     {
-        return KEYWORD_LET;
+        return token_LET;
     }
     else if (strcmp(str, "nil") == 0)
     {
-        return KEYWORD_NIL;
+        return token_NIL;
     }
     else if (strcmp(str, "return") == 0)
     {
-        return KEYWORD_RETURN;
+        return token_RETURN;
     }
     else if (strcmp(str, "var") == 0)
     {
-        return KEYWORD_VAR;
+        return token_VAR;
     }
     else if (strcmp(str, "while") == 0)
     {
-        return KEYWORD_WHILE;
+        return token_WHILE;
     }
     else
     {
-        return TYPE_IDENTIFIER;
+        return token_ID;
     }
 }
 
@@ -159,14 +160,6 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_RIGHT_BRACKET;
             }
-            else if (c == '[')
-            {
-                current_lex_state = STATE_LEFT_SQUARE_BRACKET;
-            }
-            else if (c == ']')
-            {
-                current_lex_state = STATE_RIGHT_SQUARE_BRACKET;
-            }
             else if (c == '{')
             {
                 current_lex_state = STATE_LEFT_CURV_BRACKET;
@@ -236,7 +229,7 @@ lex_token get_next_token()
             else
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
-                return (lex_token){.token_type = TYPE_ERROR, .token_value = 1};
+                return (lex_token){.token_type = token_LEX_ERROR, .token_value = 1};
             }
 
             break;
@@ -261,7 +254,7 @@ lex_token get_next_token()
             else
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
-                return (lex_token){.token_type = TYPE_ERROR, .token_value = 1};
+                return (lex_token){.token_type = token_LEX_ERROR, .token_value = 1};
             }
             break;
 
@@ -308,7 +301,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_OP_GREATER_THAN;
+                current_lex_token.token_type = token_MORE;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
@@ -316,7 +309,7 @@ lex_token get_next_token()
             break;
 
         case STATE_GREATER_OR_EQUAL_THAN:
-            current_lex_token.token_type = TYPE_OP_GREATER_OR_EQUAL_THAN;
+            current_lex_token.token_type = token_MORE_EQ;
             ungetc(c, stdin);
             return current_lex_token;
 
@@ -327,32 +320,23 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_LESS_OR_EQUAL_THAN;
             }
-            else if (c == '-')
-            {
-                current_lex_state = STATE_LEFT_ARROW;
-            }
             else
             {
-                current_lex_token.token_type = TYPE_OP_LESS_THAN;
+                current_lex_token.token_type = token_LESS;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
             break;
 
-        case STATE_LEFT_ARROW:
-            current_lex_token.token_type = TYPE_LEFT_ARROW;
-            ungetc(c, stdin);
-            return current_lex_token;
-
         case STATE_LESS_OR_EQUAL_THAN:
-            current_lex_token.token_type = TYPE_OP_LESS_OR_EQUAL_THAN;
+            current_lex_token.token_type = token_LESS_EQ;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
 
         case STATE_ADDITION:
-            current_lex_token.token_type = TYPE_ADD;
+            current_lex_token.token_type = token_PLUS;
             ungetc(c, stdin);
             return current_lex_token;
 
@@ -365,7 +349,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_SUB;
+                current_lex_token.token_type = token_MINUS;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
@@ -373,27 +357,27 @@ lex_token get_next_token()
             break;
 
         case STATE_RIGHT_ARROW:
-            current_lex_token.token_type = TYPE_RIGHT_ARROW;
+            current_lex_token.token_type = token_ARROW;
             ungetc(c, stdin);
             return current_lex_token;
             break;
 
         case STATE_MULTIPLICATION:
-            current_lex_token.token_type = TYPE_MUL;
+            current_lex_token.token_type = token_MUL;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
 
         case STATE_COLON:
-            current_lex_token.token_type = TYPE_COLON;
+            current_lex_token.token_type = token_COLON;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
 
         case STATE_DIVISION:
-            current_lex_token.token_type = TYPE_DIV;
+            current_lex_token.token_type = token_DIV;
             ungetc(c, stdin);
             return current_lex_token;
 
@@ -406,15 +390,14 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_OPTIONAL;
-                ungetc(c, stdin);
-                return current_lex_token;
+                fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                return (lex_token){.token_type = token_LEX_ERROR, .token_value = 1};
             }
 
             break;
 
         case STATE_DEFAULT_VALUE:
-            current_lex_token.token_type = TYPE_DEFAULT_VALUE;
+            current_lex_token.token_type = token_CONCAT;
             ungetc(c, stdin);
             return current_lex_token;
 
@@ -422,65 +405,53 @@ lex_token get_next_token()
 
         case STATE_EOF:
 
-            current_lex_token.token_type = TYPE_EOF;
+            current_lex_token.token_type = token_EOF;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
 
         case STATE_SEMICOLON:
-            current_lex_token.token_type = TYPE_SEMICOLON;
+            current_lex_token.token_type = token_SEMICOLON;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
 
         case STATE_COMMA:
-            current_lex_token.token_type = TYPE_COMMA;
+            current_lex_token.token_type = token_COMMA;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
         case STATE_LEFT_BRACKET:
-            current_lex_token.token_type = TYPE_LEFT_BRACKET;
+            current_lex_token.token_type = token_PARENTHESES_L;
             ungetc(c, stdin);
             return current_lex_token;
 
-            break;
-
-        case STATE_LEFT_SQUARE_BRACKET:
-            current_lex_token.token_type = TYPE_LEFT_SQUARE_BRACKET;
-            ungetc(c, stdin);
-            return current_lex_token;
-            break;
-
-        case STATE_RIGHT_SQUARE_BRACKET:
-            current_lex_token.token_type = TYPE_RIGHT_SQUARE_BRACKET;
-            ungetc(c, stdin);
-            return current_lex_token;
             break;
 
         case STATE_LEFT_CURV_BRACKET:
-            current_lex_token.token_type = TYPE_LEFT_CURV_BRACKET;
+            current_lex_token.token_type = token_BRACKET_L;
             ungetc(c, stdin);
             return current_lex_token;
             break;
 
         case STATE_RIGHT_CURV_BRACKET:
-            current_lex_token.token_type = TYPE_RIGHT_CURV_BRACKET;
+            current_lex_token.token_type = token_BRACKET_R;
             ungetc(c, stdin);
             return current_lex_token;
             break;
 
         case STATE_RIGHT_BRACKET:
-            current_lex_token.token_type = TYPE_RIGHT_BRACKET;
+            current_lex_token.token_type = token_PARENTHESES_R;
             ungetc(c, stdin);
             return current_lex_token;
 
             break;
 
         case STATE_EOL:
-            current_lex_token.token_type = TYPE_EOL;
+            current_lex_token.token_type = token_EOL;
             ungetc(c, stdin);
             return current_lex_token;
             break;
@@ -492,14 +463,14 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_NOT;
+                current_lex_token.token_type = token_NOT;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
             break;
 
         case STATE_NOT_EQUAL:
-            current_lex_token.token_type = TYPE_NOT_EQUAL;
+            current_lex_token.token_type = token_NEQ;
             return current_lex_token;
             break;
 
@@ -510,14 +481,14 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ASSING;
+                current_lex_token.token_type = token_ASSIGN;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
             break;
 
         case STATE_EQUAL:
-            current_lex_token.token_type = TYPE_EQUAL;
+            current_lex_token.token_type = token_EQ;
             ungetc(c, stdin);
             return current_lex_token;
 
@@ -545,7 +516,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = TYPE_WHOLE_NUMBER;
+                current_lex_token.token_type = token_CONST_WHOLE_NUMBER;
 
                 current_lex_token.token_value.INT_VAL = atoi(str.data);
                 string_clear(&str);
@@ -561,7 +532,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
 
@@ -580,7 +551,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = TYPE_DEC_NUMBER;
+                current_lex_token.token_type = token_CONST_DEC_NUMBER;
                 current_lex_token.token_value.FLOAT_VAL = atof(str.data);
                 string_clear(&str);
                 return current_lex_token;
@@ -601,7 +572,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
 
@@ -615,7 +586,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
 
@@ -629,7 +600,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = TYPE_EXP_POWER;
+                current_lex_token.token_type = token_CONST_SCIENTIFIC_NOTATION;
                 current_lex_token.token_value.FLOAT_VAL = atof(str.data);
                 string_clear(&str);
                 return current_lex_token;
@@ -645,7 +616,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_UNDERSCORE;
+                current_lex_token.token_type = token_UNDERSCORE;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
@@ -710,7 +681,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = KEYWORD_INT;
+                current_lex_token.token_type = token_TYPE_INT;
                 return current_lex_token;
             }
             break;
@@ -718,13 +689,13 @@ lex_token get_next_token()
         case STATE_Int_Q:
             if (c == '?')
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = KEYWORD_INT_Q;
+                current_lex_token.token_type = token_TYPE_INT_Q;
                 return current_lex_token;
             }
             break;
@@ -808,7 +779,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = KEYWORD_DOUBLE;
+                current_lex_token.token_type = token_TYPE_DOUBLE;
                 return current_lex_token;
             }
             break;
@@ -816,13 +787,13 @@ lex_token get_next_token()
         case STATE_DOUBLE_Q:
             if (c == '?')
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = KEYWORD_DOUBLE_Q;
+                current_lex_token.token_type = token_TYPE_DOUBLE_Q;
                 return current_lex_token;
             }
             break;
@@ -906,7 +877,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = KEYWORD_STRING;
+                current_lex_token.token_type = token_TYPE_STRING;
                 return current_lex_token;
             }
             break;
@@ -914,13 +885,13 @@ lex_token get_next_token()
         case STATE_String_Q:
             if (c == '?')
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             else
             {
                 ungetc(c, stdin);
-                current_lex_token.token_type = KEYWORD_STRING_Q;
+                current_lex_token.token_type = token_TYPE_STRING_Q;
                 return current_lex_token;
             }
             break;
@@ -937,7 +908,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -958,7 +929,7 @@ lex_token get_next_token()
             }
             else // to do
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -976,7 +947,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -989,7 +960,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -1002,7 +973,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -1020,7 +991,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -1033,7 +1004,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.token_type = TYPE_ERROR;
+                current_lex_token.token_type = token_LEX_ERROR;
                 return current_lex_token;
             }
             break;
@@ -1041,7 +1012,7 @@ lex_token get_next_token()
         case STATE_STRING_DONE:
 
             ungetc(c, stdin);
-            current_lex_token.token_type = TYPE_STRING;
+            current_lex_token.token_type = token_TYPE_STRING_LINE;
             current_lex_token.token_value.STR_VAL = str.data;
             return current_lex_token;
 

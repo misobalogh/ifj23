@@ -126,7 +126,7 @@ typedef enum Type_of_token
     KEYWORD_VAR,
     KEYWORD_WHILE,
 } type_of_token;
-
+/*
 // union for specific token data type
 typedef union Value_of_token
 {
@@ -158,4 +158,4 @@ lex_token get_next_token();
 extern lex_token current_lex_token;
 
 // current state
-extern states current_lex_state;
+extern states current_lex_state;*/
