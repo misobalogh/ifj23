@@ -58,11 +58,11 @@ typedef enum
     token_OP_END,
     token_PARENTHESES_L,
     token_PARENTHESES_R,
-    token_ID,
+    token_ID, // 20
     token_ID_OR_CONST,
     token_DOLLAR,
     // ...
-    token_TERMINAL,
+    token_TERMINAL,  //23
     // ...
     token_NONTERMINAL, // remove later
     token_LET,
