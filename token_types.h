@@ -15,7 +15,6 @@
 
 #include <stdbool.h>
 
-
 /**
  * @brief Enum of token types.
  *
@@ -36,7 +35,8 @@
  * @param token_PARENTHESES_R right parentheses
  * @param token_ID identifier
  */
-typedef enum {
+typedef enum
+{
     token_LEX_ERROR = -1,
     token_OP_START = 0,
     token_PLUS_MINUS = 0,
@@ -45,7 +45,7 @@ typedef enum {
     token_MUL_DIV = 1,
     token_MUL = 1,
     token_DIV = 1,
-    token_CONCAT = 2, 
+    token_CONCAT = 2,
     token_DEFAULT_VALUE = token_CONCAT, // remove token CONCAT later
     token_FORCE_UNWRAP = 3,
     token_REL = 4,
@@ -71,6 +71,8 @@ typedef enum {
     token_ELSE,
     token_WHILE,
     token_CONST,
+    token_NOT,
+    token_NIL,
     token_CONST_WHOLE_NUMBER = token_CONST,
     token_CONST_DEC_NUMBER = token_CONST,
     token_CONST_SCIENTIFIC_NOTATION = token_CONST,
@@ -82,12 +84,14 @@ typedef enum {
     token_ARROW,
     token_ASSIGN, // "="
     token_COLON,
+    token_SEMICOLON,
     token_UNDERSCORE, // "_" for function param name
     token_TYPE,
     token_TYPE_INT,
     token_TYPE_INT_Q,
     token_TYPE_DOUBLE,
     token_TYPE_DOUBLE_Q,
+    token_TYPE_STRING_LINE,
     token_TYPE_STRING,
     token_TYPE_STRING_Q,
     token_EOL,
@@ -97,11 +101,42 @@ typedef enum {
 typedef struct token
 {
     tokenType type;
-    char* value;
+    char *value;
 } tokenStruct;
-
 
 bool isTerminal(tokenType type);
 
+// union for specific token data type
+typedef union Value_of_token
+{
+    int INT_VAL;
+    float FLOAT_VAL;
+    char *STR_VAL;
+} value_of_token;
+
+// structure of token
+typedef struct Token
+{
+    value_of_token token_value;
+    tokenType token_type;
+    int line;
+} lex_token;
+
+// structure of dynamic string
+typedef struct Dynamic_String
+{
+    char *data;            // current cuntent
+    unsigned int size;     // current size
+    unsigned int capacity; // max capacity
+} dynamic_string;
+
+// function to get new token
+lex_token get_next_token();
+
+// current token
+extern lex_token current_lex_token;
+
+// current state
+// extern states current_lex_state;
 
 #endif // _TOKEN_TYPES_H
