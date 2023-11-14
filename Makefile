@@ -36,6 +36,7 @@ help:
 all: main tests
 
 test: main
+	rm -rf *.log
 	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))
 
 rununit: $(UNIT_TESTS)

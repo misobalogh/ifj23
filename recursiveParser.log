@@ -1,0 +1,14 @@
+
+
+<program> -> <stat_list> EOF
+
+<stat_list> -> <statement> EOL <stat_list>
+
+<statement> -> <let_or_var> <var_assignment>
+
+<let_or_var> -> let id
+
+<var_assignment> -> = const <expression>
+
+<expression> => switching to precedence parser
+

@@ -89,7 +89,6 @@ bool rule_STAT_LIST() {
 
 
 bool rule_STATEMENT() {
-    LOG("t.type: %d", t.type);
     switch (t.type) {
     case token_LET:
     case token_VAR:
@@ -290,13 +289,10 @@ bool rule_BRACK_STATEMENT() {
 
 
 bool rule_LET_OR_VAR() {
-    LOG("t.type: %d", t.type);
-
     if (t.type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
         t = get_next_token();
         if (t.type == token_ID) {
-            LOG("t.type: %d", t.type);
             t = get_next_token();
             return true;
         }
@@ -305,7 +301,6 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> var id\n");
         t = get_next_token();
         if (t.type == token_ID) {
-            LOG("t.type: %d", t.type);
             t = get_next_token();
             return true;
         }
@@ -314,8 +309,6 @@ bool rule_LET_OR_VAR() {
 }
 
 bool rule_VAR_ASSIGNMENT() {
-    LOG("t.type: %d", t.type);
-
     // <var_assigment> -> : type <val_assigment>
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");

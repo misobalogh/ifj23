@@ -474,7 +474,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.type = token_NOT;
+                current_lex_token.type = token_FORCE_UNWRAP;
                 ungetc(c, stdin);
                 return current_lex_token;
             }

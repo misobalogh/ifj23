@@ -37,7 +37,7 @@ bool reduce(stack* s) {
     stackItem* third = stackThird(s);
 
 
-    if (top->type == token_ID && top->flag == true) {
+    if ((top->type == token_ID || top->type == token_CONST) && top->flag == true) {
         PLOG("rule ID\n");
         rule_E_ID(s);
     }
@@ -98,22 +98,22 @@ bool precedenceParser() {
     if (stash.type != token_EMPTY) {
         t = stash;
     }
+
+
     while (!((t.type == token_EOL || t.type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
         lex_token tType = { .type = t.type, .value = t.value };
         // treat EOL and BRACKET_L as DOLLAR
         if (t.type == token_EOL || t.type == token_BRACKET_L) {
             tType.type = token_DOLLAR;
         }
-        // treat CONST as ID
-        else if (t.type == token_CONST) {
-            // TODO: Might cause issues in semantic analysis
-            t.type = token_ID;
-            tType.type = token_ID;
-        }
         // invalid token handling
         else if (t.type < token_OP_START || t.type > token_TERMINAL) {
             return false;
         }
+
+        getTableIndex(t.type);
+
+        LOG("Expresion: %d\n", t.type);
         switch (precedenceTable[stackTopTerminal(&s)->type][tType.type])
         {
         case EQUAL: // "="
@@ -159,6 +159,7 @@ bool precedenceParser() {
             // default:
             //     break;
         default:
+            PLOG("ERROR: unknown precedence table value\n");
             return false;
         }
     }

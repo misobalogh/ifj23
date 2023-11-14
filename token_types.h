@@ -61,6 +61,10 @@ typedef enum
     token_ID, // 20
     token_ID_OR_CONST,
     token_DOLLAR,
+    token_CONST,
+    token_CONST_WHOLE_NUMBER,
+    token_CONST_DEC_NUMBER,
+    token_CONST_SCIENTIFIC_NOTATION,
     // ...
     token_TERMINAL,  //23
     // ...
@@ -70,12 +74,9 @@ typedef enum
     token_IF,
     token_ELSE,
     token_WHILE,
-    token_CONST,
-    token_NOT,
+
+
     token_NIL,
-    token_CONST_WHOLE_NUMBER = token_CONST,
-    token_CONST_DEC_NUMBER = token_CONST,
-    token_CONST_SCIENTIFIC_NOTATION = token_CONST,
     token_FUNC,
     token_RETURN,
     token_BRACKET_L,
