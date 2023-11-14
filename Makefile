@@ -33,7 +33,10 @@ help:
 
 all: main tests
 
-runtests: $(UNIT_TESTS)
+test: main
+	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))
+
+rununit: $(UNIT_TESTS)
 	@for test in $(UNIT_TESTS); do \
 		./$$test; \
 	done

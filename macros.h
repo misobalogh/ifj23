@@ -34,16 +34,16 @@
     } while (0)                                                                                 \
 
 
-/**
- * @brief Compares two strings, if they are equal, returns true.
- */
+ /**
+  * @brief Compares two strings, if they are equal, returns true.
+  */
 #define STRING_EQ(str1, str2) (strcmp(str1, str2) == 0)
 
-//================= DEBUGGING =================
-/**
- * @brief Debug macro for printing to stderr.
- */
-#define LOG(fmt, ...) fprintf(stderr, RED fmt RESET "\n", __VA_ARGS__)
+  //================= DEBUGGING =================
+  /**
+   * @brief Debug macro for printing to stderr.
+   */
+#define LOG(fmt, ...) fprintf(stderr,fmt "\n", __VA_ARGS__)
 
 
 #define LOG_ERR(message) do {                           \
