@@ -39,10 +39,8 @@ typedef enum
 {
     token_LEX_ERROR,
     token_OP_START,
-    token_PLUS_MINUS,
     token_PLUS,
     token_MINUS,
-    token_MUL_DIV,
     token_MUL,
     token_DIV,
     token_CONCAT,
@@ -60,11 +58,11 @@ typedef enum
     token_PARENTHESES_R,
     token_ID, // 20
     token_ID_OR_CONST,
-    token_DOLLAR,
     token_CONST,
     token_CONST_WHOLE_NUMBER,
     token_CONST_DEC_NUMBER,
     token_CONST_SCIENTIFIC_NOTATION,
+    token_DOLLAR,
     // ...
     token_TERMINAL,  //23
     // ...

@@ -1,4 +1,86 @@
 INIT: 
-22 
-ERROR: unknown precedence table value
+24 
+LOW: 
+21 24 
+HIGH: 
+21 24 
+rule ID
 
+26 24 
+END: 
+INIT: 
+24 
+LOW: 
+21 24 
+HIGH: 
+21 24 
+rule ID
+
+26 24 
+END: 
+INIT: 
+24 
+LOW: 
+21 24 
+HIGH: 
+21 24 
+rule ID
+
+LOW: 
+4 26 24 
+LOW: 
+21 4 26 24 
+HIGH: 
+21 4 26 24 
+rule ID
+
+HIGH: 
+26 4 26 24 
+rule E op E
+
+LOW: 
+2 26 24 
+LOW: 
+21 2 26 24 
+HIGH: 
+21 2 26 24 
+rule ID
+
+HIGH: 
+26 2 26 24 
+rule E op E
+
+LOW: 
+3 26 24 
+LOW: 
+21 3 26 24 
+HIGH: 
+21 3 26 24 
+rule ID
+
+HIGH: 
+26 3 26 24 
+rule E op E
+
+LOW: 
+2 26 24 
+LOW: 
+16 2 26 24 
+LOW: 
+21 16 2 26 24 
+HIGH: 
+21 16 2 26 24 
+rule ID
+
+EQUAL: 
+26 16 2 26 24 
+HIGH: 
+17 26 16 2 26 24 
+rule (E)
+
+HIGH: 
+26 2 26 24 
+rule E op E
+
+26 24 
+END: 

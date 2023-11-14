@@ -75,7 +75,7 @@ col = GREEN if tests_passed/len(test_files) > 0.5 else RED
 print(f"""
 {BLUE}
 =========================================================================
-|  DONT GIVE U CAN DO IT 💪{25*" "}{col}{tests_passed}/{len(test_files)} tests passed{BLUE}                   
+|  DONT GIVE UP U CAN DO IT 💪{25*" "}{col}{tests_passed}/{len(test_files)} tests passed{BLUE}                   
 |      💯😎🤑💲🐵🤖📈 {40*" "}{col}{tests_passed/len(test_files)*100:.2f}%{BLUE}    
 =========================================================================
 {RESET}""")

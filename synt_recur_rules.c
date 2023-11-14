@@ -327,7 +327,7 @@ bool rule_VAR_ASSIGNMENT() {
             t = get_next_token();
             return rule_FN_OR_EXP();
         }
-        else if (t.type == token_CONST) {
+        else if (t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
             RLOG("<var_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -346,7 +346,7 @@ bool rule_VAL_ASSIGNMENT() {
 
             return rule_FN_OR_EXP();
         }
-        else if (t.type == token_CONST) {
+        else if (t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
             RLOG("<val_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -392,7 +392,7 @@ bool rule_AFTER_ID() {
         RLOG("<after_id> -> = id <fn_or_exp>\n");
         t = get_next_token();
 
-        if (t.type == token_ID || t.type == token_CONST) {
+        if (t.type == token_ID || t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
             stash = t;
             t = get_next_token();
             return rule_FN_OR_EXP();
@@ -422,7 +422,7 @@ bool rule_INPUT_PARAM_LIST() {
         return true;
     }
     // <input_param_list> -> <input_param> <input_param_next>
-    else if (t.type == token_ID || t.type == token_CONST) {
+    else if (t.type == token_ID || t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
         RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
@@ -444,7 +444,7 @@ bool rule_INPUT_PARAM_NEXT() {
 
 bool rule_INPUT_PARAM() {
     // <input_param> -> const        
-    if (t.type == token_CONST) {
+    if (t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
         RLOG("<input_param> -> const\n");
         t = get_next_token();
         return true;
@@ -482,7 +482,7 @@ bool rule_ID_OR_CONST() {
         return true;
     }
     // <id_or_const> -> const
-    else if (t.type == token_CONST) {
+    else if (t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
         RLOG("<id_or_const> -> const\n");
         t = get_next_token();
         return true;
@@ -698,7 +698,7 @@ bool rule_RETURN_STAT() {
 
 bool rule_RET_VAL() {
     // <ret_val> -> <expression>
-    if (t.type == token_ID || t.type == token_PARENTHESES_L || t.type == token_CONST) {
+    if (t.type == token_ID || t.type == token_PARENTHESES_L || t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
         RLOG("<ret_val> -> <expression>\n");
         return rule_EXPRESSION();
     }
@@ -712,7 +712,7 @@ bool rule_RET_VAL() {
 
 bool rule_CONDITION() {
     //<condition> -> <expression>
-    if (t.type == token_ID || t.type == token_PARENTHESES_L || t.type == token_CONST) {
+    if (t.type == token_ID || t.type == token_PARENTHESES_L || t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
         RLOG("<condition> -> <expression>\n");
         return rule_EXPRESSION();
     }
