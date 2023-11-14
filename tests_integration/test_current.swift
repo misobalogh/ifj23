@@ -1,4 +1,4 @@
-let b=2*2+2-3+(5)
+let b=22
 var c = a
 a = 4
 a = b
