@@ -37,34 +37,34 @@
  */
 typedef enum
 {
-    token_LEX_ERROR = -1,
-    token_OP_START = 0,
-    token_PLUS_MINUS = 0,
-    token_PLUS = 0,
-    token_MINUS = 0,
-    token_MUL_DIV = 1,
-    token_MUL = 1,
-    token_DIV = 1,
-    token_CONCAT = 2,
+    token_LEX_ERROR,
+    token_OP_START,
+    token_PLUS_MINUS,
+    token_PLUS,
+    token_MINUS,
+    token_MUL_DIV,
+    token_MUL,
+    token_DIV,
+    token_CONCAT,
     token_DEFAULT_VALUE = token_CONCAT, // remove token CONCAT later
-    token_FORCE_UNWRAP = 3,
-    token_REL = 4,
-    token_EQ = 4,
-    token_NEQ = 4,
-    token_LESS = 4,
-    token_MORE = 4,
-    token_LESS_EQ = 4,
-    token_MORE_EQ = 4,
-    token_OP_END = 4,
-    token_PARENTHESES_L = 5,
-    token_PARENTHESES_R = 6,
-    token_ID = 7,
-    token_ID_OR_CONST = 7,
-    token_DOLLAR = 8,
+    token_FORCE_UNWRAP,
+    token_REL,
+    token_EQ,
+    token_NEQ,
+    token_LESS,
+    token_MORE,
+    token_LESS_EQ,
+    token_MORE_EQ,
+    token_OP_END,
+    token_PARENTHESES_L,
+    token_PARENTHESES_R,
+    token_ID,
+    token_ID_OR_CONST,
+    token_DOLLAR,
     // ...
-    token_TERMINAL = 9,
+    token_TERMINAL,
     // ...
-    token_NONTERMINAL = 10, // remove later
+    token_NONTERMINAL, // remove later
     token_LET,
     token_VAR,
     token_IF,
@@ -96,12 +96,13 @@ typedef enum
     token_TYPE_STRING_Q,
     token_EOL,
     token_EOF,
+    token_EMPTY,
 } tokenType;
 
 typedef struct token
 {
     tokenType type;
-    char *value;
+    char* value;
 } tokenStruct;
 
 bool isTerminal(tokenType type);
@@ -111,21 +112,21 @@ typedef union Value_of_token
 {
     int INT_VAL;
     float FLOAT_VAL;
-    char *STR_VAL;
+    char* STR_VAL;
 } value_of_token;
 
 // structure of token
 typedef struct Token
 {
-    value_of_token token_value;
-    tokenType token_type;
+    value_of_token value;
+    tokenType type;
     int line;
 } lex_token;
 
 // structure of dynamic string
 typedef struct Dynamic_String
 {
-    char *data;            // current cuntent
+    char* data;            // current cuntent
     unsigned int size;     // current size
     unsigned int capacity; // max capacity
 } dynamic_string;

@@ -1,7 +1,7 @@
 # Project Name: Implementace překladače imperativního jazyka IFJ23
 # Authors: MICHAL BALOGH xbalog06, 
 
-CFLAGS = -g -Wextra -Wall -pedantic -std=c11
+CFLAGS = -g -Wextra -Wall -pedantic -std=c11 -Wno-missing-braces
 CC = gcc
 TESTLIB = cunit
 
@@ -40,7 +40,7 @@ runtests: $(UNIT_TESTS)
 
 run: main
 	rm -rf *.log
-	./main
+	./main <tests_integration/test_empty.swift
 
 $(TARGET): $(OBJ_FILES) $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ_FILES) $(SRC_DIR)/main.c
