@@ -8,11 +8,11 @@
 
 dynamic_string str = { .data = NULL, .size = 0, .capacity = 0 };
 
-lex_token current_lex_token = { .type = TYPE_ERROR, .value = 0 };
+lex_token current_lex_token = { .type = token_LEX_ERROR, .value = 0 };
 
 
 // function for picking a keyword from input string
-type_of_token keyword_check(char* str)
+tokenType keyword_check(char* str)
 {
     if (str == NULL)
     {
