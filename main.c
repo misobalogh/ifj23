@@ -17,6 +17,31 @@
 #include "synt_analysis.h"
 
 int main() {
+    // lex_token t;
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+    // t = get_next_token();
+    // LOG("Token: %d", t.type);
+
+    // return 0;
+
+
     if (recursiveParser() == false) {
         LOG("Syntax Error: code %d", SYNTAX_ANALYSIS_ERR);
         return SYNTAX_ANALYSIS_ERR;

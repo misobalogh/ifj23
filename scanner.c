@@ -6,10 +6,19 @@
 #include <stdbool.h>
 #include "token_types.h"
 
+dynamic_string str = { .data = NULL, .size = 0, .capacity = 0 };
+
+lex_token current_lex_token = { .type = token_LEX_ERROR, .value = 0 };
+
+
 // function for picking a keyword from input string
-type_of_token keyword_check(char* str)
+tokenType keyword_check(char* str)
 {
-    if (strcmp(str, "Double") == 0)
+    if (str == NULL)
+    {
+        return token_LEX_ERROR;
+    }
+    else if (strcmp(str, "Double") == 0)
     {
         return token_TYPE_DOUBLE;
     }
@@ -60,7 +69,7 @@ dynamic_string string_init(dynamic_string* str)
 
     if (str->data == NULL)
     {
-        printf("Malloc of dynamic string failed\n");
+        fprintf(stderr, "Malloc of dynamic string failed\n");
         // to do return error
     }
     return *str;
@@ -69,10 +78,12 @@ dynamic_string string_init(dynamic_string* str)
 
 void string_clear(dynamic_string* str)
 {
-    if (str != NULL)
+    if (str->data == NULL)
     {
-        free(str->data);
+        return;
     }
+    free(str->data);
+    str->data = NULL;
 }
 
 // if dynamic string is full, function will realloc its memory to 2 times its previous size
@@ -93,12 +104,12 @@ dynamic_string char_insert(dynamic_string* str, char c)
     return *str;
 }
 
-lex_token current_lex_token = { .type = TYPE_ERROR, .value = 0 };
 
 lex_token get_next_token()
 {
     states current_lex_state = STATE_START;
-    dynamic_string str;
+
+    string_clear(&str);
 
     int c = 0;
     while (1)
@@ -519,7 +530,7 @@ lex_token get_next_token()
                 current_lex_token.type = token_CONST_WHOLE_NUMBER;
 
                 current_lex_token.value.INT_VAL = atoi(str.data);
-                string_clear(&str);
+                // string_clear(&str);
                 return current_lex_token;
             }
             break;
@@ -553,7 +564,7 @@ lex_token get_next_token()
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_DEC_NUMBER;
                 current_lex_token.value.FLOAT_VAL = atof(str.data);
-                string_clear(&str);
+                // string_clear(&str);
                 return current_lex_token;
             }
 
@@ -602,7 +613,7 @@ lex_token get_next_token()
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_SCIENTIFIC_NOTATION;
                 current_lex_token.value.FLOAT_VAL = atof(str.data);
-                string_clear(&str);
+                // string_clear(&str);
                 return current_lex_token;
             }
 

@@ -40,7 +40,7 @@ runtests: $(UNIT_TESTS)
 
 run: main
 	rm -rf *.log
-	./main <tests_integration/test_empty.swift
+	./main <tests_integration/test_current.swift
 
 $(TARGET): $(OBJ_FILES) $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ_FILES) $(SRC_DIR)/main.c

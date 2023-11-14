@@ -45,12 +45,16 @@ bool rule_PROGRAM() {
         t.type == token_IF ||
         t.type == token_WHILE ||
         t.type == token_ID ||
-        t.type == token_FUNC ||
-        t.type == token_EOF) {
+        t.type == token_FUNC
+        ) {
         if (rule_STAT_LIST()) {
             RLOG("EOF\n");
             return true;
         }
+    }
+    else if (t.type == token_EOF) {
+        RLOG("EOF\n");
+        return true;
     }
     return false;
 }
@@ -66,15 +70,19 @@ bool rule_STAT_LIST() {
         t.type == token_EOL) {
         RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
         if (rule_STATEMENT()) {
+            RLOG("statement OK");
             if (t.type == token_EOL) {
+                RLOG("EOL\n");
                 t = get_next_token();
                 return rule_STAT_LIST();
+            }
+            else if (t.type == token_EOF) {
+                return true;
             }
         }
     }
     // 3. <stat_list> -> EPSILON
     else if (t.type == token_EOF) {
-        t = get_next_token();
         RLOG("<stat_list> -> EPSILON\n");
         return true;
     }
@@ -83,6 +91,7 @@ bool rule_STAT_LIST() {
 
 
 bool rule_STATEMENT() {
+    LOG("t.type: %d", t.type);
     switch (t.type) {
     case token_LET:
     case token_VAR:
@@ -288,10 +297,13 @@ bool rule_BRACK_STATEMENT() {
 
 
 bool rule_LET_OR_VAR() {
+    LOG("t.type: %d", t.type);
+
     if (t.type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
         t = get_next_token();
         if (t.type == token_ID) {
+            LOG("t.type: %d", t.type);
             t = get_next_token();
             return true;
         }
@@ -300,6 +312,7 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> var id\n");
         t = get_next_token();
         if (t.type == token_ID) {
+            LOG("t.type: %d", t.type);
             t = get_next_token();
             return true;
         }
@@ -308,6 +321,8 @@ bool rule_LET_OR_VAR() {
 }
 
 bool rule_VAR_ASSIGNMENT() {
+    LOG("t.type: %d", t.type);
+
     // <var_assigment> -> : type <val_assigment>
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
@@ -342,6 +357,7 @@ bool rule_VAL_ASSIGNMENT() {
         if (t.type == token_ID) {
             stash = t;
             t = get_next_token();
+
             return rule_FN_OR_EXP();
         }
         else if (t.type == token_CONST) {
@@ -358,12 +374,13 @@ bool rule_VAL_ASSIGNMENT() {
 }
 
 bool rule_FN_OR_EXP() {
-    // <fn_or_exp> -> EOL
-    if (t.type == token_EOL) {
+    // <fn_or_exp> -> id/const
+    if (t.type == token_EOL || t.type == token_EOF) {
+        RLOG("<fn_or_exp> -> id/const\n");
         return true;
     }
     // <fn_or_exp> -> <expression> 
-    if ((t.type >= token_OP_START && t.type <= token_OP_END)) { // TODO: is it correct for every case?
+    else if ((t.type >= token_OP_START && t.type <= token_OP_END)) { // TODO: is it correct for every case?
         RLOG("<fn_or_exp> -> <expression>\n");
         return rule_EXPRESSION();
     }
