@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 15.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -22,17 +22,17 @@ bool syntacticAnalysis();
 
 
 /**
- * @brief Stash for token for expression parser 
+ * @brief Stash for token for expression parser
  * when switching from recursive parser when deciding,
  * whether it is expression or function call
  */
-extern tokenStruct *stash; 
+extern lex_token stash;
 
 
 /**
  * @brief Most recent token from scanner
  */
-extern tokenStruct* t;     
+extern lex_token t;
 
 // Two methods - one for expressions, second for everything else
 
@@ -45,11 +45,11 @@ bool recursiveParser();
 /**
  * @brief Mocking function for testing purposes
 */
-tokenStruct *mock_precedence_nextToken();
+tokenStruct* mock_precedence_nextToken();
 
 /**
  * @brief Mocking function for testing purposes
 */
-tokenStruct *mock_recursive_nextToken();
+tokenStruct* mock_recursive_nextToken();
 
 #endif // _SYNT_ANALYSIS_H

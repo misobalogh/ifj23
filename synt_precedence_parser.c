@@ -94,49 +94,49 @@ bool precedenceParser() {
     // debug
     PLOG("INIT: ");
     stackPrint(&s);
-    tokenStruct* temp = t;
-    if (stash != NULL) {
+    lex_token temp = t;
+    if (stash.type != token_EMPTY) {
         t = stash;
     }
-    while (!((t->type == token_EOL || t->type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
-        tokenType tType = t->type;
+    while (!((t.type == token_EOL || t.type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
+        lex_token tType = { .type = t.type, .value = t.value };
         // treat EOL and BRACKET_L as DOLLAR
-        if(t->type == token_EOL || t->type == token_BRACKET_L) {
-            tType = token_DOLLAR;
+        if (t.type == token_EOL || t.type == token_BRACKET_L) {
+            tType.type = token_DOLLAR;
         }
         // treat CONST as ID
-        else if(t->type == token_CONST) {
+        else if (t.type == token_CONST) {
             // TODO: Might cause issues in semantic analysis
-            t->type = token_ID;
-            tType = token_ID;
+            t.type = token_ID;
+            tType.type = token_ID;
         }
         // invalid token handling
-        else if(t->type < token_OP_START || t->type > token_TERMINAL) {
+        else if (t.type < token_OP_START || t.type > token_TERMINAL) {
             return false;
         }
-        switch (precedenceTable[stackTopTerminal(&s)->type][tType])
+        switch (precedenceTable[stackTopTerminal(&s)->type][tType.type])
         {
         case EQUAL: // "="
             PLOG("EQUAL: ");
             stackPrint(&s);
-            stackPush(&s, t->type);
-            if (stash != NULL) {
+            stackPush(&s, t.type);
+            if (stash.type != token_EMPTY) {
                 t = temp;
-                stash = NULL;
+                stash.type = token_EMPTY;
             }
             else {
-                t = mock_recursive_nextToken();
+                t = get_next_token();
             }
             break;
         case LOW: // expand  "<"
-            stackPush(&s, t->type);
+            stackPush(&s, t.type);
             stackTopTerminalSetFlag(&s);
-            if (stash != NULL) {
+            if (stash.type != token_EMPTY) {
                 t = temp;
-                stash = NULL;
+                stash.type = token_EMPTY;
             }
             else {
-                t = mock_recursive_nextToken();
+                t = get_next_token();
             }
             PLOG("LOW: ");
             stackPrint(&s);

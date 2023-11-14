@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "swift_keywords.h"
 #include "token_types.h"
 
 typedef enum { SEM_STACK_TOKEN, SEM_STACK_LITERAL } semStackValueType;

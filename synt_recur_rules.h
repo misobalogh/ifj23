@@ -26,6 +26,8 @@ bool rule_LET_OR_VAR();
 bool rule_EXPRESSION();
 bool rule_AFTER_ID();
 bool rule_FN_OR_EXP();
+bool rule_ID_OR_UNDERSCORE();
+bool rule_BRACK_STATEMENT();
 bool rule_BRACK_STAT_LIST();
 
 

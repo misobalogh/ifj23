@@ -45,7 +45,7 @@ enum operator_precedence {
     OP_MUL_DIV      = 3,
     OP_PLUS_MINUS   = 2,
     OP_REL          = 1,
-    OP_CONCAT       = 0
+    OP_CONCAT       = 0  // TODO: rename to OP_OPTIONAL_NIL
 };
 
 /* Operators */
