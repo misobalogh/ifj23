@@ -13,7 +13,6 @@
 #include "dynamic_string.h"
 #include "function_stack.h"
 
-SemStack* semStack;
 stack* semanticStack;
 
 static char* functionId = NULL;

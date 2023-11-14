@@ -1,10 +1,11 @@
+#ifndef SEMANTIC_ANALYSIS_H
+#define SEMANTIC_ANALYSIS_H
+
 #include <stdbool.h>
-#include "semantic_analysis_stack.h"
 #include "error_codes.h"
 #include "symtable.h"
 #include "synt_prec_stack.h"
 
-extern SemStack* semStack;
 extern stack* semanticStack;
 
 error_codes semanticAnalysisInit(void);
@@ -28,3 +29,5 @@ error_codes analyseCallEpsilon(void);
 error_codes analyseCallEnd(void);
 
 const char* parseType(const char* typeStr);
+
+#endif

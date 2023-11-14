@@ -1,8 +1,8 @@
-#include "stack.h"
+#include "function_stack.h"
 #include <string.h>
 #include <malloc.h>
 
-FunctionStack* functionSackInit(void) {
+FunctionStack* functionStackInit(void) {
   FunctionStack* stack = malloc(sizeof(FunctionStack));
   if (stack == NULL) {
     return NULL;
