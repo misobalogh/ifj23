@@ -15,6 +15,7 @@
 #include "synt_recur_rules.h"
 
 
+
 /**
  * @brief Stash for token for expression parser
  * when switching from recursive parser when deciding,
@@ -30,12 +31,15 @@ lex_token t = { .type = token_EMPTY, .value = 0 };
 
 bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
-    return precedenceParser();
+    error_codes retVal = precedenceParser();
+    stash.type = token_EMPTY;
+    return retVal;
 }
 
 bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
     t = get_next_token();
+    LEX_ERR_CHECK();
     RLOG("\n\n<program> -> <stat_list> EOF\n");
     if (t.type == token_EOL ||
         t.type == token_LET ||
@@ -68,10 +72,9 @@ bool rule_STAT_LIST() {
         t.type == token_EOL) {
         RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
         if (rule_STATEMENT()) {
-            RLOG("statement OK");
             if (t.type == token_EOL) {
-                RLOG("EOL\n");
                 t = get_next_token();
+                LEX_ERR_CHECK();
                 return rule_STAT_LIST();
             }
             else if (t.type == token_EOF) {
@@ -97,18 +100,22 @@ bool rule_STATEMENT() {
     case token_ID:
         RLOG("<statement> -> id <after_id>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_AFTER_ID();
     case token_FUNC:
         RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_ID) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_PARENTHESES_L) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_PARAM_LIST()) {
             return false;
         }
@@ -116,6 +123,7 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_RETURN_TYPE()) {
             return false;
         }
@@ -123,6 +131,7 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_FUNC_STAT_LIST()) {
             return false;
         }
@@ -130,10 +139,12 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     case token_IF:
         RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_CONDITION()) {
             return false;
         }
@@ -141,6 +152,7 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -148,14 +160,17 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_ELSE) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -163,10 +178,12 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     case token_WHILE:
         RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_EXPRESSION()) {
             return false;
         }
@@ -174,6 +191,7 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -181,6 +199,7 @@ bool rule_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     case token_EOL:
         RLOG("<statement> -> EPSILON\n");
@@ -205,6 +224,7 @@ bool rule_BRACK_STAT_LIST() {
         if (rule_BRACK_STATEMENT()) {
             if (t.type == token_EOL) {
                 t = get_next_token();
+                LEX_ERR_CHECK();
                 return rule_BRACK_STAT_LIST();
             }
         }
@@ -226,10 +246,12 @@ bool rule_BRACK_STATEMENT() {
     case token_ID:
         RLOG("<brack_statement> -> id <after_id>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_AFTER_ID();
     case token_IF:
         RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_CONDITION()) {
             return false;
         }
@@ -237,6 +259,7 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -244,14 +267,17 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_ELSE) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -259,10 +285,12 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     case token_WHILE:
         RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_EXPRESSION()) {
             return false;
         }
@@ -270,6 +298,7 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -277,6 +306,7 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     case token_EOL:
         RLOG("<brack_statement> -> EPSILON\n");
@@ -292,16 +322,20 @@ bool rule_LET_OR_VAR() {
     if (t.type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type == token_ID) {
             t = get_next_token();
+            LEX_ERR_CHECK();
             return true;
         }
     }
     else if (t.type == token_VAR) {
         RLOG("<let_or_var> -> var id\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type == token_ID) {
             t = get_next_token();
+            LEX_ERR_CHECK();
             return true;
         }
     }
@@ -313,25 +347,28 @@ bool rule_VAR_ASSIGNMENT() {
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         t = get_next_token();
-        if (t.type == token_TYPE) {
-            t = get_next_token();
+        LEX_ERR_CHECK();
+        if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
     }
     // <var_assigment> -> = id <fn_or_exp>
     else if (t.type == token_ASSIGN) {
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type == token_ID) {
             RLOG("<var_assignment> -> = id <fn_or_exp>\n");
             stash = t;
             t = get_next_token();
+            LEX_ERR_CHECK();
             return rule_FN_OR_EXP();
         }
         else if (t.type == token_CONST
             || t.type == token_CONST_WHOLE_NUMBER
             || t.type == token_CONST_DEC_NUMBER
             || t.type == token_CONST_SCIENTIFIC_NOTATION
-            || t.type == token_PARENTHESES_L) {
+            || t.type == token_PARENTHESES_L
+            || t.type == token_TYPE_STRING_LINE) {
             RLOG("<var_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -344,9 +381,11 @@ bool rule_VAL_ASSIGNMENT() {
     if (t.type == token_ASSIGN) {
         RLOG("<val_assignment> -> = id <fn_or_exp>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type == token_ID) {
             stash = t;
             t = get_next_token();
+            LEX_ERR_CHECK();
 
             return rule_FN_OR_EXP();
         }
@@ -354,7 +393,8 @@ bool rule_VAL_ASSIGNMENT() {
             || t.type == token_CONST_WHOLE_NUMBER
             || t.type == token_CONST_DEC_NUMBER
             || t.type == token_CONST_SCIENTIFIC_NOTATION
-            || t.type == token_PARENTHESES_L) {
+            || t.type == token_PARENTHESES_L
+            || t.type == token_TYPE_STRING_LINE) {
             RLOG("<val_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -382,7 +422,9 @@ bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> ( <input_param_list> )
     else if (t.type == token_PARENTHESES_L) {
         RLOG("<fn_or_exp> -> ( <input_param_list> )\n");
+        stash.type = token_EMPTY;
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_INPUT_PARAM_LIST()) {
             return false;
         }
@@ -390,6 +432,7 @@ bool rule_FN_OR_EXP() {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     return false;
@@ -399,18 +442,21 @@ bool rule_AFTER_ID() {
     // <after_id> -> = id <fn_or_exp> 
     if (t.type == token_ASSIGN) {
         t = get_next_token();
+        LEX_ERR_CHECK();
 
         if (t.type == token_ID) {
             RLOG("<after_id> -> = id <fn_or_exp>\n");
             stash = t;
             t = get_next_token();
+            LEX_ERR_CHECK();
             return rule_FN_OR_EXP();
         }
         else if (t.type == token_CONST
             || t.type == token_CONST_WHOLE_NUMBER
             || t.type == token_CONST_DEC_NUMBER
             || t.type == token_CONST_SCIENTIFIC_NOTATION
-            || t.type == token_PARENTHESES_L) {
+            || t.type == token_PARENTHESES_L
+            || t.type == token_TYPE_STRING_LINE) {
             RLOG("<after_id> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -419,14 +465,15 @@ bool rule_AFTER_ID() {
     else if (t.type == token_PARENTHESES_L) {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_INPUT_PARAM_LIST()) {
             return false;
         }
-        t = get_next_token();
         if (t.type != token_PARENTHESES_R) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     return false;
@@ -443,7 +490,8 @@ bool rule_INPUT_PARAM_LIST() {
         || t.type == token_CONST
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
-        || t.type == token_CONST_SCIENTIFIC_NOTATION) {
+        || t.type == token_CONST_SCIENTIFIC_NOTATION
+        || t.type == token_TYPE_STRING_LINE) {
         RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
@@ -453,11 +501,14 @@ bool rule_INPUT_PARAM_LIST() {
 bool rule_INPUT_PARAM_NEXT() {
     // <input_param_next> -> , <input_param> <input_param_next>
     if (t.type == token_COMMA) {
+        RLOG("<input_param_next> -> , <input_param> <input_param_next>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
     // <input_param_next> -> EPSILON
     else if (t.type == token_PARENTHESES_R) {
+        RLOG("<input_param_next> -> EPSILON\n");
         return true;
     }
     return false;
@@ -468,15 +519,18 @@ bool rule_INPUT_PARAM() {
     if (t.type == token_CONST
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
-        || t.type == token_CONST_SCIENTIFIC_NOTATION) {
+        || t.type == token_CONST_SCIENTIFIC_NOTATION
+        || t.type == token_TYPE_STRING_LINE) {
         RLOG("<input_param> -> const\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     // <input_param> -> id <with_name>
     else if (t.type == token_ID) {
         RLOG("<input_param> -> id <with_name>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_WITH_NAME();
     }
     return false;
@@ -493,6 +547,7 @@ bool rule_WITH_NAME() {
     else if (t.type == token_COLON) {
         RLOG("<with_name> -> : <id_or_const>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_ID_OR_CONST();
     }
     return false;
@@ -503,15 +558,18 @@ bool rule_ID_OR_CONST() {
     if (t.type == token_ID) {
         RLOG("<id_or_const> -> id\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     // <id_or_const> -> const
     else if (t.type == token_CONST
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
-        || t.type == token_CONST_SCIENTIFIC_NOTATION) {
+        || t.type == token_CONST_SCIENTIFIC_NOTATION
+        || t.type == token_TYPE_STRING_LINE) {
         RLOG("<id_or_const> -> const\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     return false;
@@ -524,7 +582,7 @@ bool rule_PARAM_LIST() {
         return true;
     }
     // <param_list> -> <param> <param_next>
-    else if (t.type == token_ID) {
+    else if (t.type == token_ID || t.type == token_UNDERSCORE) {
         RLOG("<param_list> -> <param> <param_next>\n");
         return rule_PARAM() && rule_PARAM_NEXT();
     }
@@ -536,6 +594,7 @@ bool rule_PARAM_NEXT() {
     if (t.type == token_COMMA) {
         RLOG("<param_next> -> , <param> <param_next>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_PARAM() && rule_PARAM_NEXT();
     }
     // <param_next> -> EPSILON
@@ -556,11 +615,13 @@ bool rule_PARAM() {
         return false;
     }
     t = get_next_token();
+    LEX_ERR_CHECK();
     if (t.type != token_COLON) {
         return false;
     }
     t = get_next_token();
-    return t.type == token_TYPE;
+    LEX_ERR_CHECK();
+    return rule_TYPE();
 }
 
 bool rule_ID_OR_UNDERSCORE() {
@@ -568,12 +629,14 @@ bool rule_ID_OR_UNDERSCORE() {
     if (t.type == token_ID) {
         RLOG("<id_or_underscore> -> id\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     // <id_or_underscore> -> _
     else if (t.type == token_UNDERSCORE) {
         RLOG("<id_or_underscore> -> _\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return true;
     }
     return false;
@@ -582,10 +645,10 @@ bool rule_ID_OR_UNDERSCORE() {
 bool rule_RETURN_TYPE() {
     // <return_type> -> ". type"
     if (t.type == token_ARROW) {
-        RLOG("<return_type> -> . type\n");
+        RLOG("<return_type> -> -> <type>\n");
         t = get_next_token();
-        if (t.type == token_TYPE) {
-            t = get_next_token();
+        LEX_ERR_CHECK();
+        if (rule_TYPE()) {
             return true;
         }
     }
@@ -608,10 +671,9 @@ bool rule_FUNC_STAT_LIST() {
         t.type == token_RETURN) {
         RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
         if (rule_FUNC_STAT()) {
-            t = get_next_token();
             if (t.type == token_EOL) {
-                RLOG("EOL\n");
                 t = get_next_token();
+                LEX_ERR_CHECK();
                 return rule_FUNC_STAT_LIST();
             }
         }
@@ -633,6 +695,7 @@ bool rule_FUNC_STAT() {
     case token_ID:
         RLOG("<func_stat> -> id <after_id>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         return rule_AFTER_ID();
     case token_RETURN:
         // <func_stat> -> <return_stat>
@@ -641,34 +704,42 @@ bool rule_FUNC_STAT() {
     case token_IF:
         RLOG("<func_stat> -> if <condition> { <stat_list> } else { <stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_CONDITION()) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_R) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_ELSE) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -676,19 +747,23 @@ bool rule_FUNC_STAT() {
     case token_WHILE:
         RLOG("<func_stat> -> while <expression> { <stat_list> }\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         stash = t;
         if (!rule_EXPRESSION()) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -708,8 +783,10 @@ bool rule_RETURN_STAT() {
     if (t.type == token_RETURN) {
         RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (rule_RET_VAL()) {
             t = get_next_token();
+            LEX_ERR_CHECK();
             if (t.type == token_EOL) {
                 return rule_FUNC_STAT_LIST();
             }
@@ -725,7 +802,13 @@ bool rule_RETURN_STAT() {
 
 bool rule_RET_VAL() {
     // <ret_val> -> <expression>
-    if (t.type == token_ID || t.type == token_PARENTHESES_L || t.type == token_CONST || t.type == token_CONST_WHOLE_NUMBER || t.type == token_CONST_DEC_NUMBER || t.type == token_CONST_SCIENTIFIC_NOTATION) {
+    if (t.type == token_ID
+        || t.type == token_PARENTHESES_L
+        || t.type == token_CONST
+        || t.type == token_CONST_WHOLE_NUMBER
+        || t.type == token_CONST_DEC_NUMBER
+        || t.type == token_CONST_SCIENTIFIC_NOTATION
+        || t.type == token_TYPE_STRING_LINE) {
         RLOG("<ret_val> -> <expression>\n");
         return rule_EXPRESSION();
     }
@@ -744,7 +827,8 @@ bool rule_CONDITION() {
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
-        || t.type == token_PARENTHESES_L) {
+        || t.type == token_PARENTHESES_L
+        || t.type == token_TYPE_STRING_LINE) {
         RLOG("<condition> -> <expression>\n");
         return rule_EXPRESSION();
     }
@@ -752,15 +836,30 @@ bool rule_CONDITION() {
     if (t.type == token_LET) {
         RLOG("<condition> -> let id\n");
         t = get_next_token();
+        LEX_ERR_CHECK();
         if (t.type == token_ID) {
             t = get_next_token();
+            LEX_ERR_CHECK();
             return true;
         }
     }
     return false;
 }
 
-
+bool rule_TYPE() {
+    if (t.type == token_TYPE_STRING ||
+        t.type == token_TYPE_STRING_Q ||
+        t.type == token_TYPE_INT ||
+        t.type == token_TYPE_INT_Q ||
+        t.type == token_TYPE_DOUBLE ||
+        t.type == token_TYPE_DOUBLE_Q) {
+        RLOG("<type> -> type\n");
+        t = get_next_token();
+        LEX_ERR_CHECK();
+        return true;
+    }
+    return false;
+}
 
 
 

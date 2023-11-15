@@ -81,6 +81,13 @@ Running test {test_file}...
     if return_code == 0:
         print(f"\n{GREEN}Test '{test_file}' passed.{RESET}")
         tests_passed += 1
+    elif "test_lex_" in test_file and return_code == 1:
+        print(
+            f"\n{MAGENTA}Program should exit with 1 (testing lexical errors).{RESET}",
+            end="",
+        )
+        print(f"\n{GREEN}Test '{test_file}' passed.{RESET}")
+        tests_passed += 1
     else:
         failed_tests.append((test_file, return_code))
         print(
@@ -100,8 +107,8 @@ col = GREEN if tests_passed / len(test_files) > 0.5 else RED
 if failed_tests and len(test_files) > 1:
     print(
         f"""
-    {RED}Failed tests:
-    ========================================================================="""
+{RED}Failed tests:
+========================================================================="""
     )
     for failed, ret_codes in failed_tests:
         print(f"{failed.ljust(55)}Return code:{ret_codes}")

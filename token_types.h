@@ -66,6 +66,8 @@ typedef enum
     token_CONST_WHOLE_NUMBER,
     token_CONST_DEC_NUMBER,
     token_CONST_SCIENTIFIC_NOTATION,
+    token_TYPE_STRING_LINE,
+
     token_DOLLAR,
     // ...
     token_TERMINAL,  //25
@@ -94,7 +96,6 @@ typedef enum
     token_TYPE_INT_Q,
     token_TYPE_DOUBLE,
     token_TYPE_DOUBLE_Q,
-    token_TYPE_STRING_LINE,
     token_TYPE_STRING,
     token_TYPE_STRING_Q,
     token_EOL,

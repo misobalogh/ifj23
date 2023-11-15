@@ -29,5 +29,5 @@ bool rule_FN_OR_EXP();
 bool rule_ID_OR_UNDERSCORE();
 bool rule_BRACK_STATEMENT();
 bool rule_BRACK_STAT_LIST();
-
+bool rule_TYPE();
 

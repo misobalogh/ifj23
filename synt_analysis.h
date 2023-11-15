@@ -14,8 +14,14 @@
 #define _SYNT_ANALYSIS_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include "macros.h"
 #include "token_types.h" // remove later
+#include "error_codes.h"
+
+#define LEX_ERR_CHECK() do { if (t.type == token_LEX_ERROR) { exit(LEX_ANALYSIS_ERR); } } while(0)
+
+
 
 // Main function
 bool syntacticAnalysis();

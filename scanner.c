@@ -240,6 +240,7 @@ lex_token get_next_token()
             else
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
 
@@ -409,6 +410,7 @@ lex_token get_next_token()
             else
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
 
@@ -550,6 +552,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -590,6 +593,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -604,6 +608,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -707,6 +712,7 @@ lex_token get_next_token()
         case STATE_Int_Q:
             if (c == '?')
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -805,6 +811,7 @@ lex_token get_next_token()
         case STATE_DOUBLE_Q:
             if (c == '?')
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -903,6 +910,7 @@ lex_token get_next_token()
         case STATE_String_Q:
             if (c == '?')
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -926,6 +934,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -947,6 +956,7 @@ lex_token get_next_token()
             }
             else // to do
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -965,6 +975,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -978,6 +989,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -991,6 +1003,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -1009,6 +1022,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -1022,6 +1036,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }

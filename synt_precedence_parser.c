@@ -50,10 +50,12 @@ int getTableIndex(tokenType token) {
     case token_CONST_WHOLE_NUMBER:
     case token_CONST_DEC_NUMBER:
     case token_CONST_SCIENTIFIC_NOTATION:
+    case token_TYPE_STRING_LINE:
         return 7;
     case token_DOLLAR:
     case token_EOL:
     case token_BRACKET_L:
+    case token_BRACKET_R:
     case token_EOF:
         return 8;
     default:
@@ -79,7 +81,13 @@ bool reduce(stack* s) {
     stackItem* second = stackSecond(s);
     stackItem* third = stackThird(s);
 
-    if ((top->type == token_ID || top->type == token_CONST || top->type == token_CONST_WHOLE_NUMBER || top->type == token_CONST_DEC_NUMBER || top->type == token_CONST_SCIENTIFIC_NOTATION) && top->flag == true) {
+
+    if ((top->type == token_ID
+        || top->type == token_CONST
+        || top->type == token_CONST_WHOLE_NUMBER
+        || top->type == token_CONST_DEC_NUMBER
+        || top->type == token_CONST_SCIENTIFIC_NOTATION
+        || top->type == token_TYPE_STRING_LINE) && top->flag == true) {
         PLOG("rule ID\n");
         rule_E_ID(s);
     }
@@ -147,7 +155,7 @@ bool precedenceParser() {
         t = stash;
     }
 
-    while (!((t.type == token_EOL || t.type == token_BRACKET_L || t.type == token_EOF) && stackTopTerminal(&s)->type == token_DOLLAR)) {
+    while (!((t.type == token_EOL || t.type == token_BRACKET_L || t.type == token_EOF || t.type == token_BRACKET_R) && stackTopTerminal(&s)->type == token_DOLLAR)) {
 
         int table_index1 = getTableIndex(stackTopTerminal(&s)->type);
         int table_index2 = getTableIndex(t.type);
@@ -175,7 +183,6 @@ bool precedenceParser() {
             if (stash.type != token_EMPTY) {
                 t = temp;
                 stash.type = token_EMPTY;
-
             }
             else {
                 t = get_next_token();
@@ -198,8 +205,6 @@ bool precedenceParser() {
             stackPrint(&s);
             stackFreeItems(&s);
             return false;
-            // default:
-            //     break;
         default:
             PLOG("ERROR: unknown precedence table value\n");
             return false;
