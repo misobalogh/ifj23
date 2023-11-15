@@ -38,6 +38,8 @@
 typedef enum
 {
     token_LEX_ERROR,
+
+    // OPERATORS
     token_OP_START,
     token_PLUS,
     token_MINUS,
@@ -54,9 +56,11 @@ typedef enum
     token_LESS_EQ,
     token_MORE_EQ,
     token_OP_END,
+    // OPERATORS END
+
     token_PARENTHESES_L,
     token_PARENTHESES_R,
-    token_ID, // 20
+    token_ID, // 18
     token_ID_OR_CONST,
     token_CONST,
     token_CONST_WHOLE_NUMBER,
@@ -64,7 +68,7 @@ typedef enum
     token_CONST_SCIENTIFIC_NOTATION,
     token_DOLLAR,
     // ...
-    token_TERMINAL,  //23
+    token_TERMINAL,  //25
     // ...
     token_NONTERMINAL, // remove later
     token_LET,
@@ -138,5 +142,9 @@ extern lex_token current_lex_token;
 
 // current state
 // extern states current_lex_state;
+
+
+//======DEBUG======
+const char* TokenName(tokenType token);
 
 #endif // _TOKEN_TYPES_H

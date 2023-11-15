@@ -46,16 +46,16 @@ int getTableIndex(tokenType token) {
     case token_PARENTHESES_R:
         return 6;
     case token_ID:
-        return 7;
     case token_CONST:
     case token_CONST_WHOLE_NUMBER:
     case token_CONST_DEC_NUMBER:
     case token_CONST_SCIENTIFIC_NOTATION:
-        return 8;
+        return 7;
     case token_DOLLAR:
     case token_EOL:
     case token_BRACKET_L:
-        return 9;
+    case token_EOF:
+        return 8;
     default:
         return -1;
     }
@@ -140,14 +140,14 @@ bool precedenceParser() {
     stackPush(&s, token_DOLLAR);
 
     // debug
-    PLOG("INIT: ");
+    PLOG("====INIT====");
     stackPrint(&s);
     lex_token temp = t;
     if (stash.type != token_EMPTY) {
         t = stash;
     }
 
-    while (!((t.type == token_EOL || t.type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
+    while (!((t.type == token_EOL || t.type == token_BRACKET_L || t.type == token_EOF) && stackTopTerminal(&s)->type == token_DOLLAR)) {
 
         int table_index1 = getTableIndex(stackTopTerminal(&s)->type);
         int table_index2 = getTableIndex(t.type);
@@ -158,7 +158,7 @@ bool precedenceParser() {
         switch (precedenceTable[table_index1][table_index2])
         {
         case EQUAL: // "="
-            PLOG("EQUAL: ");
+            PLOG("====EQUAL====");
             stackPrint(&s);
             stackPush(&s, t.type);
             if (stash.type != token_EMPTY) {
@@ -175,15 +175,16 @@ bool precedenceParser() {
             if (stash.type != token_EMPTY) {
                 t = temp;
                 stash.type = token_EMPTY;
+
             }
             else {
                 t = get_next_token();
             }
-            PLOG("LOW: ");
+            PLOG("====LOW====");
             stackPrint(&s);
             break;
         case HIGH: // reduce ">"
-            PLOG("HIGH: ");
+            PLOG("====HIGH====");
             stackPrint(&s);
             if (reduce(&s)) {
                 break;
@@ -193,7 +194,7 @@ bool precedenceParser() {
                 return false;
             }
         case EMPTY: // error
-            PLOG("EMPTY: ");
+            PLOG("====EMPTY====");
             stackPrint(&s);
             stackFreeItems(&s);
             return false;
@@ -205,7 +206,7 @@ bool precedenceParser() {
         }
     }
     stackPrint(&s);
-    PLOG("END: ");
+    PLOG("====END====\n");
     stackFreeItems(&s);
     return true;
 }

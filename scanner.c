@@ -258,23 +258,20 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_BLOCKCOMMENT;
             }
-            else if (isspace(c))
-            {
-                current_lex_state = STATE_DIVISION;
-            }
             else
             {
-                fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
-                return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
+                ungetc(c, stdin);
+                current_lex_state = STATE_DIVISION;
             }
             break;
 
         case STATE_ROWCOMMENT:
-            if (c == '\n')
-            {
-                printf("ukoncil se radkovy komentar\n");
-                current_lex_state = STATE_START;
-            }
+            // if (c == '\n')
+            // {
+            ungetc(c, stdin); // zmena
+            printf("ukoncil se radkovy komentar\n");
+            current_lex_state = STATE_START;
+            // }
             break;
 
         case STATE_BLOCKCOMMENT:
@@ -292,6 +289,7 @@ lex_token get_next_token()
             }
             if (c == '/')
             {
+                ungetc(c, stdin); // zmena
                 printf("ukoncil se blokovy komentar\n");
                 current_lex_state = STATE_START;
             }

@@ -37,7 +37,7 @@ typedef enum precedenceTypes {
  * Precedence parsers uses this table, when it needs to decide,
  * what to do with stack - whether to reduce or shift.
  */
-extern const precedenceType precedenceTable[10][10];
+extern const precedenceType precedenceTable[9][9];
 
 
 //========== DEBUGGING ==========//

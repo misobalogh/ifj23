@@ -14,20 +14,19 @@
 #include "synt_prec_rules.h"
 #include "synt_analysis.h"
 
-const precedenceType precedenceTable[10][10] = {
-    //+-----+-----+------+------+------+-------+-------+------+-------+-------+------+
-    //      |  +- |  */  |  ??  |   !  |  REL  |   (   |   )  |   i   | CONST |   $  |
-    //+-----+-----+------+------+------+-------+-------+------+-------+-------+------+---+------
-            {HIGH,  LOW,   HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,   LOW,   HIGH},//  |  +-  |
-            {HIGH,  HIGH,  HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,   LOW,   HIGH},//   |  */  |
-            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    HIGH,   LOW,   LOW,   HIGH},//   |  ??  |
-            {HIGH,  HIGH,  HIGH,  EMPTY, HIGH,   EMPTY,  HIGH,   EMPTY, EMPTY, HIGH},//|  !   |
-            {LOW,   LOW,   HIGH,  LOW,   EMPTY,  LOW,    HIGH,   LOW,   LOW,   HIGH},//   |  REL |
-            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EQUAL,  LOW,   LOW,   EMPTY},//  |  (   |
-            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY, EMPTY, HIGH},// |  )   |
-            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY, EMPTY, HIGH},// |  i   |
-            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY, EMPTY, HIGH},// | CONST|
-            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EMPTY,  LOW,   LOW,   EMPTY}//   |  $   |
+const precedenceType precedenceTable[9][9] = {
+    //+-----+-----+------+------+------+-------+-------+------+-------+------+
+    //      |  +- |  */  |  ??  |   !  |  REL  |   (   |   )  |   i   |  $   |
+    //+-----+-----+------+------+------+-------+-------+------+-------+------+---+------
+            {HIGH,  LOW,   HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,      HIGH},//  |  +-  |
+            {HIGH,  HIGH,  HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,      HIGH},//   |  */  |
+            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    HIGH,   LOW,      HIGH},//   |  ??  |
+            {HIGH,  HIGH,  HIGH,  EMPTY, HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},//|  !   |
+            {LOW,   LOW,   HIGH,  LOW,   EMPTY,  LOW,    HIGH,   LOW,      HIGH},//   |  REL |
+            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EQUAL,  LOW,      EMPTY},//  |  (   |
+            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},// |  )   |
+            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},// |  i   |
+            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EMPTY,  LOW,     EMPTY}//   |  $   |
 };
 
 /**
