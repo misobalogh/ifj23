@@ -97,17 +97,18 @@ Running test {test_file}...
 
 col = GREEN if tests_passed / len(test_files) > 0.5 else RED
 
-print(
-    f"""
-{RED}Failed tests:
-========================================================================="""
-)
-for failed, ret_codes in failed_tests:
-    print(f"{failed.ljust(55)}Return code:{ret_codes}")
-print(
-    f"""=========================================================================
-{RESET}"""
-)
+if failed_tests and len(test_files) > 1:
+    print(
+        f"""
+    {RED}Failed tests:
+    ========================================================================="""
+    )
+    for failed, ret_codes in failed_tests:
+        print(f"{failed.ljust(55)}Return code:{ret_codes}")
+    print(
+        f"""=========================================================================
+    {RESET}"""
+    )
 
 
 print(

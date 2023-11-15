@@ -266,12 +266,22 @@ lex_token get_next_token()
             break;
 
         case STATE_ROWCOMMENT:
-            // if (c == '\n')
-            // {
-            ungetc(c, stdin); // zmena
-            printf("ukoncil se radkovy komentar\n");
-            current_lex_state = STATE_START;
-            // }
+            if (c == '\n')
+            {
+                ungetc(c, stdin); // zmena
+                printf("ukoncil se radkovy komentar\n");
+                current_lex_state = STATE_START;
+            }
+            else if (c == EOF)
+            {
+                ungetc(c, stdin);                        // zmena
+                printf("ukoncil se radkovy komentar\n"); // zmena
+                current_lex_state = STATE_START;         // zmena
+            }
+            else
+            {
+                continue;
+            }
             break;
 
         case STATE_BLOCKCOMMENT:
@@ -289,7 +299,6 @@ lex_token get_next_token()
             }
             if (c == '/')
             {
-                ungetc(c, stdin); // zmena
                 printf("ukoncil se blokovy komentar\n");
                 current_lex_state = STATE_START;
             }
