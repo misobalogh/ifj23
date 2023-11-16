@@ -40,6 +40,15 @@ extern lex_token stash;
  */
 extern lex_token t;
 
+
+/**
+ * @brief Consumes optional EOL between tokens (not the one on the end of statement)
+ *
+ * @return void
+*/
+void consume_optional_EOL();
+
+
 // Two methods - one for expressions, second for everything else
 
 // Expression parser

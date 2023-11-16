@@ -15,6 +15,10 @@
 #include "synt_recur_rules.h"
 
 
+/**
+ * @brief Most recent token from scanner
+ */
+lex_token t = { .type = token_EMPTY, .value = 0 };
 
 /**
  * @brief Stash for token for expression parser
@@ -23,11 +27,16 @@
  */
 lex_token stash = { .type = token_EMPTY, .value = 0 };
 
+void consume_optional_EOL() {
+    if (t.type == token_EOL) {
+        RLOG("consume_optional_EOL()\n");
+        t = get_next_token();
+        LEX_ERR_CHECK();
+        consume_optional_EOL();
+    }
+}
 
-/**
- * @brief Most recent token from scanner
- */
-lex_token t = { .type = token_EMPTY, .value = 0 };
+// ===================== RULES =====================
 
 bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
@@ -101,21 +110,25 @@ bool rule_STATEMENT() {
         RLOG("<statement> -> id <after_id>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_AFTER_ID();
     case token_FUNC:
         RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_ID) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_PARENTHESES_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_PARAM_LIST()) {
             return false;
         }
@@ -124,6 +137,7 @@ bool rule_STATEMENT() {
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_RETURN_TYPE()) {
             return false;
         }
@@ -132,6 +146,7 @@ bool rule_STATEMENT() {
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_FUNC_STAT_LIST()) {
             return false;
         }
@@ -145,14 +160,17 @@ bool rule_STATEMENT() {
         RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_CONDITION()) {
             return false;
         }
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -161,16 +179,19 @@ bool rule_STATEMENT() {
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_ELSE) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -184,14 +205,17 @@ bool rule_STATEMENT() {
         RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_EXPRESSION()) {
             return false;
         }
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -247,19 +271,23 @@ bool rule_BRACK_STATEMENT() {
         RLOG("<brack_statement> -> id <after_id>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_AFTER_ID();
     case token_IF:
         RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_CONDITION()) {
             return false;
         }
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -268,16 +296,19 @@ bool rule_BRACK_STATEMENT() {
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_ELSE) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -291,14 +322,17 @@ bool rule_BRACK_STATEMENT() {
         RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_EXPRESSION()) {
             return false;
         }
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
@@ -323,9 +357,11 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> let id\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type == token_ID) {
             t = get_next_token();
             LEX_ERR_CHECK();
+            consume_optional_EOL();
             return true;
         }
     }
@@ -333,9 +369,11 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> var id\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type == token_ID) {
             t = get_next_token();
             LEX_ERR_CHECK();
+            consume_optional_EOL();
             return true;
         }
     }
@@ -348,6 +386,7 @@ bool rule_VAR_ASSIGNMENT() {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
@@ -356,6 +395,7 @@ bool rule_VAR_ASSIGNMENT() {
     else if (t.type == token_ASSIGN) {
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type == token_ID) {
             RLOG("<var_assignment> -> = id <fn_or_exp>\n");
             stash = t;
@@ -379,10 +419,11 @@ bool rule_VAR_ASSIGNMENT() {
 bool rule_VAL_ASSIGNMENT() {
     // <val_assigment> -> = id <fn_or_exp>
     if (t.type == token_ASSIGN) {
-        RLOG("<val_assignment> -> = id <fn_or_exp>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type == token_ID) {
+            RLOG("<val_assignment> -> = id <fn_or_exp>\n");
             stash = t;
             t = get_next_token();
             LEX_ERR_CHECK();
@@ -415,7 +456,7 @@ bool rule_FN_OR_EXP() {
         return true;
     }
     // <fn_or_exp> -> <expression> 
-    else if ((t.type >= token_OP_START && t.type <= token_OP_END)) { // TODO: is it correct for every case?
+    else if ((t.type >= token_OP_START && t.type <= token_OP_END)) {
         RLOG("<fn_or_exp> -> <expression>\n");
         return rule_EXPRESSION();
     }
@@ -425,6 +466,7 @@ bool rule_FN_OR_EXP() {
         stash.type = token_EMPTY;
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_INPUT_PARAM_LIST()) {
             return false;
         }
@@ -443,6 +485,7 @@ bool rule_AFTER_ID() {
     if (t.type == token_ASSIGN) {
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
 
         if (t.type == token_ID) {
             RLOG("<after_id> -> = id <fn_or_exp>\n");
@@ -458,7 +501,8 @@ bool rule_AFTER_ID() {
             || t.type == token_PARENTHESES_L
             || t.type == token_TYPE_STRING_LINE) {
             RLOG("<after_id> -> = const <expression>\n");
-            return rule_EXPRESSION();
+            bool retval = rule_EXPRESSION();
+            return retval;
         }
     }
     // <after_id> -> ( <input_param_list> ) 
@@ -466,6 +510,7 @@ bool rule_AFTER_ID() {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_INPUT_PARAM_LIST()) {
             return false;
         }
@@ -504,6 +549,7 @@ bool rule_INPUT_PARAM_NEXT() {
         RLOG("<input_param_next> -> , <input_param> <input_param_next>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
     // <input_param_next> -> EPSILON
@@ -524,6 +570,7 @@ bool rule_INPUT_PARAM() {
         RLOG("<input_param> -> const\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return true;
     }
     // <input_param> -> id <with_name>
@@ -531,6 +578,7 @@ bool rule_INPUT_PARAM() {
         RLOG("<input_param> -> id <with_name>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_WITH_NAME();
     }
     return false;
@@ -548,6 +596,7 @@ bool rule_WITH_NAME() {
         RLOG("<with_name> -> : <id_or_const>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_ID_OR_CONST();
     }
     return false;
@@ -559,6 +608,7 @@ bool rule_ID_OR_CONST() {
         RLOG("<id_or_const> -> id\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return true;
     }
     // <id_or_const> -> const
@@ -570,6 +620,7 @@ bool rule_ID_OR_CONST() {
         RLOG("<id_or_const> -> const\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return true;
     }
     return false;
@@ -595,6 +646,7 @@ bool rule_PARAM_NEXT() {
         RLOG("<param_next> -> , <param> <param_next>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_PARAM() && rule_PARAM_NEXT();
     }
     // <param_next> -> EPSILON
@@ -616,11 +668,13 @@ bool rule_PARAM() {
     }
     t = get_next_token();
     LEX_ERR_CHECK();
+    consume_optional_EOL();
     if (t.type != token_COLON) {
         return false;
     }
     t = get_next_token();
     LEX_ERR_CHECK();
+    consume_optional_EOL();
     return rule_TYPE();
 }
 
@@ -630,6 +684,7 @@ bool rule_ID_OR_UNDERSCORE() {
         RLOG("<id_or_underscore> -> id\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return true;
     }
     // <id_or_underscore> -> _
@@ -637,6 +692,7 @@ bool rule_ID_OR_UNDERSCORE() {
         RLOG("<id_or_underscore> -> _\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return true;
     }
     return false;
@@ -648,6 +704,7 @@ bool rule_RETURN_TYPE() {
         RLOG("<return_type> -> -> <type>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (rule_TYPE()) {
             return true;
         }
@@ -696,74 +753,85 @@ bool rule_FUNC_STAT() {
         RLOG("<func_stat> -> id <after_id>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         return rule_AFTER_ID();
     case token_RETURN:
         // <func_stat> -> <return_stat>
         RLOG("<func_stat> -> <return_stat>\n");
         return rule_RETURN_STAT();
     case token_IF:
-        RLOG("<func_stat> -> if <condition> { <stat_list> } else { <stat_list> }\n");
+        RLOG("<func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_CONDITION()) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_R) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_ELSE) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_R) {
             return false;
         }
         return true;
     case token_WHILE:
-        RLOG("<func_stat> -> while <expression> { <stat_list> }\n");
+        RLOG("<func_stat> -> while <expression> { <func_stat_list> }\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         stash = t;
         if (!rule_EXPRESSION()) {
             return false;
         }
-        t = get_next_token();
-        LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -784,9 +852,8 @@ bool rule_RETURN_STAT() {
         RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (rule_RET_VAL()) {
-            t = get_next_token();
-            LEX_ERR_CHECK();
             if (t.type == token_EOL) {
                 return rule_FUNC_STAT_LIST();
             }
@@ -837,9 +904,11 @@ bool rule_CONDITION() {
         RLOG("<condition> -> let id\n");
         t = get_next_token();
         LEX_ERR_CHECK();
+        consume_optional_EOL();
         if (t.type == token_ID) {
             t = get_next_token();
             LEX_ERR_CHECK();
+            consume_optional_EOL();
             return true;
         }
     }

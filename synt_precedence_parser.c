@@ -20,6 +20,29 @@
 #include "macros.h"
 #include "synt_prec_rules.h"
 
+void consume_optional_EOL_in_expressions() {
+    while (t.type == token_EOL) {
+        PLOG("EOL consumed\n");
+        t = get_next_token();
+        LEX_ERR_CHECK();
+    }
+    if (t.type == token_CONST
+        || t.type == token_CONST_WHOLE_NUMBER
+        || t.type == token_CONST_DEC_NUMBER
+        || t.type == token_CONST_SCIENTIFIC_NOTATION
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_PARENTHESES_L
+        || t.type == token_PARENTHESES_R
+        || (t.type >= token_OP_START && t.type <= token_OP_END)) {
+        return;
+    }
+    else {
+        stash = t;
+        t.type = token_EOL;
+    }
+}
+
+
 int getTableIndex(tokenType token) {
     switch (token)
     {
@@ -175,6 +198,7 @@ bool precedenceParser() {
             }
             else {
                 t = get_next_token();
+                LEX_ERR_CHECK();
             }
             break;
         case LOW: // expand  "<"
@@ -186,6 +210,7 @@ bool precedenceParser() {
             }
             else {
                 t = get_next_token();
+                LEX_ERR_CHECK();
             }
             PLOG("====LOW====");
             stackPrint(&s);
@@ -213,6 +238,9 @@ bool precedenceParser() {
     stackPrint(&s);
     PLOG("====END====\n");
     stackFreeItems(&s);
+
+    // need to return the EOL token back to the scanner
+    RLOG("CAME BACK");
     return true;
 }
 

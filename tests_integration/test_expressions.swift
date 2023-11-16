@@ -1,6 +1,9 @@
 let b=22+2+3+4+5+5+6
 let d=22+2+3+4+5+5+6
-let easdasdasdasd=22+2+3+4+5+5+6
+let 
+easdasdasdasd
+=
+22+2+3+4+5+5+6
 a = 33
 var c = a
 a = 4
