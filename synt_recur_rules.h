@@ -25,7 +25,7 @@ error_codes rule_WITH_NAME();
 error_codes rule_ID_OR_CONST();
 error_codes rule_LET_OR_VAR();
 error_codes rule_EXPRESSION();
-error_codes rule_AFTER_ID();
+error_codes rule_AFTER_ID(lex_token idToken);
 error_codes rule_FN_OR_EXP();
 error_codes rule_ID_OR_UNDERSCORE();
 error_codes rule_BRACK_STATEMENT();

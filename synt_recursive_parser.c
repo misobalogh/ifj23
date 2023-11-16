@@ -26,6 +26,8 @@ error_codes recursiveParser(void) {
       return INTERNAL_ERROR;
     }
 
+    semanticAnalysisDeinit();
+
     return rule_PROGRAM();
 }
 

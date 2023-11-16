@@ -12,6 +12,7 @@
 #include "global_variables.h"
 #include "dynamic_string.h"
 #include "function_stack.h"
+#include <string.h>
 
 #define NOT_FALSE(expr) do { if (!expr) return INTERNAL_ERROR; } while (0)
 #define NOT_NULL(expr) do { if (expr == NULL) return INTERNAL_ERROR; } while(0)
@@ -29,39 +30,39 @@ error_codes semanticAnalysisInit(void) {
   global_initSymtable();
 
   paramLabel = malloc(sizeof(String));
-  if (paramLabel == NULL) {
-    return INTERNAL_ERROR;
-  }
+  NOT_NULL(paramLabel);
 
   functionId = malloc(sizeof(String));
-  if (functionId == NULL) {
-    return INTERNAL_ERROR;
-  }
+  NOT_NULL(functionId);
 
   functionParam = malloc(sizeof(String));
-  if (functionParam == NULL) {
-    return INTERNAL_ERROR;
-  }
+  NOT_NULL(functionParam);
 
-  if (!stringInit(paramLabel, "")) {
-    return INTERNAL_ERROR;
-  }
-
-  if (!stringInit(functionId, "")) {
-    return INTERNAL_ERROR;
-  }
+  NOT_FALSE(stringInit(paramLabel, ""));
+  NOT_FALSE(stringInit(functionId, ""));
+  NOT_FALSE(stringInit(functionParam, ""));
 
   postponedCheckStack = functionStackInit();
-  if (postponedCheckStack == NULL) {
-    return INTERNAL_ERROR;
-  }
+  NOT_NULL(postponedCheckStack);
 
   callParams = malloc(sizeof(String));
-  if (callParams == NULL || !stringInit(callParams, "")) {
-    return INTERNAL_ERROR;
-  }
+  NOT_NULL(callParams);
+  NOT_FALSE(stringInit(callParams, ""));
 
   return SUCCESS;
+}
+
+void semanticAnalysisDeinit(void) {
+  global_freeSymtable();
+  stringFree(paramLabel);
+  stringFree(functionId);
+  stringFree(functionParam);
+  free(paramLabel);
+  free(functionId);
+  free(functionParam);
+  functionStackDeinit(postponedCheckStack);
+  stringFree(callParams);
+  free(callParams);
 }
 
 error_codes analyseLet(const char* idname) {
@@ -105,13 +106,13 @@ error_codes analyseFunctionParamLabel(const char* label) {
     NOT_FALSE(stringConcatCStr(functionParam, label));
   }
 
-  NOT_FALSE(stringConcatChar(functionParam, ';'));
+  NOT_FALSE(stringConcatChar(functionParam, ','));
   return SUCCESS;
 }
 
 error_codes analyseFunctionParamName(const char* name) {
   NOT_FALSE(stringConcatCStr(functionParam, name));
-  NOT_FALSE(stringConcatChar(functionParam, ';'));
+  NOT_FALSE(stringConcatChar(functionParam, ':'));
   return SUCCESS;
 }
 
@@ -190,60 +191,215 @@ error_codes analyseFunctionEnd(void) {
   return SUCCESS;
 }
 
-error_codes analyseCallId(const char* idname) {
-  callId = malloc(sizeof(strlen(idname)));
-  if (callId == NULL) {
-    return INTERNAL_ERROR;
+char* getLabelType(char* params, char* out_label, char* out_type) {
+  // label
+  int i = 0;
+  while (*params != ':' && *params != '\0') {
+    out_label[i++] = *params;
+    params++;
+  }
+  out_label[i] = '\0';
+
+  // check premature end
+  if (*params == '\0' || *++params == '\0') {
+    return NULL;
   }
 
-  strcpy(callId, idname);
-  return SUCCESS;
-}
+  // type (single char)
+  *out_type = *params;
 
-error_codes analyseCallLabel(const char* label) {
-  stringClear(paramLabel);
-  if (!stringConcatCStr(paramLabel, label))
-    return SUCCESS;
-  return INTERNAL_ERROR;
-}
-
-static bool _callEnd(const char* param) {
-  return stringConcat(callParams, paramLabel)
-    && stringConcatChar(callParams, ':')
-    && stringConcatCStr(callParams, param)
-    && stringConcatChar(callParams, ';');
-}
-
-error_codes analyseCallParamConst(const char* data) {
-  stringClear(paramLabel);
-  if (_callEnd(data)) {
-    return SUCCESS;
-  }
-  return INTERNAL_ERROR;
-}
-
-error_codes analyseCallParam(const char* paramIdname) {
-  symtableItem* item = global_symbolSearch(paramIdname);
-  if (item == NULL) {
-    return SEMANTIC_ERR;
+  if (*params++ == ';') {
+    // return pointer first char of next label
+    return ++params;
   }
 
-  if (_callEnd(paramIdname)) {
-    return SUCCESS;
+  if (*params == '\0') {
+    // return end of string
+    return params;
   }
-  return INTERNAL_ERROR;
+
+  // bad format
+  return NULL;
 }
 
-error_codes analyseCallEpsilon(void) {
-  if (!stringConcatCStr(callParams, "_:")
-    || !stringConcat(callParams, paramLabel)) {
-      return INTERNAL_ERROR;
+char* getLabelNameType(char* params, char* out_label, char* out_name, char* out_type) {
+  // label
+  int i = 0;
+  while (*params != ',' && *params != '\0') {
+    out_label[i++] = *params;
   }
-  return SUCCESS;
+  out_label[i] = '\0';
+
+  // check premature end
+  if (*params == '\0') {
+    return NULL;
+  }
+
+  // ignore semarator
+  params++;
+
+  // name
+  i = 0;
+  while (*params != ':' && *params != '\0') {
+    out_name[i++] = *params;
+    params++;
+  }
+  out_name[i] = '\0';
+
+  // check premature end
+  if (*params == '\0' || *++params == '\0') {
+    return NULL;
+  }
+
+  // type (single char)
+  *out_type = *params;
+
+  if (*params == ';') {
+    // return pointer to first char of next label
+    return ++params;
+  }
+
+  if (*params == '\0') {
+    // return pointer to end of string
+    return params;
+  }
+
+  // bad format
+  return NULL;
 }
 
 bool compareParams(const char* callParams, const char* functionParams) {
-  return false;
+  if (*functionParams++ != 'f') {
+    return false;
+  }
+
+  if (*functionParams++ != ';') {
+    return false;
+  }
+
+  // ignore return type
+  callParams++;
+
+  // copy constant strings to get strings that can be modified
+  char* mutCallParams = malloc(strlen(callParams) + 1);
+  char* mutFunctionParams = malloc(strlen(functionParams) + 1);
+
+  if (mutCallParams == NULL || mutFunctionParams == NULL) {
+    free(mutCallParams);
+    free(mutFunctionParams);
+    return false;
+  }
+
+  strcpy(mutCallParams, callParams);
+  strcpy(mutFunctionParams, functionParams);
+
+  char* callLabel = malloc(strlen(callParams));
+  char callType;
+  char* fnLabel = malloc(strlen(functionParams));
+  char* fnName = malloc(strlen(functionParams));
+  char fnType;
+  bool result = true;
+
+  if (callLabel == NULL || fnLabel == NULL || fnName == NULL) {
+    free(callLabel);
+    free(fnLabel);
+    free(fnName);
+    result = false;
+    goto end;
+  }
+
+  // cp and fp will be modified, mutCallParams and mutFunctionParams must be kept for free
+  char* cp = mutCallParams;
+  char* fp = mutFunctionParams;
+
+  while (*cp != '\0' && *fp != '\0') {
+    cp = getLabelType(cp, callLabel, &callType);
+    fp = getLabelNameType(fp, fnLabel, fnName, &fnType);
+
+    // params were in wrong format
+    if (cp == NULL || fp == NULL) {
+      result = false;
+      goto end;
+    }
+
+    if (strcmp(callLabel, fnLabel) != 0 || callType != fnType) {
+      result = false;
+      goto end;
+    }
+  }
+
+end:
+  free(mutCallParams);
+  free(mutFunctionParams);
+  free(callLabel);
+  free(fnLabel);
+  free(fnName);
+
+  return result;
+}
+
+error_codes analyseCallConst(tokenType type) {
+  const char* ts = typeShort(type);
+  NOT_NULL(ts);
+
+  NOT_FALSE(stringConcatCStr(callParams, "_:"));
+  NOT_FALSE(stringConcatCStr(callParams, ts));
+  NOT_FALSE(stringConcatChar(callParams, ';'));
+
+  return SUCCESS;
+}
+error_codes analyseCallIdOrLabel(const char* value) {
+  stringClear(paramLabel);
+  NOT_FALSE(stringConcatCStr(paramLabel, value));
+  return SUCCESS;
+}
+
+bool isTypeOfVariable(const char* typeStr) {
+  return strcmp(typeStr, "I") == 0
+    || strcmp(typeStr, "D") == 0
+    || strcmp(typeStr, "S") == 0;
+}
+
+error_codes analyseCallEpsAfterId(void) {
+  // paramLabel is the variable passed as param
+
+  symtableItem* it = global_symbolSearch(stringCStr(paramLabel));
+  NOT_NULL(it);
+
+  NOT_FALSE(isTypeOfVariable(it->type));
+
+  NOT_FALSE(stringConcatCStr(callParams, "_:"));
+  NOT_FALSE(stringConcatCStr(callParams, it->type));
+  NOT_FALSE(stringConcatChar(callParams, ';'));
+
+  return SUCCESS;
+}
+
+error_codes analyseCallIdAfterLabel(const char* idname) {
+  // paramLabel is label
+
+  symtableItem* it = global_symbolSearch(idname);
+  NOT_NULL(it);
+
+  NOT_FALSE(isTypeOfVariable(it->type));
+
+  NOT_FALSE(stringConcat(callParams, paramLabel));
+  NOT_FALSE(stringConcatChar(callParams, ':'));
+  NOT_FALSE(stringConcatCStr(callParams, it->type));
+
+  return SUCCESS;
+}
+error_codes analyseCallConstAfterLabel(tokenType type) {
+  // paramLabel is label
+
+  const char* ts = typeShort(type);
+  NOT_NULL(ts);
+
+  NOT_FALSE(stringConcat(callParams, paramLabel));
+  NOT_FALSE(stringConcatChar(callParams, ':'));
+  NOT_FALSE(stringConcatCStr(callParams, ts));
+
+  return SUCCESS;
 }
 
 error_codes analyseCallEnd(void) {
@@ -251,17 +407,12 @@ error_codes analyseCallEnd(void) {
 
   // function was called before declaration
   if (item == NULL) {
-    const char* params = stringCStr(callParams);
-    if (!functionStackPush(postponedCheckStack, callId, params)) {
-      return INTERNAL_ERROR;
-    }
-
+    // postpone semantic check until function declaration
+    NOT_FALSE(functionStackPush(postponedCheckStack, callId, stringCStr(callParams)));
     return SUCCESS;
   }
 
-  if (compareParams(stringCStr(callParams), item->type)) {
-    return SUCCESS;
-  }
-  return SEMANTIC_ERR;
+  NOT_FALSE(compareParams(stringCStr(callParams), item->type));
+  return SUCCESS;
 }
 

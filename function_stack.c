@@ -17,6 +17,21 @@ FunctionStack* functionStackInit(void) {
   return stack;
 }
 
+void functionStackDeinit(FunctionStack* stack) {
+  FunctionStackItem* current = stack->first;
+
+  while (current != NULL) {
+    FunctionStackItem* next = stack->first->next;
+
+    free(current->name);
+    free(current->params);
+
+    current = next;
+  }
+
+  free(stack);
+}
+
 bool functionStackPush(FunctionStack* stack, const char* name, const char* params) {
   FunctionStackItem* first = stack->first;
 

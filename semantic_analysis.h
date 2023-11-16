@@ -9,6 +9,8 @@
 extern stack* semanticStack;
 
 error_codes semanticAnalysisInit(void);
+void semanticAnalysisDeinit(void);
+
 error_codes checkDeclaration(void);
 
 error_codes analyseFunctionId(const char* idname);
@@ -26,12 +28,19 @@ error_codes analyseLet(const char* idname);
 error_codes analyseVar(const char* idname);
 error_codes analyseId(const char* idname);
 
-error_codes analyseCallId(const char* idname);
-error_codes analyseCallLabel(const char* label);
-error_codes analyseCallParam(const char* paramIdname);
-error_codes analyseCallParamConst(const char* data);
-error_codes analyseCallEpsilon(void);
+/* error_codes analyseCallId(const char* idname); */
+/* error_codes analyseCallLabel(const char* label); */
+/* error_codes analyseCallParam(const char* paramIdname); */
+/* error_codes analyseCallParamConst(const char* data); */
+/* error_codes analyseCallEpsilon(void); */
 error_codes analyseCallEnd(void);
+
+
+error_codes analyseCallConst(tokenType type);
+error_codes analyseCallIdOrLabel(const char* value);
+error_codes analyseCallEpsAfterId(void);
+error_codes analyseCallIdAfterLabel(const char* idname);
+error_codes analyseCallConstAfterLabel(tokenType type);
 
 const char* typeShort(tokenType type);
 

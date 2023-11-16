@@ -14,6 +14,7 @@ typedef struct FunctionStack {
 } FunctionStack;
 
 FunctionStack* functionStackInit(void);
+void functionStackDeinit(FunctionStack* stack);
 char* functionStackFindAndPop(FunctionStack* stack, const char* name);
 bool functionStackPush(FunctionStack* stack, const char* name, const char* params);
 

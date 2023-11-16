@@ -25,6 +25,7 @@ extern symtable *global_table;
 extern symtableStack* global_symtableStack;
 
 void global_initSymtable(void);
+void global_freeSymtable(void);
 bool global_addVar(char* id, char* type, int value);
 
 void global_generateInstruction();

@@ -28,6 +28,10 @@ void global_initSymtable(void) {
     global_table = symtableInit(SYMTABLE_SIZE);
 }
 
+void global_freeSymtable(void) {
+  symtableFree(global_table);
+}
+
 
 /**
  * @brief Checks if variable is already declared in global table of symbols

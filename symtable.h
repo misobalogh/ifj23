@@ -30,8 +30,11 @@
  * 
  * @param key name of variable
  * @param type  type of variable, for functions it is first letter of return type,
- * types and parameters names, identifiers (e.g. func concat(_ x : String, with y : String) -> String) 
- * will be stored as "f;S;S;_;x;S;with;y" because "function" returns :String", has parameters "String" named "_" with "id" "x", and "String" named "with" with id "y"
+ * function type is f;RETURN_TYPE;LABEL_1,NAME_1:TYPE_1;...;LABEL_N,NAME_N:TYPE_N
+ * LABEL_k can be _,
+ * TYPE_k is I, D or S,
+ * RETURN_TYPE is I, D, S, or v where v means no return type (void)
+
  * @param data value of variable, for functions it is number of parameters
  */
 typedef struct symtableItem {

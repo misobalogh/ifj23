@@ -112,10 +112,11 @@ error_codes rule_STATEMENT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<statement> -> id <after_id>\n");
+        lex_token idToken = t;
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
-        return rule_AFTER_ID();
+        return rule_AFTER_ID(idToken);
     case token_FUNC:
         RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
         t = get_next_token();
@@ -278,10 +279,11 @@ error_codes rule_BRACK_STATEMENT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<brack_statement> -> id <after_id>\n");
+        lex_token idToken = t;
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
-        return rule_AFTER_ID();
+        return rule_AFTER_ID(idToken);
     case token_IF:
         RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         t = get_next_token();
@@ -489,7 +491,7 @@ error_codes rule_FN_OR_EXP() {
     return SYNTAX_ANALYSIS_ERR;
 }
 
-error_codes rule_AFTER_ID() {
+error_codes rule_AFTER_ID(lex_token idToken) {
     // <after_id> -> = id <fn_or_exp> 
     if (t.type == token_ASSIGN) {
         t = get_next_token();
@@ -519,7 +521,6 @@ error_codes rule_AFTER_ID() {
     else if (t.type == token_PARENTHESES_L) {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         t = get_next_token();
-        SEMANTIC_CHECK(analyseCallId(t.value.STR_VAL));
         LEX_ERR_CHECK();
         consume_optional_EOL();
         if (!rule_INPUT_PARAM_LIST()) {
@@ -578,18 +579,17 @@ error_codes rule_INPUT_PARAM() {
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
-        RLOG("<input_param> -> const\n");
-        SEMANTIC_CHECK(analyseCallLabel(NULL));
-        /* analyseCallParamConst(t.value); */
-        t = get_next_token();
-        LEX_ERR_CHECK();
-        consume_optional_EOL();
-        return SUCCESS;
+          RLOG("<input_param> -> const\n");
+          SEMANTIC_CHECK(analyseCallConst(t.type));
+          t = get_next_token();
+          LEX_ERR_CHECK();
+          consume_optional_EOL();
+          return SUCCESS;
     }
     // <input_param> -> id <with_name>
     else if (t.type == token_ID) {
         RLOG("<input_param> -> id <with_name>\n");
-        SEMANTIC_CHECK(analyseCallLabel(t.value.STR_VAL));
+        SEMANTIC_CHECK(analyseCallIdOrLabel(t.value.STR_VAL));
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -603,7 +603,7 @@ error_codes rule_WITH_NAME() {
     if (t.type == token_COMMA ||
         t.type == token_PARENTHESES_R) {
         RLOG("<with_name> -> EPSILON\n");
-
+        analyseCallEpsAfterId();
         return SUCCESS;
     }
     // <with_name> -> : <id_or_const>
@@ -621,7 +621,7 @@ error_codes rule_ID_OR_CONST() {
     // <id_or_const> -> id
     if (t.type == token_ID) {
         RLOG("<id_or_const> -> id\n");
-        SEMANTIC_CHECK(analyseCallParam(t.value.STR_VAL));
+        SEMANTIC_CHECK(analyseCallIdAfterLabel(t.value.STR_VAL));
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -634,7 +634,7 @@ error_codes rule_ID_OR_CONST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<id_or_const> -> const\n");
-        /* analyseCallParamConst(t->value); */
+        analyseCallConstAfterLabel(t.type);
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -774,10 +774,11 @@ error_codes rule_FUNC_STAT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<func_stat> -> id <after_id>\n");
+        lex_token idToken = t;
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
-        return rule_AFTER_ID();
+        return rule_AFTER_ID(idToken);
     case token_RETURN:
         // <func_stat> -> <return_stat>
         RLOG("<func_stat> -> <return_stat>\n");
