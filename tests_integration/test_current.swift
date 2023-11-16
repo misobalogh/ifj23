@@ -1,3 +1,5 @@
+// Program 1: Vypocet faktorialu (iterativne)
+/* Hlavni telo programu */
 write("Zadejte cislo pro vypocet faktorialu\n")
 let a : Int? = readInt()
 if let a {

@@ -181,7 +181,6 @@ bool precedenceParser() {
     stackPrint(&s);
 
     tokenType lastToken = token_DOLLAR;
-    LOGTOKEN("ENTERING");
 
     // swap stash and current token
     if (stash.type != token_EMPTY) {
@@ -192,8 +191,8 @@ bool precedenceParser() {
 
     while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->type != token_DOLLAR) {
 
-        LOG("Last token: %s", TokenName(lastToken));
-        LOG("Current token: %s\n", TokenName(t.type));
+        // LOG("Last token: %s", TokenName(lastToken));
+        // LOG("Current token: %s\n", TokenName(t.type));
 
         int table_index2;
 
@@ -217,7 +216,7 @@ bool precedenceParser() {
             break;
         }
 
-        LOG("table indexes: %d %d\n", table_index1, table_index2);
+        // LOG("table indexes: %d %d\n", table_index1, table_index2);
 
         switch (precedenceTable[table_index1][table_index2])
         {
