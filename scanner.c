@@ -537,7 +537,7 @@ lex_token get_next_token()
             {
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_WHOLE_NUMBER;
-
+                char_insert(&str, '\0'); // TODO: check if this is correct
                 current_lex_token.value.INT_VAL = atoi(str.data);
                 // string_clear(&str);
                 return current_lex_token;
@@ -573,6 +573,7 @@ lex_token get_next_token()
             {
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_DEC_NUMBER;
+                char_insert(&str, '\0'); // TODO: check if this is correct
                 current_lex_token.value.FLOAT_VAL = atof(str.data);
                 // string_clear(&str);
                 return current_lex_token;
@@ -658,6 +659,7 @@ lex_token get_next_token()
             {
                 ungetc(c, stdin);
                 // current_lex_token.type = TYPE_IDENTIFIER;
+                char_insert(&str, '\0'); // TODO: check if this is correct
                 current_lex_token.type = keyword_check(str.data);
                 current_lex_token.value.STR_VAL = str.data;
                 //  string_clear(&str);
