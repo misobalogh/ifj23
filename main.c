@@ -42,8 +42,9 @@ int main() {
     // return 0;
 
 
-    if (recursiveParser() == false) {
-        LOG("Syntax Error: code %d", SYNTAX_ANALYSIS_ERR);
+    error_codes code = recursiveParser();
+    if (code != SUCCESS) {
+        LOG("Syntax Error: code %d", code);
         return SYNTAX_ANALYSIS_ERR;
     }
     else {

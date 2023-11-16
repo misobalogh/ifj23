@@ -21,9 +21,9 @@
 #include "synt_recur_rules.h"
 #include "semantic_analysis.h"
 
-bool recursiveParser() {
+error_codes recursiveParser(void) {
     if (semanticAnalysisInit() != SUCCESS) {
-      return false;
+      return INTERNAL_ERROR;
     }
 
     return rule_PROGRAM();
