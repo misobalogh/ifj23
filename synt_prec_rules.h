@@ -16,6 +16,8 @@
 #include "synt_prec_table.h"
 #include "synt_prec_stack.h"
 
+int getTableIndex(tokenType token);
+void consume_optional_EOL_in_expressions();
 
 /* EXPRESSIONS */
 void rule_E_ID(stack* s);

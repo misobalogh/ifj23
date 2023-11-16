@@ -20,6 +20,74 @@
 #include "macros.h"
 #include "synt_prec_rules.h"
 
+void consume_optional_EOL_in_expressions() {
+    while (t.type == token_EOL) {
+        PLOG("EOL consumed\n");
+        t = get_next_token();
+        LEX_ERR_CHECK();
+    }
+    if (t.type == token_CONST
+        || t.type == token_CONST_WHOLE_NUMBER
+        || t.type == token_CONST_DEC_NUMBER
+        || t.type == token_CONST_SCIENTIFIC_NOTATION
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_PARENTHESES_L
+        || t.type == token_PARENTHESES_R
+        || (t.type >= token_OP_START && t.type <= token_OP_END)) {
+        return;
+    }
+    else {
+        stash = t;
+        t.type = token_EOL;
+    }
+}
+
+
+int getTableIndex(tokenType token) {
+    switch (token)
+    {
+    case token_PLUS:
+    case token_MINUS:
+        return 0;
+    case token_MUL:
+    case token_DIV:
+        return 1;
+    case token_DEFAULT_VALUE:
+        return 2;
+    case token_FORCE_UNWRAP:
+        return 3;
+    case token_REL:
+    case token_EQ:
+    case token_NEQ:
+    case token_LESS:
+    case token_MORE:
+    case token_LESS_EQ:
+    case token_MORE_EQ:
+        return 4;
+    case token_PARENTHESES_L:
+        return 5;
+    case token_PARENTHESES_R:
+        return 6;
+    case token_ID:
+    case token_CONST:
+    case token_CONST_WHOLE_NUMBER:
+    case token_CONST_DEC_NUMBER:
+    case token_CONST_SCIENTIFIC_NOTATION:
+    case token_TYPE_STRING_LINE:
+        return 7;
+    case token_DOLLAR:
+    case token_EOL:
+    case token_BRACKET_L:
+    case token_BRACKET_R:
+    case token_EOF:
+        return 8;
+    default:
+        return -1;
+    }
+}
+
+
+
 /**
  * @brief Reduce items on stack with one of defined rules.
  * Called when ">" sign is in precedence table.
@@ -37,20 +105,25 @@ bool reduce(stack* s) {
     stackItem* third = stackThird(s);
 
 
-    if (top->type == token_ID && top->flag == true) {
+    if ((top->type == token_ID
+        || top->type == token_CONST
+        || top->type == token_CONST_WHOLE_NUMBER
+        || top->type == token_CONST_DEC_NUMBER
+        || top->type == token_CONST_SCIENTIFIC_NOTATION
+        || top->type == token_TYPE_STRING_LINE) && top->flag == true) {
         PLOG("rule ID\n");
         rule_E_ID(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
-        (second->type == token_PLUS_MINUS || second->type == token_MUL_DIV) &&
+        (second->type == token_PLUS || second->type == token_MINUS || second->type == token_MUL || second->type == token_DIV) &&
         third->type == token_NONTERMINAL) {
         PLOG("rule E op E\n");
         rule_ID_OP_ID(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
-        second->type == token_CONCAT &&
+        second->type == token_DEFAULT_VALUE &&
         third->type == token_NONTERMINAL) {
         PLOG("rule E ?? E\n");
         rule_ID_CONCAT_ID(s);
@@ -69,9 +142,15 @@ bool reduce(stack* s) {
         rule_ID_FORCE_UNWRAP(s);
     }
     else if (
-        first->type == token_NONTERMINAL &&
-        second->type == token_REL &&
-        third->type == token_NONTERMINAL) {
+        first->type == token_NONTERMINAL
+        && (second->type == token_REL
+            || second->type == token_EQ
+            || second->type == token_NEQ
+            || second->type == token_LESS
+            || second->type == token_MORE
+            || second->type == token_LESS_EQ
+            || second->type == token_MORE_EQ)
+        && third->type == token_NONTERMINAL) {
         PLOG("rule ID rel ID\n");
         rule_ID_REL_ID(s);
     }
@@ -92,32 +171,25 @@ bool precedenceParser() {
     stackPush(&s, token_DOLLAR);
 
     // debug
-    PLOG("INIT: ");
+    PLOG("====INIT====");
     stackPrint(&s);
     lex_token temp = t;
     if (stash.type != token_EMPTY) {
         t = stash;
     }
-    while (!((t.type == token_EOL || t.type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
-        lex_token tType = { .type = t.type, .value = t.value };
-        // treat EOL and BRACKET_L as DOLLAR
-        if (t.type == token_EOL || t.type == token_BRACKET_L) {
-            tType.type = token_DOLLAR;
-        }
-        // treat CONST as ID
-        else if (t.type == token_CONST) {
-            // TODO: Might cause issues in semantic analysis
-            t.type = token_ID;
-            tType.type = token_ID;
-        }
-        // invalid token handling
-        else if (t.type < token_OP_START || t.type > token_TERMINAL) {
+
+    while (!((t.type == token_EOL || t.type == token_BRACKET_L || t.type == token_EOF || t.type == token_BRACKET_R) && stackTopTerminal(&s)->type == token_DOLLAR)) {
+
+        int table_index1 = getTableIndex(stackTopTerminal(&s)->type);
+        int table_index2 = getTableIndex(t.type);
+        if (table_index1 == -1 || table_index2 == -1) {
             return false;
         }
-        switch (precedenceTable[stackTopTerminal(&s)->type][tType.type])
+
+        switch (precedenceTable[table_index1][table_index2])
         {
         case EQUAL: // "="
-            PLOG("EQUAL: ");
+            PLOG("====EQUAL====");
             stackPrint(&s);
             stackPush(&s, t.type);
             if (stash.type != token_EMPTY) {
@@ -126,6 +198,7 @@ bool precedenceParser() {
             }
             else {
                 t = get_next_token();
+                LEX_ERR_CHECK();
             }
             break;
         case LOW: // expand  "<"
@@ -137,12 +210,13 @@ bool precedenceParser() {
             }
             else {
                 t = get_next_token();
+                LEX_ERR_CHECK();
             }
-            PLOG("LOW: ");
+            PLOG("====LOW====");
             stackPrint(&s);
             break;
         case HIGH: // reduce ">"
-            PLOG("HIGH: ");
+            PLOG("====HIGH====");
             stackPrint(&s);
             if (reduce(&s)) {
                 break;
@@ -152,19 +226,21 @@ bool precedenceParser() {
                 return false;
             }
         case EMPTY: // error
-            PLOG("EMPTY: ");
+            PLOG("====EMPTY====");
             stackPrint(&s);
             stackFreeItems(&s);
             return false;
-            // default:
-            //     break;
         default:
+            PLOG("ERROR: unknown precedence table value\n");
             return false;
         }
     }
     stackPrint(&s);
-    PLOG("END: ");
+    PLOG("====END====\n");
     stackFreeItems(&s);
+
+    // need to return the EOL token back to the scanner
+    RLOG("CAME BACK");
     return true;
 }
 

@@ -240,6 +240,7 @@ lex_token get_next_token()
             else
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
 
@@ -258,22 +259,29 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_BLOCKCOMMENT;
             }
-            else if (isspace(c))
-            {
-                current_lex_state = STATE_DIVISION;
-            }
             else
             {
-                fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
-                return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
+                ungetc(c, stdin);
+                current_lex_state = STATE_DIVISION;
             }
             break;
 
         case STATE_ROWCOMMENT:
             if (c == '\n')
             {
+                ungetc(c, stdin); // zmena
                 printf("ukoncil se radkovy komentar\n");
                 current_lex_state = STATE_START;
+            }
+            else if (c == EOF)
+            {
+                ungetc(c, stdin);                        // zmena
+                printf("ukoncil se radkovy komentar\n"); // zmena
+                current_lex_state = STATE_START;         // zmena
+            }
+            else
+            {
+                continue;
             }
             break;
 
@@ -402,6 +410,7 @@ lex_token get_next_token()
             else
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
 
@@ -474,7 +483,7 @@ lex_token get_next_token()
             }
             else
             {
-                current_lex_token.type = token_NOT;
+                current_lex_token.type = token_FORCE_UNWRAP;
                 ungetc(c, stdin);
                 return current_lex_token;
             }
@@ -543,6 +552,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -583,6 +593,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -597,6 +608,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -700,6 +712,7 @@ lex_token get_next_token()
         case STATE_Int_Q:
             if (c == '?')
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -798,6 +811,7 @@ lex_token get_next_token()
         case STATE_DOUBLE_Q:
             if (c == '?')
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -896,6 +910,7 @@ lex_token get_next_token()
         case STATE_String_Q:
             if (c == '?')
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -919,6 +934,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -940,6 +956,7 @@ lex_token get_next_token()
             }
             else // to do
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -958,6 +975,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -971,6 +989,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -984,6 +1003,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -1002,6 +1022,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
@@ -1015,6 +1036,7 @@ lex_token get_next_token()
             }
             else
             {
+                string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }

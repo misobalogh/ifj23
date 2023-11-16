@@ -22,10 +22,12 @@ help:
 	@echo "  make help      - Print this help message"
 	@echo "  make           - Print this help message"
 	@echo "  make all       - Compile all files and run tests"
+	@echo "  make test      - Runs integration test on the program"
+	@echo "  make test (test name) Runs only specific test"
 	@echo "  make run       - Run the main program"
 	@echo "  make main      - Compile the main program"
-	@echo "  make tests     - Compile all tests"
-	@echo "  make runtests  - Run all tests"
+	@echo "  make tests     - Compile all unit tests"
+	@echo "  make runtests  - Run all unit tests"
 	@echo "  make <target>  - Compile a specific target program"
 	@echo "  make clean     - Remove all object files and binaries"	
 	@echo ""
@@ -33,7 +35,11 @@ help:
 
 all: main tests
 
-runtests: $(UNIT_TESTS)
+test: main
+	rm -rf *.log
+	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))
+
+rununit: $(UNIT_TESTS)
 	@for test in $(UNIT_TESTS); do \
 		./$$test; \
 	done

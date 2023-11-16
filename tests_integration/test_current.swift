@@ -1,3 +1,4 @@
-let b = a
-var c = a
-a = 4
+while vyraz 
+{
+    sekvence_prikazu = 2
+}
