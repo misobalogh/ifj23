@@ -23,6 +23,14 @@ static String* callParams;
 static String* paramLabel;
 static String* functionParam;
 static int functionParamCount = 0;
+static struct {
+  bool let;
+  char* idname;
+  lex_token type;
+  char* assignId;
+  lex_token assignType;
+  bool assignConst;
+} assignment;
 
 static FunctionStack* postponedCheckStack;
 

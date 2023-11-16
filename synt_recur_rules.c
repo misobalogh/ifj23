@@ -370,6 +370,7 @@ error_codes rule_LET_OR_VAR() {
         LEX_ERR_CHECK();
         consume_optional_EOL();
         if (t.type == token_ID) {
+            SEMANTIC_CHECK(analyseLetId(t.value.STR_VAL));
             t = get_next_token();
             LEX_ERR_CHECK();
             consume_optional_EOL();
@@ -383,6 +384,7 @@ error_codes rule_LET_OR_VAR() {
         consume_optional_EOL();
         if (t.type == token_ID) {
             t = get_next_token();
+            SEMANTIC_CHECK(analyseVarId(t.value.STR_VAL));
             LEX_ERR_CHECK();
             consume_optional_EOL();
             return SUCCESS;
@@ -398,6 +400,7 @@ error_codes rule_VAR_ASSIGNMENT() {
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
+        SEMANTIC_CHECK(analyseTypeHint(t.type));
         if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
