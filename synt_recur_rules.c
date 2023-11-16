@@ -16,18 +16,20 @@
 #include "semantic_analysis.h"
 #include "generator.h"
 
+#define SEMANTIC_CHECK(code) do { if (code != SUCCESS) return code; } while (0)
+
 
 /**
  * @brief Most recent token from scanner
  */
-lex_token t = { .type = token_EMPTY, .value = 0 };
+lex_token t = { .type = token_EMPTY, .value = {0} };
 
 /**
  * @brief Stash for token for expression parser
  * when switching from recursive parser when deciding,
  * whether it is expression or function call
  */
-lex_token stash = { .type = token_EMPTY, .value = 0 };
+lex_token stash = { .type = token_EMPTY, .value = {0} };
 
 void consume_optional_EOL() {
     if (t.type == token_EOL) {
@@ -123,8 +125,7 @@ bool rule_STATEMENT() {
             return false;
         }
 
-        const char* idname = t.value.STR_VAL;
-        analyseFunctionAddId(idname);
+        SEMANTIC_CHECK(analyseFunctionId(t.value.STR_VAL));
 
         t = get_next_token();
         LEX_ERR_CHECK();
@@ -147,6 +148,7 @@ bool rule_STATEMENT() {
         if (!rule_RETURN_TYPE()) {
             return false;
         }
+        SEMANTIC_CHECK(analyseFunctionEnd());
         if (t.type != token_BRACKET_L) {
             return false;
         }
@@ -519,7 +521,7 @@ bool rule_AFTER_ID() {
     else if (t.type == token_PARENTHESES_L) {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         t = get_next_token();
-        analyseCallId(t.value.STR_VAL);
+        SEMANTIC_CHECK(analyseCallId(t.value.STR_VAL));
         LEX_ERR_CHECK();
         consume_optional_EOL();
         if (!rule_INPUT_PARAM_LIST()) {
@@ -579,7 +581,7 @@ bool rule_INPUT_PARAM() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<input_param> -> const\n");
-        analyseCallLabel(NULL);
+        SEMANTIC_CHECK(analyseCallLabel(NULL));
         /* analyseCallParamConst(t.value); */
         t = get_next_token();
         LEX_ERR_CHECK();
@@ -589,7 +591,7 @@ bool rule_INPUT_PARAM() {
     // <input_param> -> id <with_name>
     else if (t.type == token_ID) {
         RLOG("<input_param> -> id <with_name>\n");
-        analyseCallLabel(t.value.STR_VAL);
+        SEMANTIC_CHECK(analyseCallLabel(t.value.STR_VAL));
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -621,7 +623,7 @@ bool rule_ID_OR_CONST() {
     // <id_or_const> -> id
     if (t.type == token_ID) {
         RLOG("<id_or_const> -> id\n");
-        analyseCallParam(t.value.STR_VAL);
+        SEMANTIC_CHECK(analyseCallParam(t.value.STR_VAL));
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -683,6 +685,7 @@ bool rule_PARAM() {
     if (t.type != token_ID) {
         return false;
     }
+    SEMANTIC_CHECK(analyseFunctionParamName(t.value.STR_VAL));
     t = get_next_token();
     LEX_ERR_CHECK();
     consume_optional_EOL();
@@ -692,6 +695,7 @@ bool rule_PARAM() {
     t = get_next_token();
     LEX_ERR_CHECK();
     consume_optional_EOL();
+    SEMANTIC_CHECK(analyseFunctionParamType(t.type));
     return rule_TYPE();
 }
 
@@ -699,6 +703,7 @@ bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> id
     if (t.type == token_ID) {
         RLOG("<id_or_underscore> -> id\n");
+        SEMANTIC_CHECK(analyseFunctionParamLabel(t.value.STR_VAL));
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -707,6 +712,7 @@ bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> _
     else if (t.type == token_UNDERSCORE) {
         RLOG("<id_or_underscore> -> _\n");
+        SEMANTIC_CHECK(analyseFunctionParamLabel(NULL));
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
@@ -722,14 +728,14 @@ bool rule_RETURN_TYPE() {
         t = get_next_token();
         LEX_ERR_CHECK();
         consume_optional_EOL();
+        SEMANTIC_CHECK(analyseFunctionType(t.type));
         if (rule_TYPE()) {
-            /* analyseFunctionAddReturn(); */
             return true;
         }
     }
     // <return_type> -> EPSILON
     else if (t.type == token_BRACKET_L) {
-        analyseFunctionAddReturn("");
+        SEMANTIC_CHECK(analyseFunctionType(token_EMPTY));
         RLOG("<return_type> -> EPSILON");
         return true;
     }

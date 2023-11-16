@@ -13,12 +13,15 @@
 #include "dynamic_string.h"
 #include "function_stack.h"
 
-stack* semanticStack;
+#define NOT_FALSE(expr) do { if (!expr) return INTERNAL_ERROR; } while (0)
+#define NOT_NULL(expr) do { if (expr == NULL) return INTERNAL_ERROR; } while(0)
 
-static char* functionId = NULL;
+static String* functionId = NULL;
 static char* callId = NULL;
 static String* callParams;
 static String* paramLabel;
+static String* functionParam;
+static int functionParamCount = 0;
 
 static FunctionStack* postponedCheckStack;
 
@@ -30,7 +33,21 @@ error_codes semanticAnalysisInit(void) {
     return INTERNAL_ERROR;
   }
 
+  functionId = malloc(sizeof(String));
+  if (functionId == NULL) {
+    return INTERNAL_ERROR;
+  }
+
+  functionParam = malloc(sizeof(String));
+  if (functionParam == NULL) {
+    return INTERNAL_ERROR;
+  }
+
   if (!stringInit(paramLabel, "")) {
+    return INTERNAL_ERROR;
+  }
+
+  if (!stringInit(functionId, "")) {
     return INTERNAL_ERROR;
   }
 
@@ -70,90 +87,106 @@ error_codes analyseId(const char* idname) {
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddId(const char* idname) {
-  functionId = malloc(strlen(idname));
-  if (functionId == NULL) {
-    return INTERNAL_ERROR;
-  }
-
-  strcpy(functionId, idname);
-
-  symtableItem* item = symtableSearch(global_table, idname);
-
-  if (item != NULL) {
-    return SEMANTIC_ERR;
-  }
+error_codes analyseFunctionId(const char* idname) {
+  stringClear(functionId);
+  stringConcatCStr(functionId, idname);
 
   symtableInsert(global_table, idname, "f;", 0);
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddParam(const char* label, const char* name, const char* type) {
-  symtableItem* fn = symtableSearch(global_table, functionId);
+error_codes analyseFunctionParamLabel(const char* label) {
+  stringClear(functionParam);
 
-  if (fn == NULL) {
-    return INTERNAL_ERROR;
+  if (label == NULL) {
+    NOT_FALSE(stringConcatChar(functionParam, '_'));
+  }
+  else {
+    NOT_FALSE(stringConcatCStr(functionParam, label));
   }
 
-  String typeStr;
-  if (!stringInit(&typeStr, fn->type)) {
-    return INTERNAL_ERROR;
-  }
-
-  stringConcatCStr(&typeStr, label);
-  stringConcatChar(&typeStr, ';');
-  stringConcatCStr(&typeStr, name);
-  stringConcatChar(&typeStr, ';');
-
-  const char* typeShort = parseType(type);
-  if (typeShort[0] == '\0') {
-    stringFree(&typeStr);
-    return SEMANTIC_ERR;
-  }
-
-  stringConcatCStr(&typeStr, typeShort);
-  stringConcatChar(&typeStr, ';');
-
-  symtableInsert(global_table, fn->key, stringCStr(&typeStr), fn->data + 1);
-
-  stringFree(&typeStr);
+  NOT_FALSE(stringConcatChar(functionParam, ';'));
   return SUCCESS;
 }
 
-error_codes analyseFunctionAddReturn(const char* type) {
-  symtableItem* fn = symtableSearch(global_table, functionId);
+error_codes analyseFunctionParamName(const char* name) {
+  NOT_FALSE(stringConcatCStr(functionParam, name));
+  NOT_FALSE(stringConcatChar(functionParam, ';'));
+  return SUCCESS;
+}
 
-  if (fn == NULL) {
-    return INTERNAL_ERROR;
+const char* typeShort(tokenType type) {
+  switch (type) {
+    case token_TYPE_STRING:
+    case token_TYPE_STRING_Q:
+      return "S";
+
+    case token_TYPE_INT:
+    case token_TYPE_INT_Q:
+      return "I";
+
+    case token_TYPE_DOUBLE:
+    case token_TYPE_DOUBLE_Q:
+      return "D";
+
+    default:
+      return NULL;
+  }
+}
+
+error_codes analyseFunctionParamType(tokenType type) {
+  const char* ts = typeShort(type);
+  if (ts == NULL) {
+    return SYNTAX_ANALYSIS_ERR;
   }
 
-  if (*type == '\0') {
-    return SUCCESS;
+  NOT_FALSE(stringConcatCStr(functionParam, ts));
+  functionParamCount++;
+  return SUCCESS;
+}
+
+error_codes analyseFunctionType(tokenType type) {
+  const char* ts;
+
+  if (type == token_EMPTY) {
+    ts = "v";
+  }
+  else {
+    ts = typeShort(type);
+    if (ts == NULL) {
+      return SYNTAX_ANALYSIS_ERR;
+    }
   }
 
-  String typeStr;
-  if (!stringInit(&typeStr, fn->type)) {
-    return INTERNAL_ERROR;
-  }
+  symtableItem* fn = symtableSearch(global_table, stringCStr(functionId));
+  NOT_NULL(fn);
 
-  const char* typeShort = parseType(type);
-  if (typeShort[0] == '\0') {
-    stringFree(&typeStr);
-    return SEMANTIC_ERR;
-  }
+  String typeString;
+  NOT_FALSE(stringInit(&typeString, fn->type));
+  NOT_FALSE(stringConcatCStr(&typeString, ts));
+  NOT_FALSE(stringConcatChar(&typeString, ';'));
 
-  stringConcatCStr(&typeStr, typeShort);
-  stringConcatChar(&typeStr, ';');
-
-  symtableInsert(global_table, functionId, stringCStr(&typeStr), fn->data);
-  stringFree(&typeStr);
-
+  symtableInsert(global_table, stringCStr(functionId), stringCStr(&typeString), 0);
   return SUCCESS;
 }
 
 error_codes analyseFunctionEnd(void) {
-  free(functionId);
-  functionId = NULL;
+  symtableItem* fn = symtableSearch(global_table, stringCStr(functionId));
+  NOT_NULL(fn);
+
+  String typeString;
+  NOT_FALSE(stringInit(&typeString, fn->type));
+
+  NOT_FALSE(stringConcat(&typeString, functionParam));
+
+  symtableInsert(global_table, stringCStr(functionId),
+                 stringCStr(&typeString), functionParamCount);
+
+  stringFree(&typeString);
+  functionParamCount = 0;
+  stringClear(functionId);
+  stringClear(functionParam);
+
   return SUCCESS;
 }
 
@@ -232,21 +265,3 @@ error_codes analyseCallEnd(void) {
   return SEMANTIC_ERR;
 }
 
-const char* parseType(const char* typeStr) {
-  struct { const char* key; const char* value; } map[] = {
-    { "Int", "I" },
-    { "Double", "D" },
-    { "String", "S" },
-    { "Int?", "I?" },
-    { "Double?", "D?" },
-    { "String?", "S?" }
-  };
-
-  for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-    if (strcmp(typeStr, map[i].key) == 0) {
-      return map[i].value;
-    }
-  }
-
-  return "";
-}
