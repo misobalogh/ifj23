@@ -26,6 +26,7 @@
 // Main function
 bool syntacticAnalysis();
 
+void getToken();
 
 /**
  * @brief Stash for token for expression parser
@@ -40,6 +41,8 @@ extern lex_token stash;
  */
 extern lex_token t;
 
+
+extern bool EOL_flag;
 
 /**
  * @brief Consumes optional EOL between tokens (not the one on the end of statement)
@@ -66,5 +69,12 @@ tokenStruct* mock_precedence_nextToken();
  * @brief Mocking function for testing purposes
 */
 tokenStruct* mock_recursive_nextToken();
+
+
+//================= DEBUGGING =================
+#define LOGTOKEN(message) printf("%s: %s\n", message, TokenName(t.type))
+
+
+
 
 #endif // _SYNT_ANALYSIS_H
