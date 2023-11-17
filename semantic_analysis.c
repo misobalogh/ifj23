@@ -133,9 +133,7 @@ error_codes analyseAssignId(const char* idname) {
 // function definition
 
 error_codes analyseFunctionId(const char* idname) {
-  stringClear(functionId);
-  stringConcatCStr(functionId, idname);
-
+  NOT_FALSE(stringReinit(functionId, idname));
   symtableInsert(global_table, idname, "f;", 0);
   return SUCCESS;
 }
@@ -209,12 +207,15 @@ error_codes analyseFunctionEnd(void) {
   symtableInsert(global_table, stringCStr(functionId),
                  stringCStr(&typeString), functionParamCount);
 
+  error_codes ret = _checkPostponed(stringCStr(functionId), stringCStr(&typeString));
+  if (ret != SUCCESS) {
+    return ret;
+  }
+
   stringFree(&typeString);
   functionParamCount = 0;
   stringClear(functionId);
   stringClear(functionParam);
-
-  _checkPostponed(stringCStr(functionId), stringCStr(&typeString));
 
   return SUCCESS;
 }
@@ -454,16 +455,25 @@ end:
 const char* _typeShort(tokenType type) {
   switch (type) {
     case token_TYPE_STRING:
-    case token_TYPE_STRING_Q:
+    case token_TYPE_STRING_LINE:
       return "S";
 
+    case token_TYPE_STRING_Q:
+      return "S?";
+
+    case token_CONST_WHOLE_NUMBER:
     case token_TYPE_INT:
-    case token_TYPE_INT_Q:
       return "I";
 
+    case token_TYPE_INT_Q:
+      return "I?";
+
+    case token_CONST_SCIENTIFIC_NOTATION:
     case token_TYPE_DOUBLE:
-    case token_TYPE_DOUBLE_Q:
       return "D";
+
+    case token_TYPE_DOUBLE_Q:
+      return "D?";
 
     default:
       return NULL;

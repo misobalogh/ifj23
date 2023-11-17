@@ -16,7 +16,7 @@
 #include "semantic_analysis.h"
 #include "generator.h"
 
-#define SEMANTIC_CHECK(expr) do { error_codes __code = expr; if (__code == false) exit(__code); } while (0)
+#define SEMANTIC_CHECK(expr) do { error_codes __code = expr; if (__code != SUCCESS) exit(__code); } while (0)
 
 
 void getToken() {
@@ -353,7 +353,7 @@ bool rule_LET_OR_VAR() {
         getToken();
 
         if (t.type == token_ID) {
-            SEMANTIC_CHECK(analyseLetId(t.value.STR_VAL));
+            /* SEMANTIC_CHECK(analyseLetId(t.value.STR_VAL)); */
             getToken();
             LEX_ERR_CHECK();
             consume_optional_EOL();
@@ -364,7 +364,7 @@ bool rule_LET_OR_VAR() {
         RLOG("<let_or_var> -> var id\n");
         getToken();
         if (t.type == token_ID) {
-            SEMANTIC_CHECK(analyseVarId(t.value.STR_VAL));
+            /* SEMANTIC_CHECK(analyseVarId(t.value.STR_VAL)); */
             getToken();
             return true;
         }
@@ -377,7 +377,7 @@ bool rule_VAR_ASSIGNMENT() {
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         getToken();
-        SEMANTIC_CHECK(analyseTypeHint(t.type));
+        /* SEMANTIC_CHECK(analyseTypeHint(t.type)); */
         if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
@@ -441,7 +441,7 @@ bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
         RLOG("<fn_or_exp> -> id\n");
-        SEMANTIC_CHECK(analyseAssignId(t.value.STR_VAL));
+        /* SEMANTIC_CHECK(analyseAssignId(t.value.STR_VAL)); */
         stash.type = token_EMPTY;
         return true;
     }
@@ -481,7 +481,6 @@ bool rule_AFTER_ID(lex_token idToken) {
             getToken();
             stash = lastToken;
             LEX_ERR_CHECK();
-            // TODO: analyse assignment
             return rule_FN_OR_EXP();
         }
         else if (t.type == token_CONST

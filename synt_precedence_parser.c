@@ -86,6 +86,7 @@ int getTableIndex(tokenType token) {
     }
 }
 
+#include "semantic_analysis.h"
 
 
 /**
@@ -112,6 +113,10 @@ bool reduce(stack* s) {
         || top->type == token_CONST_SCIENTIFIC_NOTATION
         || top->type == token_TYPE_STRING_LINE) && top->flag == true) {
         PLOG("---rule ID---");
+
+        /* const char* ts = _typeShort(top->type); */
+        /* printf("%s ", ts); */
+
         rule_E_ID(s);
         stackPrint(s);
     }
@@ -120,6 +125,10 @@ bool reduce(stack* s) {
         (second->type == token_PLUS || second->type == token_MINUS || second->type == token_MUL || second->type == token_DIV) &&
         third->type == token_NONTERMINAL) {
         PLOG("---rule E op E---");
+
+        /* char c =(char [token_DIV + 1]) { [token_PLUS]='+', [token_MINUS]='-', [token_MUL]='*', [token_DIV]='/' }[second->type]; */
+        /* printf("%c ", c); */
+
         rule_ID_OP_ID(s);
         stackPrint(s);
     }
@@ -128,6 +137,9 @@ bool reduce(stack* s) {
         second->type == token_DEFAULT_VALUE &&
         third->type == token_NONTERMINAL) {
         PLOG("---rule E ?? E---");
+
+        /* printf("?? "); */
+
         rule_ID_CONCAT_ID(s);
         stackPrint(s);
     }
@@ -157,6 +169,13 @@ bool reduce(stack* s) {
             || second->type == token_MORE_EQ)
         && third->type == token_NONTERMINAL) {
         PLOG("rule ID rel ID\n");
+
+        /* const char* c = (const char* [token_MORE_EQ + 1]) { */
+        /*   [token_EQ]="=", [token_NEQ]="!=", [token_LESS]="<", [token_MORE]=">", */
+        /*     [token_LESS_EQ]="<=", [token_MORE_EQ]=">=" */
+        /* }[second->type]; */
+        /* printf("%s ", c); */
+
         stackPrint(s);
         rule_ID_REL_ID(s);
     }
@@ -260,6 +279,8 @@ bool precedenceParser() {
         }
 
     }
+
+    putchar('\n');
 
     stash.type = token_EMPTY;
 

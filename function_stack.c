@@ -8,11 +8,7 @@ FunctionStack* functionStackInit(void) {
     return NULL;
   }
 
-  stack->first = malloc(sizeof(FunctionStackItem));
-  if (stack->first == NULL) {
-    free(stack);
-    return NULL;
-  }
+  stack->first = NULL;
 
   return stack;
 }

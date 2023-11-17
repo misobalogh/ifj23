@@ -49,6 +49,7 @@ bool stringConcat(String* string, const String* const other) {
   }
 
   strcat(string->data, other->data);
+  string->size += other->size;
   return true;
 }
 
@@ -61,6 +62,7 @@ bool stringConcatCStr(String* string, const char* cStr) {
   }
 
   strcat(string->data, cStr);
+  string->size += len;
   return true;
 }
 
