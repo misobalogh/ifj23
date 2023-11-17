@@ -6,20 +6,19 @@
 * Faculty: FIT VUT
 * Date: 13.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
 #include "synt_prec_stack.h"
 #include "token_types.h"
 #include <stdlib.h>
-#include "macros.h"
 
 
 /**
  * @brief Initialize stack.
- * 
- * @param s Pointer to stack. 
+ *
+ * @param s Pointer to stack.
  */
 void stackInit(stack* s) {
     s->size = 0;
@@ -28,7 +27,7 @@ void stackInit(stack* s) {
 
 /**
  * @brief Push new item on stack.
- * 
+ *
  * @param s Pointer to stack.
  * @param type Type of token.
  */
@@ -46,7 +45,7 @@ void stackPush(stack* s, tokenType type) {
  * @brief Pop item from stack.
  * If stack is empty, nothing happens.
  * Also frees memory of popped item.
- * 
+ *
  * @param s Pointer to stack.
 */
 void stackPop(stack* s) {
@@ -61,9 +60,9 @@ void stackPop(stack* s) {
 
 /**
  * @brief Returns top of stack.
- * 
+ *
  * @param s Pointer to stack.
- * @return stackItem* pointer to item on top of stack. 
+ * @return stackItem* pointer to item on top of stack.
  * NULL if stack is empty.
  */
 stackItem* stackTop(stack* s) {
@@ -72,7 +71,7 @@ stackItem* stackTop(stack* s) {
 
 /**
  * @brief Returns true if stack is empty.
- * 
+ *
  * @param s Pointer to stack.
 */
 bool stackIsEmpty(stack* s) {
@@ -81,7 +80,7 @@ bool stackIsEmpty(stack* s) {
 
 /**
  * @brief Frees all items on stack.
- * 
+ *
  * @param s Pointer to stack.
 */
 void stackFreeItems(stack* s) {
@@ -93,14 +92,14 @@ void stackFreeItems(stack* s) {
 
 /**
  * @brief Returns first terminal from stack.
- * 
+ *
  * @param s Pointer to stack.
  * @return stackItem* pointer to first terminal on stack.
  * NULL if stack is empty or there is no terminal on stack.
 */
 stackItem* stackTopTerminal(stack* s) {
     stackItem* item = s->top;
-    while (item && !isTerminal(item->type)) { 
+    while (item && !isTerminal(item->type)) {
         item = item->lower;
     }
     return item;
@@ -109,22 +108,22 @@ stackItem* stackTopTerminal(stack* s) {
 /**
  * @brief Sets flag of first terminal on stack.
  * means: change 'a' to 'a<'
- * 
+ *
  * @param s Pointer to stack.
  */
 void stackTopTerminalSetFlag(stack* s) {
     stackItem* item = s->top;
-    while (item && !isTerminal(item->type)) { 
+    while (item && !isTerminal(item->type)) {
         item = item->lower;
     }
-    item->flag = true; 
+    item->flag = true;
 }
 
 /**
  * @brief Returns first item from stack. (top)
- * 
+ *
  * @param s Pointer to stack.
- * 
+ *
  * @return stackItem* pointer to first item on stack.
  * NULL if stack is empty.
 */
@@ -134,9 +133,9 @@ stackItem* stackFirst(stack* s) {
 
 /**
  * @brief Returns second item from stack. (top - 1)
- * 
+ *
  * @param s Pointer to stack.
- * 
+ *
  * @return stackItem* pointer to second item on stack.
  * NULL if stack is empty or there is no second item on stack.
 */
@@ -149,9 +148,9 @@ stackItem* stackSecond(stack* s) {
 
 /**
  * @brief Returns third item from stack. (top - 2)
- * 
+ *
  * @param s Pointer to stack.
- * 
+ *
  * @return stackItem* pointer to third item on stack.
  * NULL if stack is empty or there is no third item on stack.
 */
@@ -166,19 +165,20 @@ stackItem* stackThird(stack* s) {
 //========== DEBUG ==========
 /**
  * @brief Prints stack.
- * 
+ *
  * @param s Pointer to stack.
 */
 void stackPrint(stack* s) {
-    FILE *logFile = fopen("precedenceParser.log", "a"); 
-    if(!logFile) {
+    FILE* logFile = fopen("precedenceParser.log", "a");
+    if (!logFile) {
         return;
     }
     stackItem* item = s->top;
     while (item) {
-        fprintf(logFile, "%d ", item->type);
+        const char* str = TokenName(item->type);
+        fprintf(logFile, "%s\n", str);
         item = item->lower;
     }
-    fprintf(logFile, "\n");
+    fprintf(logFile, "\n\n");
     fclose(logFile);
 }

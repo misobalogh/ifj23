@@ -38,11 +38,11 @@
 typedef enum
 {
     token_LEX_ERROR,
+
+    // OPERATORS
     token_OP_START,
-    token_PLUS_MINUS,
     token_PLUS,
     token_MINUS,
-    token_MUL_DIV,
     token_MUL,
     token_DIV,
     token_CONCAT,
@@ -56,13 +56,21 @@ typedef enum
     token_LESS_EQ,
     token_MORE_EQ,
     token_OP_END,
+    // OPERATORS END
+
     token_PARENTHESES_L,
     token_PARENTHESES_R,
-    token_ID,
+    token_ID, // 18
     token_ID_OR_CONST,
+    token_CONST,
+    token_CONST_WHOLE_NUMBER,
+    token_CONST_DEC_NUMBER,
+    token_CONST_SCIENTIFIC_NOTATION,
+    token_TYPE_STRING_LINE,
+
     token_DOLLAR,
     // ...
-    token_TERMINAL,
+    token_TERMINAL,  //25
     // ...
     token_NONTERMINAL, // remove later
     token_LET,
@@ -70,12 +78,9 @@ typedef enum
     token_IF,
     token_ELSE,
     token_WHILE,
-    token_CONST,
-    token_NOT,
+
+
     token_NIL,
-    token_CONST_WHOLE_NUMBER = token_CONST,
-    token_CONST_DEC_NUMBER = token_CONST,
-    token_CONST_SCIENTIFIC_NOTATION = token_CONST,
     token_FUNC,
     token_RETURN,
     token_BRACKET_L,
@@ -91,7 +96,6 @@ typedef enum
     token_TYPE_INT_Q,
     token_TYPE_DOUBLE,
     token_TYPE_DOUBLE_Q,
-    token_TYPE_STRING_LINE,
     token_TYPE_STRING,
     token_TYPE_STRING_Q,
     token_EOL,
@@ -139,5 +143,9 @@ extern lex_token current_lex_token;
 
 // current state
 // extern states current_lex_state;
+
+
+//======DEBUG======
+const char* TokenName(tokenType token);
 
 #endif // _TOKEN_TYPES_H

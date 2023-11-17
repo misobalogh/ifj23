@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 14.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -33,8 +33,8 @@ typedef enum precedenceTypes {
 } precedenceType;
 
 /**
- * @brief Precedence table for precedence parser. 
- * Precedence parsers uses this table, when it needs to decide, 
+ * @brief Precedence table for precedence parser.
+ * Precedence parsers uses this table, when it needs to decide,
  * what to do with stack - whether to reduce or shift.
  */
 extern const precedenceType precedenceTable[9][9];

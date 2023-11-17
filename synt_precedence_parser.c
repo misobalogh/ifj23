@@ -20,6 +20,74 @@
 #include "macros.h"
 #include "synt_prec_rules.h"
 
+bool connstTypes(tokenType type) {
+    if (type == token_CONST
+        || type == token_CONST_WHOLE_NUMBER
+        || type == token_CONST_DEC_NUMBER
+        || type == token_CONST_SCIENTIFIC_NOTATION
+        || type == token_TYPE_STRING_LINE) {
+        return true;
+    }
+    return false;
+}
+
+bool possibleExpressionTokensWithoutID() {
+    if (connstTypes(t.type)
+        || t.type == token_PARENTHESES_L
+        || t.type == token_PARENTHESES_R
+        || (t.type >= token_OP_START && t.type <= token_OP_END)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+int getTableIndex(tokenType token) {
+    switch (token)
+    {
+    case token_PLUS:
+    case token_MINUS:
+        return 0;
+    case token_MUL:
+    case token_DIV:
+        return 1;
+    case token_DEFAULT_VALUE:
+        return 2;
+    case token_FORCE_UNWRAP:
+        return 3;
+    case token_REL:
+    case token_EQ:
+    case token_NEQ:
+    case token_LESS:
+    case token_MORE:
+    case token_LESS_EQ:
+    case token_MORE_EQ:
+        return 4;
+    case token_PARENTHESES_L:
+        return 5;
+    case token_PARENTHESES_R:
+        return 6;
+    case token_ID:
+    case token_CONST:
+    case token_CONST_WHOLE_NUMBER:
+    case token_CONST_DEC_NUMBER:
+    case token_CONST_SCIENTIFIC_NOTATION:
+    case token_TYPE_STRING_LINE:
+        return 7;
+    case token_DOLLAR:
+    case token_EOL:
+    case token_BRACKET_L:
+    case token_BRACKET_R:
+    case token_EOF:
+        return 8;
+    default:
+        return 8;
+    }
+}
+
+
+
 /**
  * @brief Reduce items on stack with one of defined rules.
  * Called when ">" sign is in precedence table.
@@ -37,42 +105,59 @@ bool reduce(stack* s) {
     stackItem* third = stackThird(s);
 
 
-    if (top->type == token_ID && top->flag == true) {
-        PLOG("rule ID\n");
+    if ((top->type == token_ID
+        || top->type == token_CONST
+        || top->type == token_CONST_WHOLE_NUMBER
+        || top->type == token_CONST_DEC_NUMBER
+        || top->type == token_CONST_SCIENTIFIC_NOTATION
+        || top->type == token_TYPE_STRING_LINE) && top->flag == true) {
+        PLOG("---rule ID---");
         rule_E_ID(s);
+        stackPrint(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
-        (second->type == token_PLUS_MINUS || second->type == token_MUL_DIV) &&
+        (second->type == token_PLUS || second->type == token_MINUS || second->type == token_MUL || second->type == token_DIV) &&
         third->type == token_NONTERMINAL) {
-        PLOG("rule E op E\n");
+        PLOG("---rule E op E---");
         rule_ID_OP_ID(s);
+        stackPrint(s);
     }
     else if (
         first->type == token_NONTERMINAL &&
-        second->type == token_CONCAT &&
+        second->type == token_DEFAULT_VALUE &&
         third->type == token_NONTERMINAL) {
-        PLOG("rule E ?? E\n");
+        PLOG("---rule E ?? E---");
         rule_ID_CONCAT_ID(s);
+        stackPrint(s);
     }
     else if (
         first->type == token_PARENTHESES_R &&
         second->type == token_NONTERMINAL &&
         third->type == token_PARENTHESES_L) {
-        PLOG("rule (E)\n");
+        PLOG("---rule (E)---");
         rule_PAR_ID_PAR(s);
+        stackPrint(s);
     }
     else if (
         first->type == token_FORCE_UNWRAP &&
         second->type == token_NONTERMINAL) {
-        PLOG("rule E!\n");
+        PLOG("---rule E!---");
         rule_ID_FORCE_UNWRAP(s);
+        stackPrint(s);
     }
     else if (
-        first->type == token_NONTERMINAL &&
-        second->type == token_REL &&
-        third->type == token_NONTERMINAL) {
+        first->type == token_NONTERMINAL
+        && (second->type == token_REL
+            || second->type == token_EQ
+            || second->type == token_NEQ
+            || second->type == token_LESS
+            || second->type == token_MORE
+            || second->type == token_LESS_EQ
+            || second->type == token_MORE_EQ)
+        && third->type == token_NONTERMINAL) {
         PLOG("rule ID rel ID\n");
+        stackPrint(s);
         rule_ID_REL_ID(s);
     }
     else {
@@ -92,59 +177,72 @@ bool precedenceParser() {
     stackPush(&s, token_DOLLAR);
 
     // debug
-    PLOG("INIT: ");
+    PLOG("====INIT====");
     stackPrint(&s);
-    lex_token temp = t;
+
+    tokenType lastToken = token_DOLLAR;
+
+    // swap stash and current token
     if (stash.type != token_EMPTY) {
+        lex_token temp = t;
         t = stash;
+        stash = temp;
     }
-    while (!((t.type == token_EOL || t.type == token_BRACKET_L) && stackTopTerminal(&s)->type == token_DOLLAR)) {
-        lex_token tType = { .type = t.type, .value = t.value };
-        // treat EOL and BRACKET_L as DOLLAR
-        if (t.type == token_EOL || t.type == token_BRACKET_L) {
-            tType.type = token_DOLLAR;
+
+    while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->type != token_DOLLAR) {
+
+        // LOG("Last token: %s", TokenName(lastToken));
+        // LOG("Current token: %s\n", TokenName(t.type));
+
+        int table_index2;
+
+        if ((lastToken == token_ID
+            || connstTypes(lastToken)
+            || lastToken == token_PARENTHESES_R
+            || lastToken == token_FORCE_UNWRAP) && t.type == token_ID) {
+            table_index2 = getTableIndex(token_DOLLAR);
         }
-        // treat CONST as ID
-        else if (t.type == token_CONST) {
-            // TODO: Might cause issues in semantic analysis
-            t.type = token_ID;
-            tType.type = token_ID;
+        else {
+            table_index2 = getTableIndex(t.type);
         }
-        // invalid token handling
-        else if (t.type < token_OP_START || t.type > token_TERMINAL) {
+
+        int table_index1 = getTableIndex(stackTopTerminal(&s)->type);
+
+        if (table_index1 == -1 || table_index2 == -1) {
             return false;
         }
-        switch (precedenceTable[stackTopTerminal(&s)->type][tType.type])
+
+        if (table_index1 == getTableIndex(token_DOLLAR) && table_index2 == getTableIndex(token_DOLLAR)) {
+            break;
+        }
+
+        // LOG("table indexes: %d %d\n", table_index1, table_index2);
+
+        switch (precedenceTable[table_index1][table_index2])
         {
         case EQUAL: // "="
-            PLOG("EQUAL: ");
-            stackPrint(&s);
             stackPush(&s, t.type);
-            if (stash.type != token_EMPTY) {
-                t = temp;
-                stash.type = token_EMPTY;
-            }
-            else {
-                t = get_next_token();
-            }
+
+            lastToken = t.type;
+            getToken();
+
+            PLOG("====EQUAL====");
+            stackPrint(&s);
             break;
         case LOW: // expand  "<"
             stackPush(&s, t.type);
             stackTopTerminalSetFlag(&s);
-            if (stash.type != token_EMPTY) {
-                t = temp;
-                stash.type = token_EMPTY;
-            }
-            else {
-                t = get_next_token();
-            }
-            PLOG("LOW: ");
+
+            lastToken = t.type;
+            getToken();
+
+            PLOG("====LOW====");
             stackPrint(&s);
             break;
         case HIGH: // reduce ">"
-            PLOG("HIGH: ");
-            stackPrint(&s);
             if (reduce(&s)) {
+                PLOG("====HIGH====");
+                stackPrint(&s);
                 break;
             }
             else {
@@ -152,19 +250,22 @@ bool precedenceParser() {
                 return false;
             }
         case EMPTY: // error
-            PLOG("EMPTY: ");
+            PLOG("====EMPTY====");
             stackPrint(&s);
             stackFreeItems(&s);
             return false;
-            // default:
-            //     break;
         default:
+            PLOG("ERROR: unknown precedence table value\n");
             return false;
         }
+
     }
-    stackPrint(&s);
-    PLOG("END: ");
+
+    stash.type = token_EMPTY;
+
+    PLOG("====END====\n");
     stackFreeItems(&s);
+
     return true;
 }
 

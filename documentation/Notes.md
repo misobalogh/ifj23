@@ -8,6 +8,7 @@
 - [ ] Built-in functions
 - [ ] add negative numbers to expression parser (1-(-2))
 - [ ] add rule for optional EOL - it **can be** nearly anywhere, but it **has to be** after certain statements (there can also be tab, space...)
+- [ ] Expression pareser: E ?? E, left side maybe shouldnt be constant
 
 # Notes
 
