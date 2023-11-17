@@ -94,7 +94,6 @@ bool rule_STAT_LIST() {
         RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
         if (rule_STATEMENT()) {
             if (EOL_flag == true) {
-                LEX_ERR_CHECK();
                 return rule_STAT_LIST();
             }
             else if (t.type == token_EOF) {
@@ -164,7 +163,7 @@ bool rule_STATEMENT() {
         if (!rule_CONDITION()) {
             return false;
         }
-        consume_optional_EOL();
+
         if (t.type != token_BRACKET_L) {
             return false;
         }
@@ -173,6 +172,7 @@ bool rule_STATEMENT() {
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
+
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -188,15 +188,17 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        if (!rule_BRACK_STAT_LIST()) {
+        if (!rule_FUNC_STAT_LIST()) {
             return false;
         }
+
         if (t.type != token_BRACKET_R) {
             return false;
         }
         getToken();
-        LEX_ERR_CHECK();
+
         return true;
+
     case token_WHILE:
         RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
@@ -213,15 +215,17 @@ bool rule_STATEMENT() {
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
+
         if (t.type != token_BRACKET_R) {
             return false;
         }
         getToken();
-        LEX_ERR_CHECK();
         return true;
+
     case token_EOL:
         RLOG("<statement> -> EPSILON\n");
         return true;
+
     default:
         RLOG("ERROR: <statement>\n");
         return false;
@@ -688,13 +692,12 @@ bool rule_FUNC_STAT_LIST() {
         RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
         if (rule_FUNC_STAT()) {
             if (EOL_flag) {
-                LEX_ERR_CHECK();
                 return rule_FUNC_STAT_LIST();
             }
         }
     }
     // <func_stat_list> -> EPSILON    
-    if (t.type == token_BRACKET_R) {
+    else if (t.type == token_BRACKET_R) {
         RLOG("<func_stat_list> -> EPSILON\n");
         return true;
     }
@@ -723,7 +726,6 @@ bool rule_FUNC_STAT() {
         if (!rule_CONDITION()) {
             return false;
         }
-        getToken();
 
         if (t.type != token_BRACKET_L) {
             return false;
@@ -733,7 +735,6 @@ bool rule_FUNC_STAT() {
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
-        getToken();
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -753,17 +754,18 @@ bool rule_FUNC_STAT() {
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
-        getToken();
 
         if (t.type != token_BRACKET_R) {
             return false;
         }
+        getToken();
+
         return true;
+
     case token_WHILE:
         RLOG("<func_stat> -> while <expression> { <func_stat_list> }\n");
         getToken();
 
-        stash = t;
         if (!rule_EXPRESSION()) {
             return false;
         }
@@ -776,15 +778,17 @@ bool rule_FUNC_STAT() {
         if (!rule_BRACK_STAT_LIST()) {
             return false;
         }
-        getToken();
 
         if (t.type != token_BRACKET_R) {
             return false;
         }
+        getToken();
         return true;
+
     case token_EOL:
         RLOG("<func_stat> -> EPSILON\n");
         return true;
+
     default:
         RLOG("ERROR: <func_stat>\n");
         return false;
@@ -797,7 +801,6 @@ bool rule_RETURN_STAT() {
     if (t.type == token_RETURN) {
         RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
         getToken();
-
         if (rule_RET_VAL()) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
@@ -851,8 +854,6 @@ bool rule_CONDITION() {
 
         if (t.type == token_ID) {
             getToken();
-            LEX_ERR_CHECK();
-            consume_optional_EOL();
             return true;
         }
     }
