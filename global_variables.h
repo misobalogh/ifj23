@@ -27,6 +27,7 @@ extern SymtableStack* global_symtableStack;
 void global_initSymtableStack(void);
 void global_initSymtable(void);
 void global_freeSymtable(void);
+void global_freeSymtableStack(void);
 bool global_addVar(char* id, char* type, int value);
 
 void global_generateInstruction();

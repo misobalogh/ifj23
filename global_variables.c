@@ -40,6 +40,19 @@ void global_initSymtableStack(void) {
   symtableStackInit(global_symtableStack);
 }
 
+void global_freeSymtableStack(void) {
+  SymtableStackItem* current = global_symtableStack->first;
+
+  while (current != NULL) {
+    SymtableStackItem* next = current->next;
+    free(current);
+    current = next;
+  }
+
+  free(global_symtableStack);
+  global_symtableStack = NULL;
+}
+
 
 /**
  * @brief Checks if variable is already declared in global table of symbols

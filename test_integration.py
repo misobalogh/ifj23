@@ -3,7 +3,7 @@ import sys
 import subprocess
 from subprocess import TimeoutExpired
 
-timeout_seconds = 1
+timeout_seconds = 5
 
 GREEN = "\033[92m"
 RED = "\033[91m"

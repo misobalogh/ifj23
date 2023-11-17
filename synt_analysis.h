@@ -58,7 +58,7 @@ void consume_optional_EOL();
 bool precedenceParser();
 
 // Recursive descent parser
-error_codes recursiveParser();
+bool recursiveParser();
 
 /**
  * @brief Mocking function for testing purposes

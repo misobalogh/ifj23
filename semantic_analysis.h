@@ -10,7 +10,7 @@
  * @brief Initializes semantic analysis variables. Must be called before
  * any calls to any other semantic analysis functions
  */
-error_codes semanticAnalysisInit(void);
+bool semanticAnalysisInit(void);
 
 /**
  * @brief Frees all memory allocated by semantic analysis.

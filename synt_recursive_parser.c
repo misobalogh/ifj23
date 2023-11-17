@@ -21,14 +21,14 @@
 #include "synt_recur_rules.h"
 #include "semantic_analysis.h"
 
-error_codes recursiveParser(void) {
-    if (semanticAnalysisInit() != SUCCESS) {
-      return INTERNAL_ERROR;
+bool recursiveParser(void) {
+    if (!semanticAnalysisInit()) {
+      return false;
     }
 
-    return rule_PROGRAM();
-
+    bool result = rule_PROGRAM();
     semanticAnalysisDeinit();
+    return result;
 }
 
 

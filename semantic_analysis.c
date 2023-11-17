@@ -36,45 +36,54 @@ static struct {
 
 static FunctionStack* postponedCheckStack;
 
-error_codes semanticAnalysisInit(void) {
+bool semanticAnalysisInit(void) {
   global_initSymtable();
+  global_initSymtableStack();
+
+  paramLabel = NULL;
+  functionId = NULL;
+  functionParam = NULL;
+  callParams = NULL;
 
   paramLabel = malloc(sizeof(String));
-  NOT_NULL(paramLabel);
-
   functionId = malloc(sizeof(String));
-  NOT_NULL(functionId);
-
   functionParam = malloc(sizeof(String));
-  NOT_NULL(functionParam);
-
-  NOT_FALSE(stringInit(paramLabel, ""));
-  NOT_FALSE(stringInit(functionId, ""));
-  NOT_FALSE(stringInit(functionParam, ""));
-  NOT_FALSE(stringInit(&assignment.idRight, ""));
-  NOT_FALSE(stringInit(&assignment.idLeft, ""));
+  callParams = malloc(sizeof(String));
 
   postponedCheckStack = functionStackInit();
-  NOT_NULL(postponedCheckStack);
 
-  callParams = malloc(sizeof(String));
-  NOT_NULL(callParams);
-  NOT_FALSE(stringInit(callParams, ""));
+  if (paramLabel == NULL || functionId == NULL ||
+    functionParam == NULL || callParams == NULL
+    || postponedCheckStack == NULL) {
+      semanticAnalysisDeinit();
+      return false;
+  }
 
-  return SUCCESS;
+  if (!stringInit(paramLabel, "")
+    || !stringInit(functionId, "")
+    || !stringInit(functionParam, "")
+    || !stringInit(&assignment.idRight, "")
+    || !stringInit(&assignment.idLeft, "")
+    || !stringInit(callParams, "")) {
+      semanticAnalysisDeinit();
+      return false;
+  }
+
+  return true;
 }
 
 void semanticAnalysisDeinit(void) {
   global_freeSymtable();
+  global_freeSymtableStack();
   stringFree(paramLabel);
   stringFree(functionId);
   stringFree(functionParam);
+  stringFree(callParams);
   free(paramLabel);
   free(functionId);
   free(functionParam);
-  functionStackDeinit(postponedCheckStack);
-  stringFree(callParams);
   free(callParams);
+  functionStackDeinit(postponedCheckStack);
 }
 
 // variable declaration and assignment

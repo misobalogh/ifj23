@@ -16,7 +16,7 @@
 #include "semantic_analysis.h"
 #include "generator.h"
 
-#define PROPAGATE_ERROR(expr) do { error_codes __code = expr; if (__code != SUCCESS) return __code; } while (0)
+#define SEMANTIC_CHECK(expr) do { error_codes __code = expr; if (__code == false) exit(__code); } while (0)
 
 
 void getToken() {
@@ -58,13 +58,13 @@ void consume_optional_EOL() {
 
 // ===================== RULES =====================
 
-error_codes rule_EXPRESSION() {
+bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
-    error_codes retVal = precedenceParser();
+    bool retVal = precedenceParser();
     return retVal;
 }
 
-error_codes rule_PROGRAM() {
+bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
     getToken();
     RLOG("\n\n<program> -> <stat_list> EOF\n");
@@ -75,19 +75,19 @@ error_codes rule_PROGRAM() {
         t.type == token_ID ||
         t.type == token_FUNC
         ) {
-        if (rule_STAT_LIST() == SUCCESS) {
+        if (rule_STAT_LIST()) {
             RLOG("EOF\n");
-            return SUCCESS;
+            return true;
         }
     }
     else if (t.type == token_EOF) {
         RLOG("EOF\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_STAT_LIST() {
+bool rule_STAT_LIST() {
     // 2. <stat_list> -> <statement> EOL <stat_list>
     if (t.type == token_LET ||
         t.type == token_VAR ||
@@ -96,31 +96,30 @@ error_codes rule_STAT_LIST() {
         t.type == token_ID ||
         t.type == token_FUNC) {
         RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
-        if (rule_STATEMENT() == SUCCESS) {
+        if (rule_STATEMENT()) {
             if (EOL_flag == true) {
                 return rule_STAT_LIST();
             }
             else if (t.type == token_EOF) {
-                return SUCCESS;
+                return true;
             }
         }
     }
     // 3. <stat_list> -> EPSILON
     else if (t.type == token_EOF) {
         RLOG("<stat_list> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
 
-error_codes rule_STATEMENT() {
+bool rule_STATEMENT() {
     switch (t.type) {
     case token_LET:
     case token_VAR:
         RLOG("<statement> -> <let_or_var> <var_assignment>\n");
-        PROPAGATE_ERROR(rule_LET_OR_VAR());
-        return rule_VAR_ASSIGNMENT();
+        return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<statement> -> id <after_id>\n");
         lex_token idToken = t;
@@ -130,102 +129,102 @@ error_codes rule_STATEMENT() {
         RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
         getToken();
         if (t.type != token_ID) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
-        PROPAGATE_ERROR(analyseFunctionId(t.value.STR_VAL));
+        SEMANTIC_CHECK(analyseFunctionId(t.value.STR_VAL));
         getToken();
         if (t.type != token_PARENTHESES_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
-        if (rule_PARAM_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_PARAM_LIST() == false) {
+            return false;
         }
         if (t.type != token_PARENTHESES_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_RETURN_TYPE() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_RETURN_TYPE() == false) {
+            return false;
         }
-        PROPAGATE_ERROR(analyseFunctionEnd());
+        SEMANTIC_CHECK(analyseFunctionEnd());
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_FUNC_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_FUNC_STAT_LIST() == false) {
+            return false;
         }
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
         LEX_ERR_CHECK();
-        return SUCCESS;
+        return true;
     case token_IF:
         RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
 
-        if (rule_CONDITION() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_CONDITION() == false) {
+            return false;
         }
 
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
-        }
-
-        if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
-        }
-        getToken();
-
-        if (t.type != token_ELSE) {
-            return SYNTAX_ANALYSIS_ERR;
-        }
-        getToken();
-
-        if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
-        }
-        getToken();
-
-        if (rule_FUNC_STAT_LIST() != SUCCESS) {
+        if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
 
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        return SUCCESS;
+        if (t.type != token_ELSE) {
+            return false;
+        }
+        getToken();
+
+        if (t.type != token_BRACKET_L) {
+            return false;
+        }
+        getToken();
+
+        if (rule_FUNC_STAT_LIST() == false) {
+            return false;
+        }
+
+        if (t.type != token_BRACKET_R) {
+            return false;
+        }
+        getToken();
+
+        return true;
 
     case token_WHILE:
         RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
 
-        if (rule_EXPRESSION() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_EXPRESSION() == false) {
+            return false;
         }
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
 
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
         return true;
@@ -236,12 +235,12 @@ error_codes rule_STATEMENT() {
 
     default:
         RLOG("ERROR: <statement>\n");
-        return SYNTAX_ANALYSIS_ERR;
+        return false;
     }
 }
 
 
-error_codes rule_BRACK_STAT_LIST() {
+bool rule_BRACK_STAT_LIST() {
     // 2. <brack_stat_list> -> <brack_statement> EOL <between_brackets>
     if (t.type == token_LET ||
         t.type == token_VAR ||
@@ -249,7 +248,7 @@ error_codes rule_BRACK_STAT_LIST() {
         t.type == token_WHILE ||
         t.type == token_ID) {
         RLOG("<brack_stat_list> -> <brack_statement> EOL <brack_stat_list>\n");
-        if (rule_BRACK_STATEMENT() == SUCCESS) {
+        if (rule_BRACK_STATEMENT()) {
             if (EOL_flag == true) {
                 LEX_ERR_CHECK();
                 return rule_BRACK_STAT_LIST();
@@ -258,19 +257,18 @@ error_codes rule_BRACK_STAT_LIST() {
     }
     if (t.type == token_BRACKET_R) {
         RLOG("<brack_stat_list> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
 
-error_codes rule_BRACK_STATEMENT() {
+bool rule_BRACK_STATEMENT() {
     switch (t.type) {
     case token_LET:
     case token_VAR:
         RLOG("<brack_statement> -> <let_or_var> <var_assignment>\n");
-        PROPAGATE_ERROR(rule_LET_OR_VAR());
-        return rule_VAR_ASSIGNMENT();
+        return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<brack_statement> -> id <after_id>\n");
         lex_token idToken = t;
@@ -281,106 +279,106 @@ error_codes rule_BRACK_STATEMENT() {
         RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
 
-        if (rule_CONDITION() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_CONDITION() == false) {
+            return false;
         }
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
         if (t.type != token_ELSE) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
         LEX_ERR_CHECK();
-        return SUCCESS;
+        return true;
     case token_WHILE:
         RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
 
-        if (rule_EXPRESSION() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_EXPRESSION() == false) {
+            return false;
         }
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
         LEX_ERR_CHECK();
-        return SUCCESS;
+        return true;
     case token_EOL:
         RLOG("<brack_statement> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     default:
         RLOG("ERROR: <brack_statement>\n");
-        return SYNTAX_ANALYSIS_ERR;
+        return false;
     }
 }
 
 
-error_codes rule_LET_OR_VAR() {
+bool rule_LET_OR_VAR() {
     if (t.type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
         getToken();
 
         if (t.type == token_ID) {
-            PROPAGATE_ERROR(analyseLetId(t.value.STR_VAL));
+            SEMANTIC_CHECK(analyseLetId(t.value.STR_VAL));
             getToken();
             LEX_ERR_CHECK();
             consume_optional_EOL();
-            return SUCCESS;
+            return true;
         }
     }
     else if (t.type == token_VAR) {
         RLOG("<let_or_var> -> var id\n");
         getToken();
         if (t.type == token_ID) {
-            PROPAGATE_ERROR(analyseVarId(t.value.STR_VAL));
+            SEMANTIC_CHECK(analyseVarId(t.value.STR_VAL));
             getToken();
             return true;
         }
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_VAR_ASSIGNMENT() {
+bool rule_VAR_ASSIGNMENT() {
     // <var_assigment> -> : type <val_assigment>
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         getToken();
-        PROPAGATE_ERROR(analyseTypeHint(t.type));
-        if (rule_TYPE() == SUCCESS) {
+        SEMANTIC_CHECK(analyseTypeHint(t.type));
+        if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
     }
@@ -405,10 +403,10 @@ error_codes rule_VAR_ASSIGNMENT() {
             return rule_EXPRESSION();
         }
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_VAL_ASSIGNMENT() {
+bool rule_VAL_ASSIGNMENT() {
     // <val_assigment> -> = id <fn_or_exp>
     if (t.type == token_ASSIGN) {
         getToken();
@@ -434,18 +432,18 @@ error_codes rule_VAL_ASSIGNMENT() {
     // <val_assigment> -> EPSILON
     else if (EOL_flag) {
         RLOG("<val_assignment> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_FN_OR_EXP() {
+bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
         RLOG("<fn_or_exp> -> id\n");
-        PROPAGATE_ERROR(analyseAssignId(t.value.STR_VAL));
+        SEMANTIC_CHECK(analyseAssignId(t.value.STR_VAL));
         stash.type = token_EMPTY;
-        return SUCCESS;
+        return true;
     }
     // <fn_or_exp> -> <expression> 
     else if ((t.type >= token_OP_START && t.type <= token_OP_END)) {
@@ -458,20 +456,20 @@ error_codes rule_FN_OR_EXP() {
         stash.type = token_EMPTY;
         getToken();
 
-        if (rule_INPUT_PARAM_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_INPUT_PARAM_LIST() == false) {
+            return false;
         }
         if (t.type != token_PARENTHESES_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
         LEX_ERR_CHECK();
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_AFTER_ID(lex_token idToken) {
+bool rule_AFTER_ID(lex_token idToken) {
     // <after_id> -> = id <fn_or_exp> 
     if (t.type == token_ASSIGN) {
         getToken();
@@ -493,31 +491,30 @@ error_codes rule_AFTER_ID(lex_token idToken) {
             || t.type == token_PARENTHESES_L
             || t.type == token_TYPE_STRING_LINE) {
             RLOG("<after_id> -> = const <expression>\n");
-            bool retval = rule_EXPRESSION();
-            return retval ? SUCCESS : SYNTAX_ANALYSIS_ERR;
+            return rule_EXPRESSION();
         }
     }
     // <after_id> -> ( <input_param_list> ) 
     else if (t.type == token_PARENTHESES_L) {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         getToken();
-        if (rule_INPUT_PARAM_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_INPUT_PARAM_LIST() == false) {
+            return false;
         }
         if (t.type != token_PARENTHESES_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
         return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_INPUT_PARAM_LIST() {
+bool rule_INPUT_PARAM_LIST() {
     // <input_param_list> -> EPSILON
     if (t.type == token_PARENTHESES_R) {
         RLOG("<input_param_list> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
     // <input_param_list> -> <input_param> <input_param_next>
     else if (t.type == token_ID
@@ -527,30 +524,28 @@ error_codes rule_INPUT_PARAM_LIST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
-        PROPAGATE_ERROR(rule_INPUT_PARAM());
-        return rule_INPUT_PARAM_NEXT();
+        return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_INPUT_PARAM_NEXT() {
+bool rule_INPUT_PARAM_NEXT() {
     // <input_param_next> -> , <input_param> <input_param_next>
     if (t.type == token_COMMA) {
         RLOG("<input_param_next> -> , <input_param> <input_param_next>\n");
         getToken();
 
-        PROPAGATE_ERROR(rule_INPUT_PARAM());
-        return rule_INPUT_PARAM_NEXT();
+        return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
     // <input_param_next> -> EPSILON
     else if (t.type == token_PARENTHESES_R) {
         RLOG("<input_param_next> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_INPUT_PARAM() {
+bool rule_INPUT_PARAM() {
     // <input_param> -> const        
     if (t.type == token_CONST
         || t.type == token_CONST_WHOLE_NUMBER
@@ -559,28 +554,28 @@ error_codes rule_INPUT_PARAM() {
         || t.type == token_TYPE_STRING_LINE) {
 
         RLOG("<input_param> -> const\n");
-        PROPAGATE_ERROR(analyseCallConst(t.type));
+        SEMANTIC_CHECK(analyseCallConst(t.type));
         getToken();
         return true;
     }
     // <input_param> -> id <with_name>
     else if (t.type == token_ID) {
         RLOG("<input_param> -> id <with_name>\n");
-        PROPAGATE_ERROR(analyseCallIdOrLabel(t.value.STR_VAL));
+        SEMANTIC_CHECK(analyseCallIdOrLabel(t.value.STR_VAL));
         getToken();
 
         return rule_WITH_NAME();
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_WITH_NAME() {
+bool rule_WITH_NAME() {
     // <with_name> -> EPSILON 
     if (t.type == token_COMMA ||
         t.type == token_PARENTHESES_R) {
         RLOG("<with_name> -> EPSILON\n");
         analyseCallEpsAfterId();
-        return SUCCESS;
+        return true;
     }
     // <with_name> -> : <id_or_const>
     else if (t.type == token_COLON) {
@@ -589,10 +584,10 @@ error_codes rule_WITH_NAME() {
 
         return rule_ID_OR_CONST();
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_ID_OR_CONST() {
+bool rule_ID_OR_CONST() {
     // <id_or_const> -> id
     if (t.type == token_ID) {
         RLOG("<id_or_const> -> id\n");
@@ -608,74 +603,72 @@ error_codes rule_ID_OR_CONST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<id_or_const> -> const\n");
-        PROPAGATE_ERROR(analyseCallConstAfterLabel(t.type));
+        SEMANTIC_CHECK(analyseCallConstAfterLabel(t.type));
         getToken();
 
         return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_PARAM_LIST() {
+bool rule_PARAM_LIST() {
     // <param_list> -> EPSILON
     if (t.type == token_PARENTHESES_R) {
         RLOG("<param_list> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
     // <param_list> -> <param> <param_next>
     else if (t.type == token_ID || t.type == token_UNDERSCORE) {
         RLOG("<param_list> -> <param> <param_next>\n");
-        PROPAGATE_ERROR(rule_PARAM());
-        return rule_PARAM_NEXT();
+        return rule_PARAM() && rule_PARAM_NEXT();
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_PARAM_NEXT() {
+bool rule_PARAM_NEXT() {
     // <param_next> -> , <param> <param_next>
     if (t.type == token_COMMA) {
         RLOG("<param_next> -> , <param> <param_next>\n");
         getToken();
 
-        PROPAGATE_ERROR(rule_PARAM());
-        return rule_PARAM_NEXT();
+        return rule_PARAM() && rule_PARAM_NEXT();
     }
     // <param_next> -> EPSILON
     else if (t.type == token_PARENTHESES_R) {
         RLOG("<param_next> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_PARAM() {
+bool rule_PARAM() {
     // <param> -> <id_or_underscore> id : <type>
     RLOG("<param> -> <id_or_underscore> id : <type>\n");
-    if (rule_ID_OR_UNDERSCORE() != SUCCESS) {
-        return SYNTAX_ANALYSIS_ERR;
+    if (rule_ID_OR_UNDERSCORE() == false) {
+        return false;
     }
     if (t.type != token_ID) {
-        return SYNTAX_ANALYSIS_ERR;
+        return false;
     }
-    PROPAGATE_ERROR(analyseFunctionParamName(t.value.STR_VAL));
+    SEMANTIC_CHECK(analyseFunctionParamName(t.value.STR_VAL));
     getToken();
     LEX_ERR_CHECK();
     consume_optional_EOL();
     if (t.type != token_COLON) {
-        return SYNTAX_ANALYSIS_ERR;
+        return false;
     }
     getToken();
     LEX_ERR_CHECK();
     consume_optional_EOL();
-    PROPAGATE_ERROR(analyseFunctionParamType(t.type));
+    SEMANTIC_CHECK(analyseFunctionParamType(t.type));
     return rule_TYPE();
 }
 
-error_codes rule_ID_OR_UNDERSCORE() {
+bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> id
     if (t.type == token_ID) {
         RLOG("<id_or_underscore> -> id\n");
-        PROPAGATE_ERROR(analyseFunctionParamLabel(t.value.STR_VAL));
+        SEMANTIC_CHECK(analyseFunctionParamLabel(t.value.STR_VAL));
         getToken();
 
         return true;
@@ -683,35 +676,35 @@ error_codes rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> _
     else if (t.type == token_UNDERSCORE) {
         RLOG("<id_or_underscore> -> _\n");
-        PROPAGATE_ERROR(analyseFunctionParamLabel(NULL));
+        SEMANTIC_CHECK(analyseFunctionParamLabel(NULL));
         getToken();
 
         return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_RETURN_TYPE() {
+bool rule_RETURN_TYPE() {
     // <return_type> -> ". type"
     if (t.type == token_ARROW) {
         RLOG("<return_type> -> -> <type>\n");
         getToken();
-        PROPAGATE_ERROR(analyseFunctionType(t.type));
+        SEMANTIC_CHECK(analyseFunctionType(t.type));
 
-        if (rule_TYPE() == SUCCESS) {
-            return SUCCESS;
+        if (rule_TYPE()) {
+            return true;
         }
     }
     // <return_type> -> EPSILON
     else if (t.type == token_BRACKET_L) {
-        PROPAGATE_ERROR(analyseFunctionType(token_EMPTY));
+        SEMANTIC_CHECK(analyseFunctionType(token_EMPTY));
         RLOG("<return_type> -> EPSILON");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_FUNC_STAT_LIST() {
+bool rule_FUNC_STAT_LIST() {
     // <func_stat_list> -> <func_stat> EOL <func_stat_list>
     if (t.type == token_LET ||
         t.type == token_VAR ||
@@ -720,7 +713,7 @@ error_codes rule_FUNC_STAT_LIST() {
         t.type == token_ID ||
         t.type == token_RETURN) {
         RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
-        if (rule_FUNC_STAT() == SUCCESS) {
+        if (rule_FUNC_STAT()) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
             }
@@ -729,18 +722,17 @@ error_codes rule_FUNC_STAT_LIST() {
     // <func_stat_list> -> EPSILON    
     else if (t.type == token_BRACKET_R) {
         RLOG("<func_stat_list> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_FUNC_STAT() {
+bool rule_FUNC_STAT() {
     switch (t.type) {
     case token_LET:
     case token_VAR:
         RLOG("<func_stat> -> <let_or_var> <var_assignment>\n");
-        PROPAGATE_ERROR(rule_LET_OR_VAR());
-        return rule_VAR_ASSIGNMENT();
+        return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<func_stat> -> id <after_id>\n");
         lex_token idToken = t;
@@ -755,85 +747,85 @@ error_codes rule_FUNC_STAT() {
         RLOG("<func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }\n");
         getToken();
 
-        if (rule_CONDITION() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_CONDITION() == false) {
+            return false;
         }
 
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
 
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
         if (t.type != token_ELSE) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
 
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        return SUCCESS;
+        return true;
 
     case token_WHILE:
         RLOG("<func_stat> -> while <expression> { <func_stat_list> }\n");
         getToken();
 
-        if (rule_EXPRESSION() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_EXPRESSION() == false) {
+            return false;
         }
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
         getToken();
 
-        if (rule_BRACK_STAT_LIST() != SUCCESS) {
-            return SYNTAX_ANALYSIS_ERR;
+        if (rule_BRACK_STAT_LIST() == false) {
+            return false;
         }
 
         if (t.type != token_BRACKET_R) {
-            return SYNTAX_ANALYSIS_ERR;
+            return false;
         }
 
         getToken();
-        return SUCCESS;
+        return true;
 
     case token_EOL:
         RLOG("<func_stat> -> EPSILON\n");
-        return SUCCESS;
+        return true;
 
     default:
         RLOG("ERROR: <func_stat>\n");
-        return SYNTAX_ANALYSIS_ERR;
+        return false;
     }
 }
 
-error_codes rule_RETURN_STAT() {
+bool rule_RETURN_STAT() {
     // <return_stat> -> return <ret_val> EOL <func_stat_list>
     if (t.type == token_RETURN) {
         RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
         getToken();
-        if (rule_RET_VAL() == SUCCESS) {
+        if (rule_RET_VAL()) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
             }
@@ -842,12 +834,12 @@ error_codes rule_RETURN_STAT() {
     // <return_stat> -> EPSILON
     else if (EOL_flag) {
         RLOG("<return_stat> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_RET_VAL() {
+bool rule_RET_VAL() {
     // <ret_val> -> <expression>
     if (t.type == token_ID
         || t.type == token_PARENTHESES_L
@@ -862,12 +854,12 @@ error_codes rule_RET_VAL() {
     // <ret_value> -> EPSILON
     else if (EOL_flag) {
         RLOG("<ret_val> -> EPSILON\n");
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_CONDITION() {
+bool rule_CONDITION() {
     //<condition> -> <expression>
     if (t.type == token_ID
         || t.type == token_CONST
@@ -886,13 +878,13 @@ error_codes rule_CONDITION() {
 
         if (t.type == token_ID) {
             getToken();
-            return SUCCESS;
+            return true;
         }
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
-error_codes rule_TYPE() {
+bool rule_TYPE() {
     if (t.type == token_TYPE_STRING ||
         t.type == token_TYPE_STRING_Q ||
         t.type == token_TYPE_INT ||
@@ -902,9 +894,9 @@ error_codes rule_TYPE() {
         RLOG("<type> -> type\n");
         getToken();
         LEX_ERR_CHECK();
-        return SUCCESS;
+        return true;
     }
-    return SYNTAX_ANALYSIS_ERR;
+    return false;
 }
 
 
