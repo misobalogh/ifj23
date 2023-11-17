@@ -19,25 +19,25 @@
 int main() {
     // lex_token t;
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
     // t = get_next_token();
-    // LOG("Token: %d", t.type);
+    // LOG("Token: %s", TokenName(t.type));
 
     // return 0;
 
