@@ -22,8 +22,9 @@
  * @brief Global table of symbols
 */
 extern symtable *global_table;
-extern symtableStack* global_symtableStack;
+extern SymtableStack* global_symtableStack;
 
+void global_initSymtableStack(void);
 void global_initSymtable(void);
 void global_freeSymtable(void);
 bool global_addVar(char* id, char* type, int value);
@@ -31,5 +32,6 @@ bool global_addVar(char* id, char* type, int value);
 void global_generateInstruction();
 
 symtableItem* global_symbolSearch(const char* key);
+void global_insertTop(const char* key, const char* type, int data);
 
 #endif // IFJ23_GLOBAL_VARIABLES_H

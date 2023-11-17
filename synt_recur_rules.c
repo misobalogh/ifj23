@@ -16,7 +16,7 @@
 #include "semantic_analysis.h"
 #include "generator.h"
 
-#define SEMANTIC_CHECK(code) do { error_codes __code = code; if (__code != SUCCESS) return __code; } while (0)
+#define SEMANTIC_CHECK(expr) do { error_codes __code = expr; if (__code != SUCCESS) return __code; } while (0)
 
 
 void getToken() {
@@ -75,7 +75,7 @@ error_codes rule_PROGRAM() {
         t.type == token_ID ||
         t.type == token_FUNC
         ) {
-        if (rule_STAT_LIST()) {
+        if (rule_STAT_LIST() == SUCCESS) {
             RLOG("EOF\n");
             return SUCCESS;
         }
@@ -96,7 +96,7 @@ error_codes rule_STAT_LIST() {
         t.type == token_ID ||
         t.type == token_FUNC) {
         RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
-        if (rule_STATEMENT()) {
+        if (rule_STATEMENT() == SUCCESS) {
             if (EOL_flag == true) {
                 return rule_STAT_LIST();
             }
@@ -248,7 +248,7 @@ error_codes rule_BRACK_STAT_LIST() {
         t.type == token_WHILE ||
         t.type == token_ID) {
         RLOG("<brack_stat_list> -> <brack_statement> EOL <brack_stat_list>\n");
-        if (rule_BRACK_STATEMENT()) {
+        if (rule_BRACK_STATEMENT() == SUCCESS) {
             if (EOL_flag == true) {
                 LEX_ERR_CHECK();
                 return rule_BRACK_STAT_LIST();
@@ -378,7 +378,7 @@ error_codes rule_VAR_ASSIGNMENT() {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         getToken();
         SEMANTIC_CHECK(analyseTypeHint(t.type));
-        if (rule_TYPE()) {
+        if (rule_TYPE() == SUCCESS) {
             return rule_VAL_ASSIGNMENT();
         }
     }
@@ -413,9 +413,8 @@ error_codes rule_VAL_ASSIGNMENT() {
 
         if (t.type == token_ID) {
             RLOG("<val_assignment> -> = id <fn_or_exp>\n");
-            lex_token lastToken = t;
+            stash = t;
             getToken();
-            stash = lastToken;
             LEX_ERR_CHECK();
 
             return rule_FN_OR_EXP();
@@ -442,6 +441,7 @@ error_codes rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
         RLOG("<fn_or_exp> -> id\n");
+        SEMANTIC_CHECK(analyseAssignId(t.value.STR_VAL));
         stash.type = token_EMPTY;
         return SUCCESS;
     }
@@ -692,7 +692,7 @@ error_codes rule_RETURN_TYPE() {
         getToken();
         SEMANTIC_CHECK(analyseFunctionType(t.type));
 
-        if (rule_TYPE()) {
+        if (rule_TYPE() == SUCCESS) {
             return SUCCESS;
         }
     }
@@ -714,7 +714,7 @@ error_codes rule_FUNC_STAT_LIST() {
         t.type == token_ID ||
         t.type == token_RETURN) {
         RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
-        if (rule_FUNC_STAT()) {
+        if (rule_FUNC_STAT() == SUCCESS) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
             }
@@ -826,7 +826,7 @@ error_codes rule_RETURN_STAT() {
     if (t.type == token_RETURN) {
         RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
         getToken();
-        if (rule_RET_VAL()) {
+        if (rule_RET_VAL() == SUCCESS) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
             }

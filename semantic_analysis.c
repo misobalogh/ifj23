@@ -7,12 +7,14 @@
 */
 
 #include "semantic_analysis.h"
+
 #include <malloc.h>
+#include <string.h>
+
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
 #include "function_stack.h"
-#include <string.h>
 
 #define NOT_FALSE(expr) do { if (!expr) return INTERNAL_ERROR; } while (0)
 #define NOT_NULL(expr) do { if (expr == NULL) return INTERNAL_ERROR; } while(0)
@@ -25,11 +27,11 @@ static String* functionParam;
 static int functionParamCount = 0;
 static struct {
   bool let;
-  char* idname;
-  lex_token type;
-  char* assignId;
-  lex_token assignType;
-  bool assignConst;
+  String idLeft;
+  tokenType hintedType;
+  String idRight;
+  tokenType typeRight;
+  bool isRightConst;
 } assignment;
 
 static FunctionStack* postponedCheckStack;
@@ -49,6 +51,8 @@ error_codes semanticAnalysisInit(void) {
   NOT_FALSE(stringInit(paramLabel, ""));
   NOT_FALSE(stringInit(functionId, ""));
   NOT_FALSE(stringInit(functionParam, ""));
+  NOT_FALSE(stringInit(&assignment.idRight, ""));
+  NOT_FALSE(stringInit(&assignment.idLeft, ""));
 
   postponedCheckStack = functionStackInit();
   NOT_NULL(postponedCheckStack);
@@ -73,28 +77,51 @@ void semanticAnalysisDeinit(void) {
   free(callParams);
 }
 
-error_codes analyseLet(const char* idname) {
-  symtableItem* item = symtableSearch(global_table, idname);
+// variable declaration and assignment
 
-  if (item != NULL) {
-    return SEMANTIC_ERR;
-  }
-
-  /* symtableInsert(global_table, idname, ) */
+error_codes analyseLetId(const char* idname) {
+  NOT_FALSE(stringReinit(&assignment.idLeft, idname));
+  assignment.let = true;
+  return SUCCESS;
 }
 
-error_codes analyseVar(const char* idname) {
+error_codes analyseVarId(const char* idname) {
+  NOT_FALSE(stringReinit(&assignment.idLeft, idname));
+  assignment.let = false;
+  return SUCCESS;
 }
 
-error_codes analyseId(const char* idname) {
-  symtableItem* item = symtableSearch(global_table, idname);
+error_codes analyseTypeHint(tokenType type) {
+  assignment.hintedType = type;
+  return SUCCESS;
+}
 
-  if (item == NULL) {
-    return SEMANTIC_ERR;
+error_codes analyseAssignConst(tokenType type) {
+  assignment.typeRight = type;
+  assignment.isRightConst = true;
+  return SUCCESS;
+}
+
+error_codes analyseAssignId(const char* idname) {
+  symtableItem* right = global_symbolSearch(idname);
+
+  if (right == NULL) {
+    return UNDEFINED_VAR;
   }
+
+  const char* ts = _typeShort(assignment.hintedType);
+  if (ts != NULL) {
+    if (strcmp(ts, right->type) != 0) {
+      return TYPE_COMPATIBILITY_ERR;
+    }
+  }
+
+  global_insertTop(stringCStr(&assignment.idLeft), right->type, 0);
 
   return SUCCESS;
 }
+
+// function definition
 
 error_codes analyseFunctionId(const char* idname) {
   stringClear(functionId);
@@ -124,27 +151,8 @@ error_codes analyseFunctionParamName(const char* name) {
   return SUCCESS;
 }
 
-const char* typeShort(tokenType type) {
-  switch (type) {
-    case token_TYPE_STRING:
-    case token_TYPE_STRING_Q:
-      return "S";
-
-    case token_TYPE_INT:
-    case token_TYPE_INT_Q:
-      return "I";
-
-    case token_TYPE_DOUBLE:
-    case token_TYPE_DOUBLE_Q:
-      return "D";
-
-    default:
-      return NULL;
-  }
-}
-
 error_codes analyseFunctionParamType(tokenType type) {
-  const char* ts = typeShort(type);
+  const char* ts = _typeShort(type);
   if (ts == NULL) {
     return SYNTAX_ANALYSIS_ERR;
   }
@@ -161,7 +169,7 @@ error_codes analyseFunctionType(tokenType type) {
     ts = "v";
   }
   else {
-    ts = typeShort(type);
+    ts = _typeShort(type);
     if (ts == NULL) {
       return SYNTAX_ANALYSIS_ERR;
     }
@@ -178,6 +186,7 @@ error_codes analyseFunctionType(tokenType type) {
   symtableInsert(global_table, stringCStr(functionId), stringCStr(&typeString), 0);
   return SUCCESS;
 }
+
 
 error_codes analyseFunctionEnd(void) {
   symtableItem* fn = symtableSearch(global_table, stringCStr(functionId));
@@ -196,158 +205,15 @@ error_codes analyseFunctionEnd(void) {
   stringClear(functionId);
   stringClear(functionParam);
 
+  _checkPostponed(stringCStr(functionId), stringCStr(&typeString));
+
   return SUCCESS;
 }
 
-char* getLabelType(char* params, char* out_label, char* out_type) {
-  // label
-  int i = 0;
-  while (*params != ':' && *params != '\0') {
-    out_label[i++] = *params;
-    params++;
-  }
-  out_label[i] = '\0';
-
-  // check premature end
-  if (*params == '\0' || *++params == '\0') {
-    return NULL;
-  }
-
-  // type (single char)
-  *out_type = *params;
-
-  if (*params++ == ';') {
-    // return pointer first char of next label
-    return ++params;
-  }
-
-  if (*params == '\0') {
-    // return end of string
-    return params;
-  }
-
-  // bad format
-  return NULL;
-}
-
-char* getLabelNameType(char* params, char* out_label, char* out_name, char* out_type) {
-  // label
-  int i = 0;
-  while (*params != ',' && *params != '\0') {
-    out_label[i++] = *params;
-  }
-  out_label[i] = '\0';
-
-  // check premature end
-  if (*params == '\0') {
-    return NULL;
-  }
-
-  // ignore semarator
-  params++;
-
-  // name
-  i = 0;
-  while (*params != ':' && *params != '\0') {
-    out_name[i++] = *params;
-    params++;
-  }
-  out_name[i] = '\0';
-
-  // check premature end
-  if (*params == '\0' || *++params == '\0') {
-    return NULL;
-  }
-
-  // type (single char)
-  *out_type = *params;
-
-  if (*params == ';') {
-    // return pointer to first char of next label
-    return ++params;
-  }
-
-  if (*params == '\0') {
-    // return pointer to end of string
-    return params;
-  }
-
-  // bad format
-  return NULL;
-}
-
-bool compareParams(const char* callParams, const char* functionParams) {
-  if (*functionParams++ != 'f') {
-    return false;
-  }
-
-  if (*functionParams++ != ';') {
-    return false;
-  }
-
-  // ignore return type
-  callParams++;
-
-  // copy constant strings to get strings that can be modified
-  char* mutCallParams = malloc(strlen(callParams) + 1);
-  char* mutFunctionParams = malloc(strlen(functionParams) + 1);
-
-  if (mutCallParams == NULL || mutFunctionParams == NULL) {
-    free(mutCallParams);
-    free(mutFunctionParams);
-    return false;
-  }
-
-  strcpy(mutCallParams, callParams);
-  strcpy(mutFunctionParams, functionParams);
-
-  char* callLabel = malloc(strlen(callParams));
-  char callType;
-  char* fnLabel = malloc(strlen(functionParams));
-  char* fnName = malloc(strlen(functionParams));
-  char fnType;
-  bool result = true;
-
-  if (callLabel == NULL || fnLabel == NULL || fnName == NULL) {
-    free(callLabel);
-    free(fnLabel);
-    free(fnName);
-    result = false;
-    goto end;
-  }
-
-  // cp and fp will be modified, mutCallParams and mutFunctionParams must be kept for free
-  char* cp = mutCallParams;
-  char* fp = mutFunctionParams;
-
-  while (*cp != '\0' && *fp != '\0') {
-    cp = getLabelType(cp, callLabel, &callType);
-    fp = getLabelNameType(fp, fnLabel, fnName, &fnType);
-
-    // params were in wrong format
-    if (cp == NULL || fp == NULL) {
-      result = false;
-      goto end;
-    }
-
-    if (strcmp(callLabel, fnLabel) != 0 || callType != fnType) {
-      result = false;
-      goto end;
-    }
-  }
-
-end:
-  free(mutCallParams);
-  free(mutFunctionParams);
-  free(callLabel);
-  free(fnLabel);
-  free(fnName);
-
-  return result;
-}
+// function call
 
 error_codes analyseCallConst(tokenType type) {
-  const char* ts = typeShort(type);
+  const char* ts = _typeShort(type);
   NOT_NULL(ts);
 
   NOT_FALSE(stringConcatCStr(callParams, "_:"));
@@ -400,7 +266,7 @@ error_codes analyseCallIdAfterLabel(const char* idname) {
 error_codes analyseCallConstAfterLabel(tokenType type) {
   // paramLabel is label
 
-  const char* ts = typeShort(type);
+  const char* ts = _typeShort(type);
   NOT_NULL(ts);
 
   NOT_FALSE(stringConcat(callParams, paramLabel));
@@ -420,7 +286,189 @@ error_codes analyseCallEnd(void) {
     return SUCCESS;
   }
 
-  NOT_FALSE(compareParams(stringCStr(callParams), item->type));
+  NOT_FALSE(_compareParams(stringCStr(callParams), item->type));
   return SUCCESS;
 }
 
+// helper functions
+
+char* _getLabelType(char* params, char* out_label, char* out_type) {
+  // label
+  int i = 0;
+  while (*params != ':' && *params != '\0') {
+    out_label[i++] = *params;
+    params++;
+  }
+  out_label[i] = '\0';
+
+  // check premature end
+  if (*params == '\0' || *++params == '\0') {
+    return NULL;
+  }
+
+  // type (single char)
+  *out_type = *params;
+
+  params++;
+
+  if (*params == ';') {
+    // return pointer first char of next label
+    return ++params;
+  }
+
+  if (*params == '\0') {
+    // return end of string
+    return params;
+  }
+
+  // bad format
+  return NULL;
+}
+
+char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type) {
+  // label
+  int i = 0;
+  while (*params != ',' && *params != '\0') {
+    out_label[i++] = *params;
+  }
+  out_label[i] = '\0';
+
+  // check premature end
+  if (*params == '\0') {
+    return NULL;
+  }
+
+  // ignore semarator
+  params++;
+
+  // name
+  i = 0;
+  while (*params != ':' && *params != '\0') {
+    out_name[i++] = *params;
+    params++;
+  }
+  out_name[i] = '\0';
+
+  // check premature end
+  if (*params == '\0' || *++params == '\0') {
+    return NULL;
+  }
+
+  // type (single char)
+  *out_type = *params;
+
+  if (*params == ';') {
+    // return pointer to first char of next label
+    return ++params;
+  }
+
+  if (*params == '\0') {
+    // return pointer to end of string
+    return params;
+  }
+
+  // bad format
+  return NULL;
+}
+
+error_codes _compareParams(const char* callParams, const char* functionParams) {
+  if (*functionParams++ != 'f') {
+    return INTERNAL_ERROR;
+  }
+
+  if (*functionParams++ != ';') {
+    return INTERNAL_ERROR;
+  }
+
+  // ignore return type
+  functionParams++;
+
+  if (*functionParams++ != ';') {
+    return INTERNAL_ERROR;
+  }
+
+  // copy constant strings to get mutable strings
+  char* mutCallParams = malloc(strlen(callParams) + 1);
+  char* mutFunctionParams = malloc(strlen(functionParams) + 1);
+
+  if (mutCallParams == NULL || mutFunctionParams == NULL) {
+    free(mutCallParams);
+    free(mutFunctionParams);
+    return INTERNAL_ERROR;
+  }
+
+  strcpy(mutCallParams, callParams);
+  strcpy(mutFunctionParams, functionParams);
+
+  char* callLabel = malloc(strlen(callParams));
+  char* fnLabel = malloc(strlen(functionParams));
+  char* fnName = malloc(strlen(functionParams));
+  char callType;
+  char fnType;
+  error_codes result = SUCCESS;
+
+  if (callLabel == NULL || fnLabel == NULL || fnName == NULL) {
+    result = INTERNAL_ERROR;
+    goto end;
+  }
+
+  // cp and fp will be modified, mutCallParams and mutFunctionParams must be kept for free
+  char* cp = mutCallParams;
+  char* fp = mutFunctionParams;
+
+  while (*cp != '\0' && *fp != '\0') {
+    cp = _getLabelType(cp, callLabel, &callType);
+    fp = _getLabelNameType(fp, fnLabel, fnName, &fnType);
+
+    // params were in wrong format
+    if (cp == NULL || fp == NULL) {
+      result = INTERNAL_ERROR;
+      goto end;
+    }
+
+    if (strcmp(callLabel, fnLabel) != 0 || callType != fnType) {
+      result = SEMANTIC_ERR;
+      goto end;
+    }
+  }
+
+end:
+  free(mutCallParams);
+  free(mutFunctionParams);
+  free(callLabel);
+  free(fnLabel);
+  free(fnName);
+
+  return result;
+}
+
+const char* _typeShort(tokenType type) {
+  switch (type) {
+    case token_TYPE_STRING:
+    case token_TYPE_STRING_Q:
+      return "S";
+
+    case token_TYPE_INT:
+    case token_TYPE_INT_Q:
+      return "I";
+
+    case token_TYPE_DOUBLE:
+    case token_TYPE_DOUBLE_Q:
+      return "D";
+
+    default:
+      return NULL;
+  }
+}
+
+error_codes _checkPostponed(const char* fnId, const char* fnType) {
+  FunctionStackItem* current = postponedCheckStack->first;
+  while (current != NULL) {
+    if (strcmp(current->name, fnId) == 0) {
+      return _compareParams(current->params, fnType) != SUCCESS;
+      // TODO pop current
+    }
+  }
+
+  return SUCCESS;
+}

@@ -3,18 +3,18 @@
 
 #include "symtable.h"
 
-typedef struct symtableStackItem {
+typedef struct SymtableStackItem {
   symtable* table;
-  struct symtableStackItem* next;
-} symtableStackItem;
+  struct SymtableStackItem* next;
+} SymtableStackItem;
 
-typedef struct symtableStack {
-  symtableStackItem* first;
-} symtableStack;
+typedef struct SymtableStack {
+  SymtableStackItem* first;
+} SymtableStack;
 
-void symtableStackInit(symtableStack* stack);
-bool symtableStackPush(symtableStack* stack);
-void symtableStackPop(symtableStack* stack);
-symtableItem* symtableStackSearch(symtableStack* stack, const char* key);
+void symtableStackInit(SymtableStack* stack);
+bool symtableStackPush(SymtableStack* stack);
+void symtableStackPop(SymtableStack* stack);
+symtableItem* symtableStackSearch(SymtableStack* stack, const char* key);
 
 #endif

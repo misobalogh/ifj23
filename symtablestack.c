@@ -2,12 +2,12 @@
 #include <malloc.h>
 #include "global_variables.h"
 
-void symtableStackInit(symtableStack* stack) {
+void symtableStackInit(SymtableStack* stack) {
   stack->first = NULL;
 }
 
-bool symtableStackPush(symtableStack* stack) {
-  symtableStackItem* item = malloc(sizeof(symtableStackItem));
+bool symtableStackPush(SymtableStack* stack) {
+  SymtableStackItem* item = malloc(sizeof(SymtableStackItem));
 
   if (item == NULL) {
     return false;
@@ -21,8 +21,8 @@ bool symtableStackPush(symtableStack* stack) {
   return true;
 }
 
-void symtableStackPop(symtableStack* stack) {
-  symtableStackItem* first = stack->first;
+void symtableStackPop(SymtableStack* stack) {
+  SymtableStackItem* first = stack->first;
 
   if (first == NULL) {
     return;
@@ -33,8 +33,8 @@ void symtableStackPop(symtableStack* stack) {
   free(first);
 }
 
-symtableItem* symtableStackSearch(symtableStack* stack, const char* key) {
-  symtableStackItem* item = stack->first;
+symtableItem* symtableStackSearch(SymtableStack* stack, const char* key) {
+  SymtableStackItem* item = stack->first;
 
   while (item != NULL) {
     symtableItem* result = symtableSearch(item->table, key);

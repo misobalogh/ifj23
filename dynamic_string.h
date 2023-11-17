@@ -79,4 +79,6 @@ bool stringConcatChar(String* string, char c);
 
 void stringClear(String* string);
 
+bool stringReinit(String* string, const char* cStr);
+
 #endif

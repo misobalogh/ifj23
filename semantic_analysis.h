@@ -6,8 +6,6 @@
 #include "symtable.h"
 #include "synt_prec_stack.h"
 
-extern stack* semanticStack;
-
 /**
  * @brief Initializes semantic analysis variables. Must be called before
  * any calls to any other semantic analysis functions
@@ -58,11 +56,6 @@ error_codes analyseTypeHint(tokenType type);
 error_codes analyseAssignConst(tokenType type);
 error_codes analyseAssignId(const char* idname);
 
-error_codes analyseAssignment(const char* left, const char* right);
-error_codes analyseLet(const char* idname);
-error_codes analyseVar(const char* idname);
-error_codes analyseId(const char* idname);
-
 /* error_codes analyseCallId(const char* idname); */
 /* error_codes analyseCallLabel(const char* label); */
 /* error_codes analyseCallParam(const char* paramIdname); */
@@ -77,6 +70,10 @@ error_codes analyseCallIdAfterLabel(const char* idname);
 error_codes analyseCallConstAfterLabel(tokenType type);
 error_codes analyseCallEnd(void);
 
-const char* typeShort(tokenType type);
+char* _getLabelType(char* params, char* out_label, char* out_type);
+char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type);
+error_codes _compareParams(const char* callParams, const char* functionParams);
+const char* _typeShort(tokenType type);
+error_codes _checkPostponed(const char* fnId, const char* fnType);
 
 #endif

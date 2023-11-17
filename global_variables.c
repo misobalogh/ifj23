@@ -19,7 +19,7 @@
  * @brief Global table of symbols
 */
 symtable *global_table; 
-symtableStack* global_symtableStack;
+SymtableStack* global_symtableStack;
 
 /**
  * @brief Initialize global table of symbols
@@ -30,6 +30,14 @@ void global_initSymtable(void) {
 
 void global_freeSymtable(void) {
   symtableFree(global_table);
+}
+
+void global_initSymtableStack(void) {
+  global_symtableStack = malloc(sizeof(SymtableStack));
+  if (global_symtableStack == NULL) {
+    exit(99);
+  }
+  symtableStackInit(global_symtableStack);
 }
 
 
@@ -85,4 +93,8 @@ symtableItem* global_symbolSearch(const char* key) {
   }
 
   return symtableSearch(global_table, key);
+}
+
+void global_insertTop(const char* key, const char* type, int data) {
+  symtableInsert(global_symtableStack->first->table, key, type, data);
 }

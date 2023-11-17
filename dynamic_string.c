@@ -93,3 +93,8 @@ bool stringConcatChar(String* string, char c) {
 void stringClear(String* string) {
   string->size = 0;
 }
+
+bool stringReinit(String* string, const char* cStr) {
+  stringClear(string);
+  return stringConcatCStr(string, cStr);
+}
