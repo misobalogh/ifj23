@@ -31,10 +31,10 @@ void stackInit(stack* s) {
  * @param s Pointer to stack.
  * @param type Type of token.
  */
-void stackPush(stack* s, tokenType type) {
+void stackPush(stack* s, lex_token token) {
     stackItem* newItem = malloc(sizeof(stackItem));
     CHECK_MEMORY_ALLOC(newItem);
-    newItem->type = type;
+    newItem->token = token;
     newItem->lower = s->top;
     newItem->flag = false;
     s->top = newItem;
@@ -99,7 +99,7 @@ void stackFreeItems(stack* s) {
 */
 stackItem* stackTopTerminal(stack* s) {
     stackItem* item = s->top;
-    while (item && !isTerminal(item->type)) {
+    while (item && !isTerminal(item->token.type)) {
         item = item->lower;
     }
     return item;
@@ -113,7 +113,7 @@ stackItem* stackTopTerminal(stack* s) {
  */
 void stackTopTerminalSetFlag(stack* s) {
     stackItem* item = s->top;
-    while (item && !isTerminal(item->type)) {
+    while (item && !isTerminal(item->token.type)) {
         item = item->lower;
     }
     item->flag = true;
@@ -175,7 +175,7 @@ void stackPrint(stack* s) {
     }
     stackItem* item = s->top;
     while (item) {
-        const char* str = TokenName(item->type);
+        const char* str = TokenName(item->token.type);
         fprintf(logFile, "%s\n", str);
         item = item->lower;
     }

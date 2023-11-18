@@ -26,7 +26,7 @@
  * @param lower Pointer to item below this item.
 */
 typedef struct stackItem {
-    tokenType type;
+    lex_token token;
     bool flag;
     struct stackItem* lower;
 } stackItem;
@@ -44,7 +44,7 @@ typedef struct stack {
 
 void stackInit(stack* s);
 
-void stackPush(stack* s, tokenType type);
+void stackPush(stack* s, lex_token token);
 
 void stackPop(stack* s);
 
