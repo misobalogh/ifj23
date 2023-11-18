@@ -481,13 +481,13 @@ const char* _typeShort(tokenType type) {
 }
 
 error_codes _checkPostponed(const char* fnId, const char* fnType) {
-  FunctionStackItem* current = postponedCheckStack->first;
-  while (current != NULL) {
-    if (strcmp(current->name, fnId) == 0) {
-      return _compareParams(current->params, fnType) != SUCCESS;
-      // TODO pop current
-    }
+  FunctionStackItem* fn = functionStackRemove(postponedCheckStack, fnId);
+
+  // function was called with wrong arguments
+  if (fn != NULL && strcmp(fn->params, fnType) != 0) {
+    return UNDEFINED_FN;
   }
 
+  // function was not called or it was called with correct arguments
   return SUCCESS;
 }

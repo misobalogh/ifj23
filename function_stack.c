@@ -83,3 +83,25 @@ char* functionStackFindAndPop(FunctionStack* stack, const char* text) {
 
   return NULL;
 }
+
+FunctionStackItem* functionStackRemove(FunctionStack* stack, const char* name) {
+  FunctionStackItem* current = stack->first;
+  FunctionStackItem* prev = stack->first;
+
+  while (current != NULL) {
+    if (strcmp(current->name, name)) {
+      if (prev == NULL) {
+        stack->first = current->next;
+      }
+      else {
+        prev->next = current->next;
+      }
+
+      return current;
+    }
+
+    current = current->next;
+  }
+
+  return NULL;
+}

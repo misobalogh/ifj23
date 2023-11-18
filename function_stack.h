@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+// stack je nejjednodušší ale hashovací tabulka by byla nejefektivnější, pokud bude čas přepsat
+
 typedef struct FunctionStackItem {
   char* name;
   char* params;
@@ -14,6 +16,7 @@ typedef struct FunctionStack {
 } FunctionStack;
 
 FunctionStack* functionStackInit(void);
+FunctionStackItem* functionStackRemove(FunctionStack* stack, const char* fnName);
 void functionStackDeinit(FunctionStack* stack);
 char* functionStackFindAndPop(FunctionStack* stack, const char* name);
 bool functionStackPush(FunctionStack* stack, const char* name, const char* params);
