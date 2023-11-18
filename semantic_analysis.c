@@ -70,6 +70,18 @@ bool semanticAnalysisInit(void) {
       return false;
   }
 
+  symtableInsert(global_table, "readString", "f;S?;", 0);
+  symtableInsert(global_table, "readInt", "f;I?;", 0);
+  symtableInsert(global_table, "readDouble", "f;D?;", 0);
+  symtableInsert(global_table, "write", "f;D?;*;", 1);
+  symtableInsert(global_table, "Int2Double", "f;D;_,term:I;", 1);
+  symtableInsert(global_table, "Double2Int", "f;I;_,term:D;", 1);
+  symtableInsert(global_table, "length", "f;I;_,s:S;", 1);
+  symtableInsert(global_table, "substring",
+      "f;S?;of,s:S;startingAt,i:I,endingBefore,j:I", 1);
+  symtableInsert(global_table, "ord", "f;I;_,c:S;", 1);
+  symtableInsert(global_table, "chr", "f;S;_,i:I;", 1);
+
   return true;
 }
 
@@ -570,7 +582,7 @@ Type strToType(const char* typeStr) {
   };
 
   for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-    if (strcmp(typeStr, map[i].key)) {
+    if (strcmp(typeStr, map[i].key) == 0) {
       return map[i].type;
     }
   }
