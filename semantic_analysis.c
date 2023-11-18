@@ -15,6 +15,7 @@
 #include "global_variables.h"
 #include "dynamic_string.h"
 #include "function_stack.h"
+#include "expr.h"
 
 #define NOT_FALSE(expr) do { if (!expr) return INTERNAL_ERROR; } while (0)
 #define NOT_NULL(expr) do { if (expr == NULL) return INTERNAL_ERROR; } while(0)
@@ -33,12 +34,15 @@ static struct {
   tokenType typeRight;
   bool isRightConst;
 } assignment;
+static ExprList* exprList;
 
 static FunctionStack* postponedCheckStack;
 
 bool semanticAnalysisInit(void) {
   global_initSymtable();
   global_initSymtableStack();
+
+  exprList = exprListInit();
 
   paramLabel = NULL;
   functionId = NULL;
@@ -298,6 +302,58 @@ error_codes analyseCallEnd(void) {
 
   NOT_FALSE(_compareParams(stringCStr(callParams), item->type));
   return SUCCESS;
+}
+
+// expression
+
+void analyseExprBegin(void) {
+  exprListClear(exprList);
+}
+
+void analyseExprOperand(lex_token token) {
+  if (token.type == token_ID) {
+    exprListAddId(exprList, token.value.STR_VAL);
+  }
+  else if (token.type == token_CONST_WHOLE_NUMBER) {
+    exprListAddConst(exprList, 'I');
+  }
+  else if (token.type == token_CONST_DEC_NUMBER
+    || token.type == token_CONST_SCIENTIFIC_NOTATION) {
+      exprListAddConst(exprList, 'D');
+  }
+  else if (token.type == token_TYPE_STRING_LINE) {
+    exprListAddConst(exprList, 'S');
+  }
+  else {
+    exit(INTERNAL_ERROR);
+  }
+}
+
+void analyseExprOperator(lex_token token) {
+  exprListAddOperator(exprList, tokenToOperator(token.type));
+}
+
+void analyseExprDefault() {
+  exprListAddOperator(exprList, op_DEFAULT);
+}
+
+void analyseExprEnd(void) {
+  for (size_t i = 0; i < exprList->size; i++) {
+    ExprItem it = exprList->data[i];
+
+    switch (it.type) {
+    case EXPR_CONST:
+      printf("%c ", it.value.constType);
+      break;
+    case EXPR_ID:
+      printf("$%s ", it.value.idName);
+      break;
+    case EXPR_OPERATOR:
+      printf("op%i ", it.value.operatorType);
+      break;
+    }
+  }
+  putchar('\n');
 }
 
 // helper functions

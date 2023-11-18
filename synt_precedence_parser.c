@@ -114,8 +114,7 @@ bool reduce(stack* s) {
         || top->token.type == token_TYPE_STRING_LINE) && top->flag == true) {
         PLOG("---rule ID---");
 
-        /* const char* ts = _typeShort(top->type); */
-        /* printf("%s ", ts); */
+        analyseExprOperand(top->token);
 
         rule_E_ID(s);
         stackPrint(s);
@@ -126,8 +125,7 @@ bool reduce(stack* s) {
         third->token.type == token_NONTERMINAL) {
         PLOG("---rule E op E---");
 
-        /* char c =(char [token_DIV + 1]) { [token_PLUS]='+', [token_MINUS]='-', [token_MUL]='*', [token_DIV]='/' }[second->type]; */
-        /* printf("%c ", c); */
+        analyseExprOperator(second->token);
 
         rule_ID_OP_ID(s);
         stackPrint(s);
@@ -138,7 +136,7 @@ bool reduce(stack* s) {
         third->token.type == token_NONTERMINAL) {
         PLOG("---rule E ?? E---");
 
-        /* printf("?? "); */
+        analyseExprDefault();
 
         rule_ID_CONCAT_ID(s);
         stackPrint(s);
@@ -170,11 +168,7 @@ bool reduce(stack* s) {
         && third->token.type == token_NONTERMINAL) {
         PLOG("rule ID rel ID\n");
 
-        /* const char* c = (const char* [token_MORE_EQ + 1]) { */
-        /*   [token_EQ]="=", [token_NEQ]="!=", [token_LESS]="<", [token_MORE]=">", */
-        /*     [token_LESS_EQ]="<=", [token_MORE_EQ]=">=" */
-        /* }[second->type]; */
-        /* printf("%s ", c); */
+        analyseExprOperator(second->token);
 
         stackPrint(s);
         rule_ID_REL_ID(s);
@@ -207,6 +201,12 @@ bool precedenceParser() {
         lex_token temp = t;
         t = stash;
         stash = temp;
+
+        /* if (stash.type == token_ID || stash.type == token_TYPE_STRING_LINE) { */
+        /*   stash.value.STR_VAL = malloc(sizeof(t.value.STR_VAL) + 1); */
+        /*   CHECK_MEMORY_ALLOC(stash.value.STR_VAL); */
+        /*   strcpy(stash.value.STR_VAL, t.value.STR_VAL); */
+        /* } */
     }
 
     while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->token.type != token_DOLLAR) {
@@ -280,8 +280,6 @@ bool precedenceParser() {
         }
 
     }
-
-    putchar('\n');
 
     stash.type = token_EMPTY;
 

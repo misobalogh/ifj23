@@ -41,6 +41,12 @@ int main() {
 
     // return 0;
 
+    /* lex_token t = get_next_token(); */
+    /* while (t.type != token_EOF) { */
+    /*   printf("%s %s", TokenName(t.type), t.type == token_ID ? t.value.STR_VAL : ""); */
+    /*   t = get_next_token(); */
+    /* } */
+    /* return EXIT_SUCCESS; */
 
     if (!recursiveParser()) {
         LOG("Syntax Error: code %d", SYNTAX_ANALYSIS_ERR);

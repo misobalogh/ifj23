@@ -13,6 +13,7 @@
 #include "synt_prec_stack.h"
 #include "token_types.h"
 #include <stdlib.h>
+#include <string.h>
 
 
 /**
@@ -35,6 +36,12 @@ void stackPush(stack* s, lex_token token) {
     stackItem* newItem = malloc(sizeof(stackItem));
     CHECK_MEMORY_ALLOC(newItem);
     newItem->token = token;
+
+    if (token.type == token_TYPE_STRING_LINE || token.type == token_ID) {
+      newItem->token.value.STR_VAL = malloc(strlen(token.value.STR_VAL) + 1);
+      strcpy(newItem->token.value.STR_VAL, token.value.STR_VAL);
+    }
+
     newItem->lower = s->top;
     newItem->flag = false;
     s->top = newItem;

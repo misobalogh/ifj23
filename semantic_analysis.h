@@ -70,6 +70,12 @@ error_codes analyseCallIdAfterLabel(const char* idname);
 error_codes analyseCallConstAfterLabel(tokenType type);
 error_codes analyseCallEnd(void);
 
+void analyseExprBegin(void);
+void analyseExprOperand(lex_token token);
+void analyseExprOperator(lex_token token);
+void analyseExprDefault();
+void analyseExprEnd(void);
+
 char* _getLabelType(char* params, char* out_label, char* out_type);
 char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type);
 error_codes _compareParams(const char* callParams, const char* functionParams);

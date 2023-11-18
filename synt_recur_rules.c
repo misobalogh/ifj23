@@ -22,6 +22,13 @@
 void getToken() {
     if (stash.type != token_EMPTY) {
         t = stash;
+
+        if (t.type == token_ID || t.type == token_TYPE_STRING_LINE) {
+          t.value.STR_VAL = malloc(sizeof(stash.value.STR_VAL) + 1);
+          CHECK_MEMORY_ALLOC(t.value.STR_VAL);
+          strcpy(t.value.STR_VAL, stash.value.STR_VAL);
+        }
+
         stash.type = token_EMPTY;
     }
     else {
@@ -60,7 +67,9 @@ void consume_optional_EOL() {
 
 bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
+    analyseExprBegin();
     bool retVal = precedenceParser();
+    analyseExprEnd();
     return retVal;
 }
 
@@ -388,9 +397,16 @@ bool rule_VAR_ASSIGNMENT() {
 
         if (t.type == token_ID) {
             RLOG("<var_assignment> -> = id <fn_or_exp>\n");
+
+            char* str = malloc(strlen(t.value.STR_VAL) + 1);
+            strcpy(str, t.value.STR_VAL);
+
             lex_token lastToken = t;
             getToken();
             stash = lastToken;
+
+            stash.value.STR_VAL = str;
+
             return rule_FN_OR_EXP();
         }
         else if (t.type == token_CONST
