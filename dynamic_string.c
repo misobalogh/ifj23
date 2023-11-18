@@ -48,7 +48,7 @@ bool stringConcat(String* string, const String* const other) {
       return false;
   }
 
-  strcat(string->data, other->data);
+  strncpy(string->data + string->size, other->data, other->size);
   string->size += other->size;
   return true;
 }
@@ -61,7 +61,7 @@ bool stringConcatCStr(String* string, const char* cStr) {
       return false;
   }
 
-  strcat(string->data, cStr);
+  strncpy(string->data + string->size, cStr, len);
   string->size += len;
   return true;
 }

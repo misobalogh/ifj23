@@ -2,6 +2,7 @@
 #define SEMANTIC_ANALYSIS_H
 
 #include <stdbool.h>
+#include "dynamic_string.h"
 #include "error_codes.h"
 #include "expr.h"
 #include "symtable.h"
@@ -19,57 +20,60 @@ bool semanticAnalysisInit(void);
  */
 void semanticAnalysisDeinit(void);
 
-error_codes checkDeclaration(void);
+void checkDeclaration(void);
 
 /**
  * @brief Passes name of function in declaration for semantic check.
  * @param idname name of the function
  */
-error_codes analyseFunctionId(const char* idname);
+void analyseFunctionId(const char* idname);
 /**
  * brief Finalizes the semantic analysis of single functoin declaration.
  */
-error_codes analyseFunctionEnd(void);
+void analyseFunctionEnd(void);
 /**
  * @brief Passes parameter label for semantic analysis.
  * @param name Label Identificator of the label
  */
-error_codes analyseFunctionParamLabel(const char* label);
+void analyseFunctionParamLabel(const char* label);
 /**
  * @brief Passes parameter name for semantic analysis.
  * @param name Identificator of the parameter name.
  */
-error_codes analyseFunctionParamName(const char* name);
+void analyseFunctionParamName(const char* name);
 /**
  * @brief Passes parameter type for semantic analysis.
  * @param type Type of parameter
  */
-error_codes analyseFunctionParamType(tokenType type);
+void analyseFunctionParamType(tokenType type);
 /**
  * @brief Passes function type for semantic analysis.
  * @param type Type of the function.
  */
-error_codes analyseFunctionType(tokenType type);
+void analyseFunctionType(tokenType type);
 
-error_codes analyseLetId(const char* idname);
-error_codes analyseVarId(const char* idname);
-error_codes analyseTypeHint(tokenType type);
-error_codes analyseAssignConst(tokenType type);
-error_codes analyseAssignId(const char* idname);
+void analyseAssignBegin(void);
+void analyseAssignLet(bool let);
+void analyseAssignId(const char* idname);
+void analyseAssignHint(tokenType type);
+void analyseAssignRightId(const char* idname);
+void analyseAssignType(Type type);
+void analyseAssignEnd(void);
+void analyseAssignEndNoVal(void);
 
-/* error_codes analyseCallId(const char* idname); */
-/* error_codes analyseCallLabel(const char* label); */
-/* error_codes analyseCallParam(const char* paramIdname); */
-/* error_codes analyseCallParamConst(const char* data); */
-/* error_codes analyseCallEpsilon(void); */
+/* void analyseCallId(const char* idname); */
+/* void analyseCallLabel(const char* label); */
+/* void analyseCallParam(const char* paramIdname); */
+/* void analyseCallParamConst(const char* data); */
+/* void analyseCallEpsilon(void); */
 
 
-error_codes analyseCallConst(tokenType type);
-error_codes analyseCallIdOrLabel(const char* value);
-error_codes analyseCallEpsAfterId(void);
-error_codes analyseCallIdAfterLabel(const char* idname);
-error_codes analyseCallConstAfterLabel(tokenType type);
-error_codes analyseCallEnd(void);
+void analyseCallConst(tokenType type);
+void analyseCallIdOrLabel(const char* value);
+void analyseCallEpsAfterId(void);
+void analyseCallIdAfterLabel(const char* idname);
+void analyseCallConstAfterLabel(tokenType type);
+void analyseCallEnd(void);
 
 void analyseExprBegin(void);
 void analyseExprOperand(lex_token token);
@@ -79,9 +83,11 @@ Type analyseExprEnd(void);
 
 char* _getLabelType(char* params, char* out_label, char* out_type);
 char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type);
-error_codes _compareParams(const char* callParams, const char* functionParams);
+void _compareParams(const char* callParams, const char* functionParams);
 const char* _typeShort(tokenType type);
-error_codes _checkPostponed(const char* fnId, const char* fnType);
+void _checkPostponed(const char* fnId, const char* fnType);
 Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b);
+Type strToType(const char* typeStr);
+String typeToStr(Type type);
 
 #endif

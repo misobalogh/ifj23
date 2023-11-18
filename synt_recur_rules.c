@@ -10,14 +10,13 @@
 
 ***************************************************************/
 
+#include "global_variables.h"
+#include "symtablestack.h"
 #include "synt_analysis.h"
 #include "macros.h"
 #include "synt_recur_rules.h"
 #include "semantic_analysis.h"
 #include "generator.h"
-
-#define SEMANTIC_CHECK(expr) do { error_codes __code = expr; if (__code != SUCCESS) exit(__code); } while (0)
-
 
 void getToken() {
     if (stash.type != token_EMPTY) {
@@ -70,11 +69,16 @@ bool rule_EXPRESSION() {
     analyseExprBegin();
     bool retVal = precedenceParser();
     Type exprType = analyseExprEnd();
+    analyseAssignType(exprType);
+    analyseAssignEnd();
     return retVal;
 }
 
 bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
+
+    symtableStackPush(global_symtableStack);
+
     getToken();
     RLOG("\n\n<program> -> <stat_list> EOF\n");
     if (t.type == token_LET ||
@@ -91,8 +95,10 @@ bool rule_PROGRAM() {
     }
     else if (t.type == token_EOF) {
         RLOG("EOF\n");
+        symtableStackPop(global_symtableStack);
         return true;
     }
+    symtableStackPop(global_symtableStack);
     return false;
 }
 
@@ -128,6 +134,7 @@ bool rule_STATEMENT() {
     case token_LET:
     case token_VAR:
         RLOG("<statement> -> <let_or_var> <var_assignment>\n");
+        analyseAssignBegin();
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<statement> -> id <after_id>\n");
@@ -140,7 +147,7 @@ bool rule_STATEMENT() {
         if (t.type != token_ID) {
             return false;
         }
-        SEMANTIC_CHECK(analyseFunctionId(t.value.STR_VAL));
+        analyseFunctionId(t.value.STR_VAL);
         getToken();
         if (t.type != token_PARENTHESES_L) {
             return false;
@@ -157,11 +164,14 @@ bool rule_STATEMENT() {
         if (rule_RETURN_TYPE() == false) {
             return false;
         }
-        SEMANTIC_CHECK(analyseFunctionEnd());
+        analyseFunctionEnd();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
+
+        // symtable for this functions local variables
+        symtableStackPush(global_symtableStack);
 
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
@@ -169,6 +179,10 @@ bool rule_STATEMENT() {
         if (t.type != token_BRACKET_R) {
             return false;
         }
+
+        // pop symtable for local variables
+        symtableStackPop(global_symtableStack);
+
         getToken();
         LEX_ERR_CHECK();
         return true;
@@ -359,10 +373,11 @@ bool rule_BRACK_STATEMENT() {
 bool rule_LET_OR_VAR() {
     if (t.type == token_LET) {
         RLOG("<let_or_var> -> let id\n");
+        analyseAssignLet(true);
         getToken();
 
         if (t.type == token_ID) {
-            /* SEMANTIC_CHECK(analyseLetId(t.value.STR_VAL)); */
+            analyseAssignId(t.value.STR_VAL);
             getToken();
             LEX_ERR_CHECK();
             consume_optional_EOL();
@@ -371,9 +386,10 @@ bool rule_LET_OR_VAR() {
     }
     else if (t.type == token_VAR) {
         RLOG("<let_or_var> -> var id\n");
+        analyseAssignLet(false);
         getToken();
         if (t.type == token_ID) {
-            /* SEMANTIC_CHECK(analyseVarId(t.value.STR_VAL)); */
+            analyseAssignId(t.value.STR_VAL);
             getToken();
             return true;
         }
@@ -386,7 +402,7 @@ bool rule_VAR_ASSIGNMENT() {
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         getToken();
-        /* SEMANTIC_CHECK(analyseTypeHint(t.type)); */
+        /* (analyseTypeHint(t.type)); */
         if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
@@ -398,6 +414,8 @@ bool rule_VAR_ASSIGNMENT() {
         if (t.type == token_ID) {
             RLOG("<var_assignment> -> = id <fn_or_exp>\n");
 
+            // copy string for semantic analysis and code generation
+            // TODO rewrite this so it doesn't leak memory
             char* str = malloc(strlen(t.value.STR_VAL) + 1);
             strcpy(str, t.value.STR_VAL);
 
@@ -429,6 +447,7 @@ bool rule_VAL_ASSIGNMENT() {
 
         if (t.type == token_ID) {
             RLOG("<val_assignment> -> = id <fn_or_exp>\n");
+            analyseAssignRightId(t.value.STR_VAL);
             stash = t;
             getToken();
             LEX_ERR_CHECK();
@@ -447,6 +466,7 @@ bool rule_VAL_ASSIGNMENT() {
     }
     // <val_assigment> -> EPSILON
     else if (EOL_flag) {
+        analyseAssignEndNoVal();
         RLOG("<val_assignment> -> EPSILON\n");
         return true;
     }
@@ -457,7 +477,7 @@ bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
         RLOG("<fn_or_exp> -> id\n");
-        /* SEMANTIC_CHECK(analyseAssignId(t.value.STR_VAL)); */
+        analyseAssignEnd();
         stash.type = token_EMPTY;
         return true;
     }
@@ -569,14 +589,14 @@ bool rule_INPUT_PARAM() {
         || t.type == token_TYPE_STRING_LINE) {
 
         RLOG("<input_param> -> const\n");
-        SEMANTIC_CHECK(analyseCallConst(t.type));
+        (analyseCallConst(t.type));
         getToken();
         return true;
     }
     // <input_param> -> id <with_name>
     else if (t.type == token_ID) {
         RLOG("<input_param> -> id <with_name>\n");
-        SEMANTIC_CHECK(analyseCallIdOrLabel(t.value.STR_VAL));
+        (analyseCallIdOrLabel(t.value.STR_VAL));
         getToken();
 
         return rule_WITH_NAME();
@@ -618,7 +638,7 @@ bool rule_ID_OR_CONST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<id_or_const> -> const\n");
-        SEMANTIC_CHECK(analyseCallConstAfterLabel(t.type));
+        (analyseCallConstAfterLabel(t.type));
         getToken();
 
         return true;
@@ -665,7 +685,7 @@ bool rule_PARAM() {
     if (t.type != token_ID) {
         return false;
     }
-    SEMANTIC_CHECK(analyseFunctionParamName(t.value.STR_VAL));
+    (analyseFunctionParamName(t.value.STR_VAL));
     getToken();
     LEX_ERR_CHECK();
     consume_optional_EOL();
@@ -675,7 +695,7 @@ bool rule_PARAM() {
     getToken();
     LEX_ERR_CHECK();
     consume_optional_EOL();
-    SEMANTIC_CHECK(analyseFunctionParamType(t.type));
+    (analyseFunctionParamType(t.type));
     return rule_TYPE();
 }
 
@@ -683,7 +703,7 @@ bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> id
     if (t.type == token_ID) {
         RLOG("<id_or_underscore> -> id\n");
-        SEMANTIC_CHECK(analyseFunctionParamLabel(t.value.STR_VAL));
+        (analyseFunctionParamLabel(t.value.STR_VAL));
         getToken();
 
         return true;
@@ -691,7 +711,7 @@ bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> _
     else if (t.type == token_UNDERSCORE) {
         RLOG("<id_or_underscore> -> _\n");
-        SEMANTIC_CHECK(analyseFunctionParamLabel(NULL));
+        (analyseFunctionParamLabel(NULL));
         getToken();
 
         return true;
@@ -704,7 +724,7 @@ bool rule_RETURN_TYPE() {
     if (t.type == token_ARROW) {
         RLOG("<return_type> -> -> <type>\n");
         getToken();
-        SEMANTIC_CHECK(analyseFunctionType(t.type));
+        (analyseFunctionType(t.type));
 
         if (rule_TYPE()) {
             return true;
@@ -712,7 +732,7 @@ bool rule_RETURN_TYPE() {
     }
     // <return_type> -> EPSILON
     else if (t.type == token_BRACKET_L) {
-        SEMANTIC_CHECK(analyseFunctionType(token_EMPTY));
+        (analyseFunctionType(token_EMPTY));
         RLOG("<return_type> -> EPSILON");
         return true;
     }
@@ -907,6 +927,7 @@ bool rule_TYPE() {
         t.type == token_TYPE_DOUBLE ||
         t.type == token_TYPE_DOUBLE_Q) {
         RLOG("<type> -> type\n");
+        analyseAssignHint(t.type);
         getToken();
         LEX_ERR_CHECK();
         return true;

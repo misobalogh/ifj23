@@ -109,5 +109,9 @@ symtableItem* global_symbolSearch(const char* key) {
 }
 
 void global_insertTop(const char* key, const char* type, int data) {
+  if (global_symtableStack == NULL || global_symtableStack->first == NULL) {
+    exit(INTERNAL_ERROR);
+  }
+
   symtableInsert(global_symtableStack->first->table, key, type, data);
 }

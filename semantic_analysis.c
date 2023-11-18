@@ -18,8 +18,8 @@
 #include "function_stack.h"
 #include "expr.h"
 
-#define NOT_FALSE(expr) do { if (!expr) return INTERNAL_ERROR; } while (0)
-#define NOT_NULL(expr) do { if (expr == NULL) return INTERNAL_ERROR; } while(0)
+#define NOT_FALSE(expr) do { if (!expr) exit(INTERNAL_ERROR); } while (0)
+#define NOT_NULL(expr) do { if (expr == NULL) exit(INTERNAL_ERROR); } while(0)
 
 static String* functionId = NULL;
 static char* callId = NULL;
@@ -29,11 +29,9 @@ static String* functionParam;
 static int functionParamCount = 0;
 static struct {
   bool let;
-  String idLeft;
-  tokenType hintedType;
-  String idRight;
-  tokenType typeRight;
-  bool isRightConst;
+  String idname;
+  Type hintedType;
+  Type type;
 } assignment;
 static ExprList* exprList;
 
@@ -67,8 +65,6 @@ bool semanticAnalysisInit(void) {
   if (!stringInit(paramLabel, "")
     || !stringInit(functionId, "")
     || !stringInit(functionParam, "")
-    || !stringInit(&assignment.idRight, "")
-    || !stringInit(&assignment.idLeft, "")
     || !stringInit(callParams, "")) {
       semanticAnalysisDeinit();
       return false;
@@ -93,57 +89,67 @@ void semanticAnalysisDeinit(void) {
 
 // variable declaration and assignment
 
-error_codes analyseLetId(const char* idname) {
-  NOT_FALSE(stringReinit(&assignment.idLeft, idname));
-  assignment.let = true;
-  return SUCCESS;
-}
 
-error_codes analyseVarId(const char* idname) {
-  NOT_FALSE(stringReinit(&assignment.idLeft, idname));
+void analyseAssignBegin(void) {
+  stringClear(&assignment.idname);
   assignment.let = false;
-  return SUCCESS;
+  assignment.hintedType.type = '\0';
+  /* assignment.type = (Type) {}; */
 }
 
-error_codes analyseTypeHint(tokenType type) {
-  assignment.hintedType = type;
-  return SUCCESS;
+void analyseAssignLet(bool let) {
+  assignment.let = let;
 }
 
-error_codes analyseAssignConst(tokenType type) {
-  assignment.typeRight = type;
-  assignment.isRightConst = true;
-  return SUCCESS;
+void analyseAssignId(const char* idname) {
+  NOT_FALSE(stringReinit(&assignment.idname, idname));
 }
 
-error_codes analyseAssignId(const char* idname) {
-  symtableItem* right = global_symbolSearch(idname);
+void analyseAssignHint(tokenType type) {
+  assignment.hintedType = strToType(_typeShort(type));
+}
 
-  if (right == NULL) {
-    return UNDEFINED_VAR;
+void analyseAssignRightId(const char* idname) {
+  symtableItem* it = global_symbolSearch(idname);
+
+  if (it == NULL) {
+    exit(UNDEFINED_VAR);
   }
 
-  const char* ts = _typeShort(assignment.hintedType);
-  if (ts != NULL) {
-    if (strcmp(ts, right->type) != 0) {
-      return TYPE_COMPATIBILITY_ERR;
-    }
+  assignment.type = strToType(it->type);
+}
+
+void analyseAssignType(Type type) {
+  assignment.type = type;
+}
+
+void analyseAssignEnd(void) {
+  if (assignment.hintedType.type != '\0'
+    && assignment.hintedType.type != assignment.type.type) {
+      // type hint is different than expression type
+      exit(7);
   }
 
-  global_insertTop(stringCStr(&assignment.idLeft), right->type, 0);
+  String typeString = typeToStr(assignment.type);
+  global_insertTop(stringCStr(&assignment.idname), stringCStr(&typeString), 0);
+  stringFree(&typeString);
+}
 
-  return SUCCESS;
+void analyseAssignEndNoVal(void) {
+  String typeString = typeToStr(assignment.hintedType);
+  global_insertTop(stringCStr(&assignment.idname), stringCStr(&typeString), 0);
+  stringFree(&typeString);
 }
 
 // function definition
 
-error_codes analyseFunctionId(const char* idname) {
+void analyseFunctionId(const char* idname) {
   NOT_FALSE(stringReinit(functionId, idname));
   symtableInsert(global_table, idname, "f;", 0);
-  return SUCCESS;
+  ;
 }
 
-error_codes analyseFunctionParamLabel(const char* label) {
+void analyseFunctionParamLabel(const char* label) {
   stringClear(functionParam);
 
   if (label == NULL) {
@@ -154,27 +160,27 @@ error_codes analyseFunctionParamLabel(const char* label) {
   }
 
   NOT_FALSE(stringConcatChar(functionParam, ','));
-  return SUCCESS;
+  ;
 }
 
-error_codes analyseFunctionParamName(const char* name) {
+void analyseFunctionParamName(const char* name) {
   NOT_FALSE(stringConcatCStr(functionParam, name));
   NOT_FALSE(stringConcatChar(functionParam, ':'));
-  return SUCCESS;
+  ;
 }
 
-error_codes analyseFunctionParamType(tokenType type) {
+void analyseFunctionParamType(tokenType type) {
   const char* ts = _typeShort(type);
   if (ts == NULL) {
-    return SYNTAX_ANALYSIS_ERR;
+    exit(SYNTAX_ANALYSIS_ERR);
   }
 
   NOT_FALSE(stringConcatCStr(functionParam, ts));
   functionParamCount++;
-  return SUCCESS;
+  ;
 }
 
-error_codes analyseFunctionType(tokenType type) {
+void analyseFunctionType(tokenType type) {
   const char* ts;
 
   if (type == token_EMPTY) {
@@ -183,7 +189,7 @@ error_codes analyseFunctionType(tokenType type) {
   else {
     ts = _typeShort(type);
     if (ts == NULL) {
-      return SYNTAX_ANALYSIS_ERR;
+      exit(SYNTAX_ANALYSIS_ERR);
     }
   }
 
@@ -196,11 +202,11 @@ error_codes analyseFunctionType(tokenType type) {
   NOT_FALSE(stringConcatChar(&typeString, ';'));
 
   symtableInsert(global_table, stringCStr(functionId), stringCStr(&typeString), 0);
-  return SUCCESS;
+  ;
 }
 
 
-error_codes analyseFunctionEnd(void) {
+void analyseFunctionEnd(void) {
   symtableItem* fn = symtableSearch(global_table, stringCStr(functionId));
   NOT_NULL(fn);
 
@@ -212,22 +218,19 @@ error_codes analyseFunctionEnd(void) {
   symtableInsert(global_table, stringCStr(functionId),
                  stringCStr(&typeString), functionParamCount);
 
-  error_codes ret = _checkPostponed(stringCStr(functionId), stringCStr(&typeString));
-  if (ret != SUCCESS) {
-    return ret;
-  }
+  _checkPostponed(stringCStr(functionId), stringCStr(&typeString));
 
   stringFree(&typeString);
   functionParamCount = 0;
   stringClear(functionId);
   stringClear(functionParam);
 
-  return SUCCESS;
+  ;
 }
 
 // function call
 
-error_codes analyseCallConst(tokenType type) {
+void analyseCallConst(tokenType type) {
   const char* ts = _typeShort(type);
   NOT_NULL(ts);
 
@@ -235,12 +238,12 @@ error_codes analyseCallConst(tokenType type) {
   NOT_FALSE(stringConcatCStr(callParams, ts));
   NOT_FALSE(stringConcatChar(callParams, ';'));
 
-  return SUCCESS;
+  ;
 }
-error_codes analyseCallIdOrLabel(const char* value) {
+void analyseCallIdOrLabel(const char* value) {
   stringClear(paramLabel);
   NOT_FALSE(stringConcatCStr(paramLabel, value));
-  return SUCCESS;
+  ;
 }
 
 bool isTypeOfVariable(const char* typeStr) {
@@ -249,7 +252,7 @@ bool isTypeOfVariable(const char* typeStr) {
     || strcmp(typeStr, "S") == 0;
 }
 
-error_codes analyseCallEpsAfterId(void) {
+void analyseCallEpsAfterId(void) {
   // paramLabel is the variable passed as param
 
   symtableItem* it = global_symbolSearch(stringCStr(paramLabel));
@@ -261,10 +264,10 @@ error_codes analyseCallEpsAfterId(void) {
   NOT_FALSE(stringConcatCStr(callParams, it->type));
   NOT_FALSE(stringConcatChar(callParams, ';'));
 
-  return SUCCESS;
+  ;
 }
 
-error_codes analyseCallIdAfterLabel(const char* idname) {
+void analyseCallIdAfterLabel(const char* idname) {
   // paramLabel is label
 
   symtableItem* it = global_symbolSearch(idname);
@@ -276,9 +279,9 @@ error_codes analyseCallIdAfterLabel(const char* idname) {
   NOT_FALSE(stringConcatChar(callParams, ':'));
   NOT_FALSE(stringConcatCStr(callParams, it->type));
 
-  return SUCCESS;
+  ;
 }
-error_codes analyseCallConstAfterLabel(tokenType type) {
+void analyseCallConstAfterLabel(tokenType type) {
   // paramLabel is label
 
   const char* ts = _typeShort(type);
@@ -288,21 +291,21 @@ error_codes analyseCallConstAfterLabel(tokenType type) {
   NOT_FALSE(stringConcatChar(callParams, ':'));
   NOT_FALSE(stringConcatCStr(callParams, ts));
 
-  return SUCCESS;
+  ;
 }
 
-error_codes analyseCallEnd(void) {
+void analyseCallEnd(void) {
   symtableItem* item = global_symbolSearch(callId);
 
   // function was called before declaration
   if (item == NULL) {
     // postpone semantic check until function declaration
     NOT_FALSE(functionStackPush(postponedCheckStack, callId, stringCStr(callParams)));
-    return SUCCESS;
+    ;
   }
 
-  NOT_FALSE(_compareParams(stringCStr(callParams), item->type));
-  return SUCCESS;
+  _compareParams(stringCStr(callParams), item->type);
+  ;
 }
 
 // expression
@@ -443,20 +446,20 @@ char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out
   return NULL;
 }
 
-error_codes _compareParams(const char* callParams, const char* functionParams) {
+void _compareParams(const char* callParams, const char* functionParams) {
   if (*functionParams++ != 'f') {
-    return INTERNAL_ERROR;
+    exit(INTERNAL_ERROR);
   }
 
   if (*functionParams++ != ';') {
-    return INTERNAL_ERROR;
+    exit(INTERNAL_ERROR);
   }
 
   // ignore return type
   functionParams++;
 
   if (*functionParams++ != ';') {
-    return INTERNAL_ERROR;
+    exit(INTERNAL_ERROR);
   }
 
   // copy constant strings to get mutable strings
@@ -466,7 +469,7 @@ error_codes _compareParams(const char* callParams, const char* functionParams) {
   if (mutCallParams == NULL || mutFunctionParams == NULL) {
     free(mutCallParams);
     free(mutFunctionParams);
-    return INTERNAL_ERROR;
+    exit(INTERNAL_ERROR);
   }
 
   strcpy(mutCallParams, callParams);
@@ -511,7 +514,9 @@ end:
   free(fnLabel);
   free(fnName);
 
-  return result;
+  if (result != SUCCESS) {
+    exit(result);
+  }
 }
 
 const char* _typeShort(tokenType type) {
@@ -542,16 +547,16 @@ const char* _typeShort(tokenType type) {
   }
 }
 
-error_codes _checkPostponed(const char* fnId, const char* fnType) {
+void _checkPostponed(const char* fnId, const char* fnType) {
   FunctionStackItem* fn = functionStackRemove(postponedCheckStack, fnId);
 
   // function was called with wrong arguments
   if (fn != NULL && strcmp(fn->params, fnType) != 0) {
-    return UNDEFINED_FN;
+    exit(UNDEFINED_FN);
   }
 
   // function was not called or it was called with correct arguments
-  return SUCCESS;
+  ;
 }
 
 Type strToType(const char* typeStr) {
@@ -633,3 +638,22 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
 
   exit(TYPE_COMPATIBILITY_ERR);
 }
+
+String typeToStr(Type type) {
+  String result;
+  NOT_FALSE(stringInit(&result, ""));
+
+  if (type.type != 'I' && type.type != 'D' && type.type != 'S') {
+    exit(INTERNAL_ERROR);
+  }
+
+  stringConcatChar(&result, type.type);
+
+  if (type.nullable) {
+    stringConcatChar(&result, '?');
+  }
+
+  return result;
+}
+
+
