@@ -35,7 +35,7 @@ const precedenceType precedenceTable[9][9] = {
 void rule_E_ID(stack* s) {
     stackItem* top = stackTopTerminal(s);
     top->flag = false;
-    top->type = token_NONTERMINAL;
+    top->token.type = token_NONTERMINAL;
 }
 
 /**
@@ -49,7 +49,8 @@ void rule_ID_OP_ID(stack* s) {
     stackPop(s);
     stackPop(s);
     stackPop(s);
-    stackPush(s, token_NONTERMINAL);
+    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 }; // sem asi treba doplnit hodnotu z predchadzajuceho vypoctu, napr. 2 op 4, (op by bol +), .value bude 6
+    stackPush(s, tokenNonterminal);
 }
 
 /**
@@ -59,7 +60,8 @@ void rule_PAR_ID_PAR(stack* s) {
     stackPop(s);
     stackPop(s);
     stackPop(s);
-    stackPush(s, token_NONTERMINAL);
+    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 };
+    stackPush(s, tokenNonterminal);
 }
 
 /**
@@ -69,7 +71,8 @@ void rule_ID_CONCAT_ID(stack* s) {
     stackPop(s);
     stackPop(s);
     stackPop(s);
-    stackPush(s, token_NONTERMINAL);
+    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 };
+    stackPush(s, tokenNonterminal);
 }
 
 
@@ -79,7 +82,8 @@ void rule_ID_CONCAT_ID(stack* s) {
 void rule_ID_FORCE_UNWRAP(stack* s) {
     stackPop(s);
     stackPop(s);
-    stackPush(s, token_NONTERMINAL);
+    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 };
+    stackPush(s, tokenNonterminal);
 }
 
 
@@ -87,5 +91,6 @@ void rule_ID_REL_ID(stack* s) {
     stackPop(s);
     stackPop(s);
     stackPop(s);
-    stackPush(s, token_NONTERMINAL);
+    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 };
+    stackPush(s, tokenNonterminal);
 }
