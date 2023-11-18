@@ -11,6 +11,7 @@
 #include <malloc.h>
 #include <string.h>
 
+#include "expr_stack.h"
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
@@ -315,14 +316,14 @@ void analyseExprOperand(lex_token token) {
     exprListAddId(exprList, token.value.STR_VAL);
   }
   else if (token.type == token_CONST_WHOLE_NUMBER) {
-    exprListAddConst(exprList, 'I');
+    exprListAddConst(exprList, (Type) { 'I', false });
   }
   else if (token.type == token_CONST_DEC_NUMBER
     || token.type == token_CONST_SCIENTIFIC_NOTATION) {
-      exprListAddConst(exprList, 'D');
+      exprListAddConst(exprList, (Type) { 'D', false });
   }
   else if (token.type == token_TYPE_STRING_LINE) {
-    exprListAddConst(exprList, 'S');
+    exprListAddConst(exprList, (Type) { 'S', false});
   }
   else {
     exit(INTERNAL_ERROR);
@@ -333,27 +334,32 @@ void analyseExprOperator(lex_token token) {
   exprListAddOperator(exprList, tokenToOperator(token.type));
 }
 
-void analyseExprDefault() {
+void analyseExprDefault(void) {
   exprListAddOperator(exprList, op_DEFAULT);
 }
 
-void analyseExprEnd(void) {
+Type analyseExprEnd(void) {
+  ExprStack* stack = exprStackInit();
+
   for (size_t i = 0; i < exprList->size; i++) {
     ExprItem it = exprList->data[i];
 
-    switch (it.type) {
-    case EXPR_CONST:
-      printf("%c ", it.value.constType);
-      break;
-    case EXPR_ID:
-      printf("$%s ", it.value.idName);
-      break;
-    case EXPR_OPERATOR:
-      printf("op%i ", it.value.operatorType);
-      break;
+    if (it.type == expr_OPERATOR) {
+      ExprItem a = exprStackPop(stack);
+      ExprItem b = exprStackPop(stack);
+      Type resultType = _analyseOperation(it.value.operatorType, a, b);
+      exprStackPush(stack, (ExprItem) { .type=expr_CONST, .value={ .constType=resultType } });
+    }
+    else { // operand
+      exprStackPush(stack, it);
     }
   }
-  putchar('\n');
+
+  ExprItem top = exprStackPop(stack);
+  if (top.type != expr_CONST) {
+    exit(INTERNAL_ERROR);
+  }
+  return top.value.constType;
 }
 
 // helper functions
@@ -546,4 +552,84 @@ error_codes _checkPostponed(const char* fnId, const char* fnType) {
 
   // function was not called or it was called with correct arguments
   return SUCCESS;
+}
+
+Type strToType(const char* typeStr) {
+  struct { const char* key; Type type; } map[] = {
+    { "I", { 'I', false } },
+    { "I?", { 'I', true } },
+    { "D", { 'D', false } },
+    { "D?", { 'D', true } },
+    { "S", { 'S', false } },
+    { "S?", { 'S', true } }
+  };
+
+  for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
+    if (strcmp(typeStr, map[i].key)) {
+      return map[i].type;
+    }
+  }
+
+  exit(INTERNAL_ERROR);
+}
+
+Type variableType(const char* idname) {
+  symtableItem* it = global_symbolSearch(idname);
+
+  if (it == NULL) {
+    exit(UNDEFINED_VAR);
+  }
+
+  return strToType(it->type);
+}
+
+Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
+  if (a.type == expr_OPERATOR || b.type == expr_OPERATOR) {
+    exit(INTERNAL_ERROR);
+  }
+
+  Type typeA = (a.type == expr_CONST || a.type == expr_INTERMEDIATE)
+    ? a.value.constType
+    : variableType(a.value.idName);
+
+  Type typeB = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
+    ? b.value.constType
+    : variableType(b.value.idName);
+
+  if (optype == op_CONCAT) {
+    if (typeA.type == 'S' && typeB.type == 'S') {
+      return (Type) { 'S', (typeA.nullable || typeB.nullable) };
+    }
+  }
+
+  if (optype == op_PLUS || optype == op_MINUS || optype == op_MUL || optype == op_DIV ) {
+      if (typeA.type == typeB.type) {
+        return (Type) { typeA.type, (typeA.nullable || typeB.nullable) };
+      }
+
+      if ((typeA.type == 'I' && typeB.type == 'D')
+        || (typeA.type == 'D' && typeB.type == 'I')) {
+          return (Type) { 'D', (typeA.nullable || typeB.nullable) };
+      }
+  }
+
+  if (optype == op_DEFAULT) {
+    if (typeA.type == typeB.type && !typeB.nullable) {
+      return typeB;
+    }
+  }
+
+  if (optype == op_EQ || optype == op_NEQ) {
+    if (typeA.type == typeB.type) {
+      return (Type) { 'B', false };
+    }
+  }
+
+  if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
+    if (typeA.type == typeB.type && !typeA.nullable && !typeB.nullable) {
+      return (Type) { 'B', false };
+    }
+  }
+
+  exit(TYPE_COMPATIBILITY_ERR);
 }

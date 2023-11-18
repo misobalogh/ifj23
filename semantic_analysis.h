@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "error_codes.h"
+#include "expr.h"
 #include "symtable.h"
 #include "synt_prec_stack.h"
 
@@ -74,12 +75,13 @@ void analyseExprBegin(void);
 void analyseExprOperand(lex_token token);
 void analyseExprOperator(lex_token token);
 void analyseExprDefault();
-void analyseExprEnd(void);
+Type analyseExprEnd(void);
 
 char* _getLabelType(char* params, char* out_label, char* out_type);
 char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type);
 error_codes _compareParams(const char* callParams, const char* functionParams);
 const char* _typeShort(tokenType type);
 error_codes _checkPostponed(const char* fnId, const char* fnType);
+Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b);
 
 #endif

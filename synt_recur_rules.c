@@ -69,7 +69,7 @@ bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
     analyseExprBegin();
     bool retVal = precedenceParser();
-    analyseExprEnd();
+    Type exprType = analyseExprEnd();
     return retVal;
 }
 
