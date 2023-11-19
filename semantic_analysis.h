@@ -8,6 +8,8 @@
 #include "symtable.h"
 #include "synt_prec_stack.h"
 
+extern Type lastExprType;
+
 /**
  * @brief Initializes semantic analysis variables. Must be called before
  * any calls to any other semantic analysis functions
@@ -81,6 +83,14 @@ void analyseReassignId(const char* idname);
 void analyseReassignRightId(const char* idname);
 void analyseReassignEnd(void);
 void analyseReassignEndType(Type type);
+
+void analyseCondition(void);
+
+void analyseIfLetBegin(void);
+void analyseIfLet(const char* idname);
+void pushIfLet(void);
+
+void pushFnParams(const char* idname);
 
 bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsigned callCount);
 const char* _typeShort(tokenType type);

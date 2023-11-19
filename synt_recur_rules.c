@@ -141,6 +141,10 @@ bool rule_STATEMENT() {
         if (t.type != token_ID) {
             return false;
         }
+
+        String idname;
+        stringInit(&idname, t.value.STR_VAL);
+
         analyseFunctionId(t.value.STR_VAL);
         getToken();
         if (t.type != token_PARENTHESES_L) {
@@ -165,6 +169,7 @@ bool rule_STATEMENT() {
         getToken();
 
         symtableStackPush(global_symtableStack);
+        pushFnParams(stringCStr(&idname));
 
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
@@ -182,6 +187,8 @@ bool rule_STATEMENT() {
         RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
 
+        analyseIfLetBegin();
+
         if (rule_CONDITION() == false) {
             return false;
         }
@@ -192,11 +199,10 @@ bool rule_STATEMENT() {
         getToken();
 
         symtableStackPush(global_symtableStack);
-
+        pushIfLet();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
-
         symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
@@ -215,11 +221,9 @@ bool rule_STATEMENT() {
         getToken();
 
         symtableStackPush(global_symtableStack);
-
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
-
         symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
@@ -236,6 +240,8 @@ bool rule_STATEMENT() {
         if (rule_EXPRESSION() == false) {
             return false;
         }
+        analyseCondition();
+
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
@@ -300,6 +306,7 @@ bool rule_BRACK_STATEMENT() {
     case token_ID:
         RLOG("<brack_statement> -> id <after_id>\n");
         analyseReassignId(t.value.STR_VAL);
+        analyseCallFnId(t.value.STR_VAL);
         getToken();
 
         return rule_AFTER_ID();
@@ -307,6 +314,7 @@ bool rule_BRACK_STATEMENT() {
         RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
 
+        analyseIfLetBegin();
         if (rule_CONDITION() == false) {
             return false;
         }
@@ -316,9 +324,13 @@ bool rule_BRACK_STATEMENT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
+        pushIfLet();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+        symtableStackPop(global_symtableStack);
+
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -334,9 +346,11 @@ bool rule_BRACK_STATEMENT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+        symtableStackPop(global_symtableStack);
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -350,6 +364,8 @@ bool rule_BRACK_STATEMENT() {
         if (rule_EXPRESSION() == false) {
             return false;
         }
+        analyseCondition();
+
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
@@ -520,6 +536,7 @@ bool rule_AFTER_ID() {
         if (t.type == token_ID) {
             RLOG("<after_id> -> = id <fn_or_exp>\n");
             analyseReassignRightId(t.value.STR_VAL);
+            analyseCallFnId(t.value.STR_VAL);
             lex_token lastToken = t;
             getToken();
             stash = lastToken;
@@ -776,13 +793,14 @@ bool rule_FUNC_STAT() {
     case token_LET:
     case token_VAR:
         RLOG("<func_stat> -> <let_or_var> <var_assignment>\n");
+        analyseAssignBegin();
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<func_stat> -> id <after_id>\n");
-        lex_token idToken = t;
+        analyseReassignId(t.value.STR_VAL);
+        analyseCallFnId(t.value.STR_VAL);
         getToken();
-
-        return rule_AFTER_ID(idToken);
+        return rule_AFTER_ID();
     case token_RETURN:
         // <func_stat> -> <return_stat>
         RLOG("<func_stat> -> <return_stat>\n");
@@ -790,6 +808,8 @@ bool rule_FUNC_STAT() {
     case token_IF:
         RLOG("<func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }\n");
         getToken();
+
+        analyseIfLetBegin();
 
         if (rule_CONDITION() == false) {
             return false;
@@ -800,9 +820,12 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
+        pushIfLet();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+        symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -819,9 +842,11 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+        symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -837,6 +862,8 @@ bool rule_FUNC_STAT() {
         if (rule_EXPRESSION() == false) {
             return false;
         }
+        analyseCondition();
+
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
@@ -913,7 +940,11 @@ bool rule_CONDITION() {
         || t.type == token_PARENTHESES_L
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<condition> -> <expression>\n");
-        return rule_EXPRESSION();
+        if (!rule_EXPRESSION()) {
+          return false;
+        }
+        analyseCondition();
+        return true;
     }
     // <condtion> -> let id
     if (t.type == token_LET) {
@@ -921,6 +952,7 @@ bool rule_CONDITION() {
         getToken();
 
         if (t.type == token_ID) {
+            analyseIfLet(t.value.STR_VAL);
             getToken();
             return true;
         }

@@ -20,6 +20,11 @@
 
 static struct {
   String idname;
+  bool iflet;
+} iflet;
+
+static struct {
+  String idname;
   String idOrLabel;
   Param* params;
   unsigned paramCount;
@@ -50,6 +55,8 @@ static struct {
 
 static ExprList* exprList;
 static FunctionStack* postponedCheckStack;
+
+Type lastExprType;
 
 Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
   * ordParam, * chrParam;
@@ -85,6 +92,8 @@ bool semanticAnalysisInit(void) {
   global_initSymtable();
   global_initSymtableStack();
 
+  lastExprType =  (Type) { 'u', false };
+
   exprList = exprListInit();
 
   fnDef.paramCapacity = 10;
@@ -114,9 +123,12 @@ bool semanticAnalysisInit(void) {
     return false;
   }
 
+  iflet.iflet = false;
+
   if ( !stringInit(&fnDef.idname, "")
     || !stringInit(&fnCall.idOrLabel, "")
-    || !stringInit(&fnCall.idname, "")) {
+    || !stringInit(&fnCall.idname, "")
+    || !stringInit(&iflet.idname, "")) {
       semanticAnalysisDeinit();
       return false;
   }
@@ -367,7 +379,7 @@ void analyseFunctionParamName(const char* name) {
 }
 
 void analyseFunctionParamType(tokenType type) {
-  fnDef.params->type = tokenToType(type);
+  fnDef.params[fnDef.paramCount].type = tokenToType(type);
   fnDef.paramCount++;
 }
 
@@ -536,11 +548,13 @@ Type analyseExprEnd(void) {
   }
 
   if (top.type == expr_ID) {
-    return variableType(top.value.idName);
+    lastExprType = variableType(top.value.idName);
+    return lastExprType;
   }
 
   if (top.type == expr_INTERMEDIATE || top.type == expr_CONST) {
-    return top.value.constType;
+    lastExprType = top.value.constType;
+    return lastExprType;
   }
 
   EXIT_WITH_MESSAGE(INTERNAL_ERROR);
@@ -697,6 +711,12 @@ Type variableType(const char* idname) {
   return it->data.dataType;
 }
 
+void analyseCondition(void) {
+  if (lastExprType.base != 'B') {
+    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
+}
+
 Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   if (a.type == expr_OPERATOR || b.type == expr_OPERATOR) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
@@ -792,5 +812,51 @@ Type tokenToType(tokenType token) {
     default:
       EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
+}
+
+void pushFnParams(const char* idname) {
+  symtableItem* fn = symtableSearch(global_table, idname);
+
+  if (fn == NULL || fn->data.symbolType != symbol_FN) {
+    EXIT_WITH_MESSAGE(UNDEFINED_FN);
+  }
+
+  for (unsigned i = 0; i < fn->data.paramCount; i++) {
+    Param* param = &fn->data.params[i];
+
+    global_insertTop(stringCStr(&param->name),
+        (SymbolData) { param->type, NULL, 0, false, symbol_LET });
+  }
+
+}
+
+void analyseIfLetBegin(void) {
+  iflet.iflet = false;
+}
+
+void analyseIfLet(const char* idname) {
+  iflet.iflet = true;
+  stringReinit(&iflet.idname, idname);
+}
+
+void pushIfLet(void) {
+  if (!iflet.iflet) {
+    return;
+  }
+
+  symtableItem* it = global_symbolSearch(stringCStr(&iflet.idname));
+
+  if (it == NULL || it->data.symbolType == symbol_FN) {
+    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
+  }
+
+  SymbolData data = it->data;
+  it->data.dataType.nullable = false;
+
+  if (it->data.dataType.base == 'N') {
+    it->data.dataType.base = 'u';
+  }
+
+  global_insertTop(stringCStr(&iflet.idname), data);
 }
 
