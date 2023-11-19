@@ -303,10 +303,11 @@ void analyseAssignRightId(const char* idname) {
   symtableItem* it = global_symbolSearch(idname);
 
   if (it == NULL) {
-    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
+    assignment.type.base = 'u';
   }
-
-  assignment.type = it->data.dataType;
+  else {
+    assignment.type = it->data.dataType;
+  }
 }
 
 void analyseAssignType(Type type) {
@@ -321,6 +322,11 @@ void analyseAssignEndExpr(void) {
   if (typeIsValue(assignment.hintedType)
     && typeEq(assignment.hintedType, assignment.type)) {
       // type hint is different than expression type
+      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
+
+  if (!typeIsValue(assignment.hintedType) && !typeIsValue(assignment.type)) {
+    // type cannot be inferend
       EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
 
@@ -351,13 +357,28 @@ void analyseAssignEndCall(Type returnedType) {
     return;
   }
 
-  if (typeIsValue(assignment.hintedType)
-    && typeEq(assignment.hintedType, returnedType)) {
-      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  if (typeIsValue(assignment.hintedType)) {
+    if (returnedType.base == 'u' || typeEq(assignment.hintedType, returnedType)) {
+
+    }
+  }
+  else {
+    if (typeIsValue(returnedType)) {
+
+    }
   }
 
-  SymbolData data = { returnedType, NULL, 0, false, (assignment.let ? symbol_LET : symbol_VAR) };
-  global_insertTop(stringCStr(&assignment.idname), data);
+  // type was hinted and actual type matches or
+  // type was hinted and actual type could not be inffered or
+  // type was not hinted and actual type is valid type
+  if ((typeIsValue(assignment.hintedType) && (returnedType.base == 'u' || typeEq(assignment.hintedType, returnedType)))
+    || !(typeIsValue(assignment.hintedType) && typeIsValue(returnedType))) {
+      SymbolData data = { returnedType, NULL, 0, false, (assignment.let ? symbol_LET : symbol_VAR) };
+      global_insertTop(stringCStr(&assignment.idname), data);
+  }
+  else {
+    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
 
   assignment.started = false;
 }
@@ -851,10 +872,10 @@ void pushIfLet(void) {
   }
 
   SymbolData data = it->data;
-  it->data.dataType.nullable = false;
+  data.dataType.nullable = false;
 
-  if (it->data.dataType.base == 'N') {
-    it->data.dataType.base = 'u';
+  if (data.dataType.base == 'N') {
+    data.dataType.base = 'u';
   }
 
   global_insertTop(stringCStr(&iflet.idname), data);

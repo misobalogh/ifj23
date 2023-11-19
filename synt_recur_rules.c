@@ -435,6 +435,7 @@ bool rule_VAR_ASSIGNMENT() {
             RLOG("<var_assignment> -> = id <fn_or_exp>\n");
 
             analyseCallFnId(t.value.STR_VAL);
+            analyseAssignRightId(t.value.STR_VAL);
 
             lex_token lastToken = t;
             getToken();
@@ -464,8 +465,9 @@ bool rule_VAL_ASSIGNMENT() {
             RLOG("<val_assignment> -> = id <fn_or_exp>\n");
             analyseAssignRightId(t.value.STR_VAL);
             analyseCallFnId(t.value.STR_VAL);
-            stash = t;
+            lex_token lastToken = t;
             getToken();
+            stash = lastToken;
             LEX_ERR_CHECK();
 
             return rule_FN_OR_EXP();
