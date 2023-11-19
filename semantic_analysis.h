@@ -82,13 +82,13 @@ void analyseReassignRightId(const char* idname);
 void analyseReassignEnd(void);
 void analyseReassignEndType(Type type);
 
-char* _getLabelType(char* params, char* out_label, char* out_type);
-char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type);
-void _compareParams(const char* callParams, const char* functionParams);
+bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsigned callCount);
 const char* _typeShort(tokenType type);
-void _checkPostponed(const char* fnId, const char* fnType);
+void _checkPostponed(const char* fnId, SymbolData data);
 Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b);
 Type strToType(const char* typeStr);
 String typeToStr(Type type);
+Type tokenToType(tokenType token);
+Type variableType(const char* idname);
 
 #endif

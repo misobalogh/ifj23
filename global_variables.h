@@ -33,7 +33,7 @@ bool global_addVar(char* id, char* type, int value);
 void global_generateInstruction();
 
 symtableItem* global_symbolSearch(const char* key);
-void global_insertTop(const char* key, const char* type, int data);
+void global_insertTop(const char* key, SymbolData data);
 
 const char* errorToString(error_codes err);
 

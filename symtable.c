@@ -71,7 +71,8 @@ symtable* symtableInit(size_t capacity) {
     // Initialize all items in hash table to NULL and data to 0
     for (int i = 0; i < tab->size; i++) {
         tab->table[i].key = NULL;
-        tab->table[i].data = 0;
+        memset(&tab->table[i].data, 0, sizeof(SymbolData));
+        /* tab->table[i].data = 0; */
     }
 
     return tab;
@@ -93,7 +94,7 @@ symtable* symtableInit(size_t capacity) {
  *
  * @return 0 if insert fails, 1 if item was already in table and was updated, 2 if item was inserted succesfully
  */
-int symtableInsert(symtable* tab, const char* key, const char* type, int data) {
+int symtableInsert(symtable* tab, const char* key, SymbolData data) {
     if (tab == NULL) {
         fprintf(stderr, "Error - symtableInsert: invalid pointer, tab is NULL\n");
         return 0;
@@ -123,11 +124,27 @@ int symtableInsert(symtable* tab, const char* key, const char* type, int data) {
     CHECK_MEMORY_ALLOC(tab->table[hashValue].key);
     strcpy(tab->table[hashValue].key, key);
 
-    tab->table[hashValue].type = (char*)malloc(sizeof(char) * (strlen(type) + 1));
-    CHECK_MEMORY_ALLOC(tab->table[hashValue].type);
-    strcpy(tab->table[hashValue].type, type);
+    tab->table[hashValue].data.dataType = data.dataType;
+    tab->table[hashValue].data.paramCount = data.paramCount;
+    tab->table[hashValue].data.symbolType = data.symbolType;
+    tab->table[hashValue].data.variadic = data.variadic;
+    tab->table[hashValue].data.params = malloc(sizeof(Param) * data.paramCount);
+    CHECK_MEMORY_ALLOC(tab->table[hashValue].data.params);
 
-    tab->table[hashValue].data = data;
+    for (unsigned i = 0; i < data.paramCount; i++) {
+      Param* tableParam = &tab->table[hashValue].data.params[i];
+      Param* dataParam = &data.params[i];
+
+      tableParam->type = dataParam->type;
+      stringInit(&tableParam->name, stringCStr(&dataParam->name));
+      stringInit(&tableParam->label, stringCStr(&dataParam->label));
+    }
+
+    /* tab->table[hashValue].type = (char*)malloc(sizeof(char) * (strlen(type) + 1)); */
+    /* CHECK_MEMORY_ALLOC(tab->table[hashValue].type); */
+    /* strcpy(tab->table[hashValue].type, type); */
+
+    /* tab->table[hashValue].data = data; */
     tab->itemCount++;
 
     return 2;
@@ -187,7 +204,7 @@ bool copySymtableItems(symtable* dest, symtable* src) {
 
     for (int i = 0; i < src->size; i++) {
         if (src->table[i].key != NULL) {
-            symtableInsert(dest, src->table[i].key, src->table[i].type, src->table[i].data);
+            symtableInsert(dest, src->table[i].key, src->table[i].data);
         }
     }
 
@@ -243,10 +260,16 @@ void symtableClear(symtable* tab) {
     for (int i = 0; i < tab->size; i++) {
         if (tab->table[i].key != NULL) {
             free(tab->table[i].key);
-            free(tab->table[i].type);
             tab->table[i].key = NULL;
-            tab->table[i].data = 0;
-            tab->table[i].type = NULL;
+
+            for (unsigned j = 0; j < tab->table[i].data.paramCount; j++) {
+              Param* param = &tab->table[i].data.params[j];
+              stringFree(&param->name);
+              stringFree(&param->label);
+            }
+
+            free(tab->table[i].data.params);
+            tab->table[i].data.params = NULL;
         }
     }
     free(tab->table);

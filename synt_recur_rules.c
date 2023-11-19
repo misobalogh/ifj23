@@ -18,16 +18,11 @@
 #include "semantic_analysis.h"
 #include "generator.h"
 
+
+
 void getToken() {
     if (stash.type != token_EMPTY) {
         t = stash;
-
-        if (t.type == token_ID || t.type == token_TYPE_STRING_LINE) {
-          t.value.STR_VAL = malloc(sizeof(stash.value.STR_VAL) + 1);
-          CHECK_MEMORY_ALLOC(t.value.STR_VAL);
-          strcpy(t.value.STR_VAL, stash.value.STR_VAL);
-        }
-
         stash.type = token_EMPTY;
     }
     else {
@@ -138,9 +133,8 @@ bool rule_STATEMENT() {
         RLOG("<statement> -> id <after_id>\n");
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
-        lex_token idToken = t;
         getToken();
-        return rule_AFTER_ID(idToken);
+        return rule_AFTER_ID();
     case token_FUNC:
         RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
         getToken();
@@ -424,16 +418,11 @@ bool rule_VAR_ASSIGNMENT() {
         if (t.type == token_ID) {
             RLOG("<var_assignment> -> = id <fn_or_exp>\n");
 
-            // copy string for semantic analysis and code generation
-            // TODO rewrite this so it doesn't leak memory
-            char* str = malloc(strlen(t.value.STR_VAL) + 1);
-            strcpy(str, t.value.STR_VAL);
+            analyseCallFnId(t.value.STR_VAL);
 
             lex_token lastToken = t;
             getToken();
             stash = lastToken;
-
-            stash.value.STR_VAL = str;
 
             return rule_FN_OR_EXP();
         }
@@ -731,7 +720,7 @@ bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> _
     else if (t.type == token_UNDERSCORE) {
         RLOG("<id_or_underscore> -> _\n");
-        (analyseFunctionParamLabel(NULL));
+        analyseFunctionParamLabel("_");
         getToken();
 
         return true;

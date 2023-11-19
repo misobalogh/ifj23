@@ -1,4 +1,5 @@
 #include "function_stack.h"
+#include "symtable.h"
 #include <string.h>
 #include <malloc.h>
 
@@ -28,7 +29,7 @@ void functionStackDeinit(FunctionStack* stack) {
   free(stack);
 }
 
-bool functionStackPush(FunctionStack* stack, const char* name, const char* params) {
+bool functionStackPush(FunctionStack* stack, const char* name, Param* params, unsigned count) {
   FunctionStackItem* first = stack->first;
 
   stack->first = malloc(sizeof(FunctionStackItem));
@@ -43,7 +44,7 @@ bool functionStackPush(FunctionStack* stack, const char* name, const char* param
     return false;
   }
 
-  stack->first->params = malloc(strlen(params));
+  stack->first->params = malloc(count);
   if (stack->first->params == NULL) {
     free(stack->first->name);
     free(stack->first);
@@ -52,36 +53,10 @@ bool functionStackPush(FunctionStack* stack, const char* name, const char* param
   }
 
   strcpy(stack->first->name, name);
-  strcpy(stack->first->params, params);
+  memcpy(stack->first->params, params, sizeof(Param) * count);
   stack->first->next = first;
 
   return true;
-}
-
-char* functionStackFindAndPop(FunctionStack* stack, const char* text) {
-  FunctionStackItem* previous = NULL;
-  FunctionStackItem* current = stack->first;
-
-  while (current != NULL) {
-    if (strcmp(current->name, text) == 0) {
-      if (previous != NULL) {
-        previous->next = current->next;
-      }
-      else {
-        stack->first = current->next;
-      }
-
-      free(current->name);
-      char* params = current->params;
-      free(current);
-      return params;
-    }
-
-    previous = current;
-    current = current->next;
-  }
-
-  return NULL;
 }
 
 FunctionStackItem* functionStackRemove(FunctionStack* stack, const char* name) {

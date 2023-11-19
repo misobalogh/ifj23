@@ -35,6 +35,10 @@ help:
 
 all: main tests
 
+string_test: stest.c dynamic_string.c
+	$(CC) $(CFLAGS) $^ -o $@
+
+
 test: main
 	rm -rf *.log
 	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))

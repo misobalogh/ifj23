@@ -81,4 +81,8 @@ void stringClear(String* string);
 
 bool stringReinit(String* string, const char* cStr);
 
+bool stringReinitS(String* string, String* other);
+
+bool stringEq(String* string, String* other);
+
 #endif

@@ -21,7 +21,7 @@ bool stringInit(String* string, const char* cStr) {
     return false;
   }
 
-  strcpy(string->data, cStr);
+  strncpy(string->data, cStr, string->capacity);
   return true;
 }
 
@@ -43,8 +43,8 @@ bool stringResize(String* string, size_t size) {
 }
 
 bool stringConcat(String* string, const String* const other) {
-  if (string->size + string->size > string->capacity
-    && !stringResize(string, (string->size + string->size + 1) * STRING_GROWTH)) {
+  if (string->size + other->size + 1 >= string->capacity
+    && !stringResize(string, (string->size + other->size + 1) * STRING_GROWTH)) {
       return false;
   }
 
@@ -56,7 +56,7 @@ bool stringConcat(String* string, const String* const other) {
 bool stringConcatCStr(String* string, const char* cStr) {
   size_t len = strlen(cStr);
 
-  if (string->size + len <= string->capacity - 1
+  if (string->size + len + 1 >= string->capacity
     && !stringResize(string, (string->size + len + 1) * STRING_GROWTH)) {
       return false;
   }
@@ -74,7 +74,7 @@ void stringFree(String* string) {
 }
 
 const char* stringCStr(String* string) {
-  if (string->size <= string->capacity - 1) {
+  if (string->size + 1 >= string->capacity) {
     stringResize(string, string->capacity * STRING_GROWTH);
   }
 
@@ -83,7 +83,7 @@ const char* stringCStr(String* string) {
 }
 
 bool stringConcatChar(String* string, char c) {
-  if (string->size + 1 <= string->capacity - 1
+  if (string->size + 1 >= string->capacity
       && !stringResize(string, (string->capacity + 1) * STRING_GROWTH)) {
     return false;
   }
@@ -99,4 +99,13 @@ void stringClear(String* string) {
 bool stringReinit(String* string, const char* cStr) {
   stringClear(string);
   return stringConcatCStr(string, cStr);
+}
+
+bool stringReinitS(String* string, String* other) {
+  stringClear(string);
+  return stringConcatCStr(string, stringCStr(other));
+}
+
+bool stringEq(String* string, String* other) {
+  return strcmp(stringCStr(string), stringCStr(other)) == 0;
 }

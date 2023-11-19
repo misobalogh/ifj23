@@ -69,31 +69,6 @@ static bool global_doubleDeclaration(char* id) {
     return false;
 }
 
-/**
- * @brief Adds variable to global table of symbols
- * 
- * @param id Variable name
- * @param value Variable value
- * 
- * @return true if variable was added successfully
- */
-bool global_addVar(char* id, char* type, int value) {
-    if (global_table == NULL) {
-        global_initSymtable();
-    }
-
-    if (global_doubleDeclaration(id)) {
-        return false;
-    }
-    if (!symtableInsert(global_table, id, type, value)) {
-        return false;
-    }
-
-    //TODO: @Michal418
-    // global_generateInstruction();
-    return true;
-}
-
 const char* errorToString(error_codes err) {
   switch (err) {
   case SUCCESS:
@@ -138,7 +113,7 @@ symtableItem* global_symbolSearch(const char* key) {
   return symtableSearch(global_table, key);
 }
 
-void global_insertTop(const char* key, const char* type, int data) {
+void global_insertTop(const char* key, SymbolData data) {
   if (global_symtableStack == NULL) {
     exit(INTERNAL_ERROR);
   }
@@ -148,9 +123,9 @@ void global_insertTop(const char* key, const char* type, int data) {
       exit(99);
     }
 
-    symtableInsert(global_table, key, type, data);
+    symtableInsert(global_table, key, data);
     return;
   }
 
-  symtableInsert(global_symtableStack->first->table, key, type, data);
+  symtableInsert(global_symtableStack->first->table, key, data);
 }

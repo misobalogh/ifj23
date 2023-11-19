@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "dynamic_string.h"
+#include "expr.h"
 #include "macros.h"
 
 /* Prime number for size of hash table */
@@ -24,6 +26,22 @@
 
 /* Max load factor for hash table */
 #define SYMTABLE_MAX_LOAD 0.75
+
+typedef struct Param {
+  String label;
+  String name;
+  Type type;
+} Param;
+
+typedef enum SymbolType { symbol_VAR, symbol_LET, symbol_FN } SymbolType;
+
+typedef struct SymbolData {
+  Type dataType;
+  Param* params;
+  unsigned paramCount;
+  bool variadic;
+  SymbolType symbolType;
+} SymbolData;
 
 /**
  * @brief struct for hash table item
@@ -38,9 +56,8 @@
  * @param data value of variable, for functions it is number of parameters
  */
 typedef struct symtableItem {
-    char* key;  
-    char* type; 
-    int data;    
+    char* key;
+    SymbolData data;
 } symtableItem;
 
 
@@ -60,7 +77,7 @@ typedef struct symtable {
 
 symtable* symtableInit(size_t capacity);
 
-int symtableInsert(symtable* tab, const char* key, const char* type, int data);
+int symtableInsert(symtable* tab, const char* key, SymbolData data);
 
 symtableItem* symtableSearch(symtable* tab, const char* key);
 

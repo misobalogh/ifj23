@@ -32,6 +32,8 @@ let num2 = 4
 let sum = num1 + num2
 let product = sum * 3
 
+let ratio = 3
+
 let combined = sum + product - ratio
 
 let p = 25
@@ -70,12 +72,6 @@ let banana = apple * 2
 let cherry = banana + 3
 let date = cherry * 4
 let fig = date - banana
-
-let xValue = 9 > 3
-let yValue = xValue + 4 <= 4
-let zValue = xValue * yValue == 0
-let uValue = wValue + yValue != xValue
-let asd = (a > 4) > 4 ?? e != (a > (b > (c>(d>r))))
 
 let expr1 = (3 + 5) * (7 - 2)
 let expr3 = (4 + 2) * 8 - 5

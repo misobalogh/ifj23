@@ -1,9 +1,6 @@
 /*
  * Project: Implementace překladače imperativního jazyka IFJ23
- * File: semantic_analysis.c
  * Authors: Michal Cenek xcenek04
- * Last modified by: Michal Cenek xcenek04
- * Last modification time: 2023-10-29T13:40:10.153716
 */
 
 #include "semantic_analysis.h"
@@ -23,14 +20,18 @@
 
 static struct {
   String idname;
-  String parameters;
   String idOrLabel;
+  Param* params;
+  unsigned paramCount;
+  unsigned paramCapacity;
 } fnCall;
 
 static struct {
-  String param;
-  int paramCount;
+  Param* params;
+  unsigned paramCount;
+  unsigned paramCapacity;
   String idname;
+  Type type;
 } fnDef;
 
 static struct {
@@ -48,8 +49,37 @@ static struct {
 } reassignment;
 
 static ExprList* exprList;
-
 static FunctionStack* postponedCheckStack;
+
+Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
+  * ordParam, * chrParam;
+
+static void fnCallGrow(void) {
+  if (fnCall.paramCount + 1 >= fnCall.paramCapacity) {
+    fnCall.paramCapacity *= 2;
+    fnCall.params = realloc(fnCall.params, sizeof(Param) * fnCall.paramCapacity);
+    CHECK_MEMORY_ALLOC(fnCall.params);
+
+    for (unsigned i = fnCall.paramCount + 1; i < fnCall.paramCapacity; i++) {
+      NOT_FALSE(stringInit(&fnCall.params[i].label, ""));
+      NOT_FALSE(stringInit(&fnCall.params[i].name, ""));
+    }
+  }
+}
+
+static void fnDefGrow(void) {
+  if (fnDef.paramCount + 1 >= fnDef.paramCapacity) {
+    fnDef.paramCapacity *= 2;
+    fnDef.params = realloc(fnDef.params, sizeof(Param) * fnDef.paramCapacity);
+    CHECK_MEMORY_ALLOC(fnDef.params);
+
+    for (unsigned i = fnDef.paramCount + 1; i < fnDef.paramCapacity; i++) {
+      NOT_FALSE(stringInit(&fnDef.params[i].label, ""));
+      NOT_FALSE(stringInit(&fnDef.params[i].name, ""));
+    }
+  }
+}
+
 
 bool semanticAnalysisInit(void) {
   global_initSymtable();
@@ -57,6 +87,25 @@ bool semanticAnalysisInit(void) {
 
   exprList = exprListInit();
 
+  fnDef.paramCapacity = 10;
+  fnDef.params = malloc(sizeof(Param) * fnDef.paramCapacity);
+  CHECK_MEMORY_ALLOC(fnDef.params);
+  fnDef.paramCount = 0;
+
+  for (unsigned i = 0; i < fnDef.paramCapacity; i++) {
+    stringInit(&fnDef.params[i].label, "");
+    stringInit(&fnDef.params[i].name, "");
+  }
+
+  fnCall.paramCapacity = 10;
+  fnCall.params = malloc(sizeof(Param) * fnDef.paramCapacity);
+  CHECK_MEMORY_ALLOC(fnDef.params);
+  fnCall.paramCount = 0;
+
+  for (unsigned i = 0; i < fnCall.paramCapacity; i++) {
+    stringInit(&fnCall.params[i].label, "");
+    stringInit(&fnCall.params[i].name, "");
+  }
 
   postponedCheckStack = functionStackInit();
 
@@ -65,25 +114,114 @@ bool semanticAnalysisInit(void) {
     return false;
   }
 
-  if (!stringInit(&fnCall.parameters, "")
-    || !stringInit(&fnDef.idname, "")
-    || !stringInit(&fnDef.param, "")
-    || !stringInit(&fnCall.idOrLabel, "")) {
+  if ( !stringInit(&fnDef.idname, "")
+    || !stringInit(&fnCall.idOrLabel, "")
+    || !stringInit(&fnCall.idname, "")) {
       semanticAnalysisDeinit();
       return false;
   }
 
-  symtableInsert(global_table, "readString", "f;S?;", 0);
-  symtableInsert(global_table, "readInt", "f;I?;", 0);
-  symtableInsert(global_table, "readDouble", "f;D?;", 0);
-  symtableInsert(global_table, "write", "f;D?;*;", 1);
-  symtableInsert(global_table, "Int2Double", "f;D;_,term:I;", 1);
-  symtableInsert(global_table, "Double2Int", "f;I;_,term:D;", 1);
-  symtableInsert(global_table, "length", "f;I;_,s:S;", 1);
-  symtableInsert(global_table, "substring",
-      "f;S?;of,s:S;startingAt,i:I,endingBefore,j:I", 1);
-  symtableInsert(global_table, "ord", "f;I;_,c:S;", 1);
-  symtableInsert(global_table, "chr", "f;S;_,i:I;", 1);
+  symtableInsert(global_table, "readString", (SymbolData) {
+      (Type) { 'S', true },
+      NULL, 0, false,
+      symbol_FN
+  });
+
+  symtableInsert(global_table, "readInt", (SymbolData) {
+      (Type) { 'I', true },
+      NULL, 0, false,
+      symbol_FN
+  });
+
+  symtableInsert(global_table, "readDouble", (SymbolData) {
+      (Type) { 'D', true },
+      NULL, 0, false,
+      symbol_FN
+  });
+
+  symtableInsert(global_table, "write", (SymbolData) {
+      (Type) { 'D', true },
+      NULL, 0, true,
+      symbol_FN
+  });
+
+  int2DoubleParam = malloc(sizeof(Param));
+  CHECK_MEMORY_ALLOC(int2DoubleParam);
+  stringInit(&int2DoubleParam->label, "_");
+  stringInit(&int2DoubleParam->name, "term");
+  int2DoubleParam->type = (Type) { 'I', false };
+
+  symtableInsert(global_table, "Int2Double", (SymbolData) {
+      (Type) { 'D', false },
+      int2DoubleParam, 1, false,
+      symbol_FN
+  });
+
+  double2IntParam = malloc(sizeof(Param));
+  CHECK_MEMORY_ALLOC(double2IntParam);
+  stringInit(&double2IntParam->label, "_");
+  stringInit(&double2IntParam->name, "term");
+  double2IntParam->type = (Type) { 'D', false };
+
+  symtableInsert(global_table, "Double2Int", (SymbolData) {
+      (Type) { 'D', false },
+      double2IntParam, 1, false,
+      symbol_FN
+  });
+
+  lengthParam = malloc(sizeof(Param));
+  CHECK_MEMORY_ALLOC(lengthParam);
+  stringInit(&lengthParam->label, "_");
+  stringInit(&lengthParam->name, "s");
+  lengthParam->type = (Type) { 'S', false };
+
+  symtableInsert(global_table, "length", (SymbolData) {
+      (Type) { 'I', false },
+      lengthParam, 1, false,
+      symbol_FN
+  });
+
+  substringParams = malloc(sizeof(Param) * 3);
+  CHECK_MEMORY_ALLOC(substringParams);
+  stringInit(&substringParams[0].label, "of");
+  stringInit(&substringParams[0].name, "s");
+  substringParams[0].type = (Type) { 'S', false };
+  stringInit(&substringParams[1].label, "startingAt");
+  stringInit(&substringParams[1].name, "i");
+  substringParams[1].type = (Type) { 'I', false };
+  stringInit(&substringParams[2].label, "endingBefore");
+  stringInit(&substringParams[2].name, "j");
+  substringParams[2].type = (Type) { 'I', false };
+
+  symtableInsert(global_table, "substring", (SymbolData) {
+      (Type) { 'I', false },
+      substringParams, 3, false,
+      symbol_FN
+  });
+
+  ordParam = malloc(sizeof(Param));
+  CHECK_MEMORY_ALLOC(ordParam);
+  stringInit(&ordParam->label, "_");
+  stringInit(&ordParam->name, "c");
+  ordParam->type = (Type) { 'I', false };
+
+  symtableInsert(global_table, "ord", (SymbolData) {
+      (Type) { 'I', false },
+      ordParam, 1, false,
+      symbol_FN
+  });
+
+  chrParam = malloc(sizeof(Param));
+  CHECK_MEMORY_ALLOC(chrParam);
+  stringInit(&chrParam->label, "_");
+  stringInit(&chrParam->name, "i");
+  chrParam->type = (Type) { 'S', false };
+
+  symtableInsert(global_table, "chr", (SymbolData) {
+      (Type) { 'S', false },
+      chrParam, 1, false,
+      symbol_FN
+  });
 
   return true;
 }
@@ -91,10 +229,21 @@ bool semanticAnalysisInit(void) {
 void semanticAnalysisDeinit(void) {
   global_freeSymtable();
   global_freeSymtableStack();
-  stringFree(&fnCall.parameters);
   stringFree(&fnDef.idname);
-  stringFree(&fnDef.param);
   stringFree(&fnCall.idOrLabel);
+
+  free(fnDef.params);
+  fnDef.params = NULL;
+
+  free(fnCall.params);
+  fnCall.params = NULL;
+
+  free(int2DoubleParam);
+  free(double2IntParam);
+  free(lengthParam);
+  free(substringParams);
+  free(ordParam);
+  free(chrParam);
 
   // call check was postponed but declaration never encountered
   if (postponedCheckStack->first != NULL) {
@@ -131,7 +280,7 @@ void analyseAssignHint(tokenType type) {
   if (!assignment.started) {
     return;
   }
-  assignment.hintedType = strToType(_typeShort(type));
+  assignment.hintedType = tokenToType(type);
 }
 
 void analyseAssignRightId(const char* idname) {
@@ -145,7 +294,7 @@ void analyseAssignRightId(const char* idname) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  assignment.type = strToType(it->type);
+  assignment.type = it->data.dataType;
 }
 
 void analyseAssignType(Type type) {
@@ -163,9 +312,8 @@ void analyseAssignEndExpr(void) {
       EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
 
-  String typeString = typeToStr(assignment.type);
-  global_insertTop(stringCStr(&assignment.idname), stringCStr(&typeString), 0);
-  stringFree(&typeString);
+  SymbolData data = { assignment.type, NULL, 0, false, (assignment.let ? symbol_LET : symbol_VAR) };
+  global_insertTop(stringCStr(&assignment.idname), data);
 
   assignment.started = false;
 }
@@ -175,9 +323,13 @@ void analyseAssignEndNodef(void) {
     return;
   }
 
-  String typeString = typeToStr(assignment.hintedType);
-  global_insertTop(stringCStr(&assignment.idname), stringCStr(&typeString), 0);
-  stringFree(&typeString);
+  if (!typeIsVariable(assignment.hintedType)) {
+    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
+
+  SymbolData data = { assignment.hintedType, NULL, 0, false,
+    (assignment.let ? symbol_LET : symbol_VAR) };
+  global_insertTop(stringCStr(&assignment.idname), data);
 
   assignment.started = false;
 }
@@ -192,9 +344,8 @@ void analyseAssignEndCall(Type returnedType) {
       EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
 
-  String typeString = typeToStr(returnedType);
-  global_insertTop(stringCStr(&assignment.idname), stringCStr(&typeString), 0);
-  stringFree(&typeString);
+  SymbolData data = { returnedType, NULL, 0, false, (assignment.let ? symbol_LET : symbol_VAR) };
+  global_insertTop(stringCStr(&assignment.idname), data);
 
   assignment.started = false;
 }
@@ -202,104 +353,63 @@ void analyseAssignEndCall(Type returnedType) {
 // function definition
 
 void analyseFunctionId(const char* idname) {
+  fnDef.paramCount = 0;
   NOT_FALSE(stringReinit(&fnDef.idname, idname));
-  symtableInsert(global_table, idname, "f;", 0);
-  ;
 }
 
 void analyseFunctionParamLabel(const char* label) {
-  stringClear(&fnDef.param);
-
-  if (label == NULL) {
-    NOT_FALSE(stringConcatChar(&fnDef.param, '_'));
-  }
-  else {
-    NOT_FALSE(stringConcatCStr(&fnDef.param, label));
-  }
-
-  NOT_FALSE(stringConcatChar(&fnDef.param, ','));
-  ;
+  fnDefGrow();
+  stringReinit(&fnDef.params[fnDef.paramCount].label, label);
 }
 
 void analyseFunctionParamName(const char* name) {
-  NOT_FALSE(stringConcatCStr(&fnDef.param, name));
-  NOT_FALSE(stringConcatChar(&fnDef.param, ':'));
-  ;
+  stringReinit(&fnDef.params[fnDef.paramCount].name, name);
 }
 
 void analyseFunctionParamType(tokenType type) {
-  const char* ts = _typeShort(type);
-  if (ts == NULL) {
-    EXIT_WITH_MESSAGE(SYNTAX_ANALYSIS_ERR);
-  }
-
-  NOT_FALSE(stringConcatCStr(&fnDef.param, ts));
+  fnDef.params->type = tokenToType(type);
   fnDef.paramCount++;
-  ;
 }
 
 void analyseFunctionType(tokenType type) {
-  const char* ts;
-
-  if (type == token_EMPTY) {
-    ts = "v";
-  }
-  else {
-    ts = _typeShort(type);
-    if (ts == NULL) {
-      EXIT_WITH_MESSAGE(SYNTAX_ANALYSIS_ERR);
-    }
-  }
-
-  symtableItem* fn = symtableSearch(global_table, stringCStr(&fnDef.idname));
-  NOT_NULL(fn);
-
-  String typeString;
-  NOT_FALSE(stringInit(&typeString, fn->type));
-  NOT_FALSE(stringConcatCStr(&typeString, ts));
-  NOT_FALSE(stringConcatChar(&typeString, ';'));
-
-  symtableInsert(global_table, stringCStr(&fnDef.idname), stringCStr(&typeString), 0);
-  ;
+  fnDef.type = tokenToType(type);
 }
-
 
 void analyseFunctionEnd(void) {
   symtableItem* fn = symtableSearch(global_table, stringCStr(&fnDef.idname));
-  NOT_NULL(fn);
 
-  String typeString;
-  NOT_FALSE(stringInit(&typeString, fn->type));
+  if (fn != NULL) {
+    EXIT_WITH_MESSAGE(3);
+  }
 
-  NOT_FALSE(stringConcat(&typeString, &fnDef.param));
+  NOT_FALSE(typeIsValid(fnDef.type));
 
-  symtableInsert(global_table, stringCStr(&fnDef.idname),
-                 stringCStr(&typeString), fnDef.paramCount);
+  SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, false, symbol_FN };
+  symtableInsert(global_table, stringCStr(&fnDef.idname), data);
 
-  _checkPostponed(stringCStr(&fnDef.idname), stringCStr(&typeString));
+  _checkPostponed(stringCStr(&fnDef.idname), data);
 
-  stringFree(&typeString);
   fnDef.paramCount = 0;
   stringClear(&fnDef.idname);
-  stringClear(&fnDef.param);
+  fnDef.type = (Type) { 0, false };
 }
 
 // function call
 
 void analyseCallFnId(const char* idname) {
+  stringClear(&fnCall.idname);
+  stringClear(&fnCall.idOrLabel);
+  fnCall.paramCount = 0;
   NOT_FALSE(stringReinit(&fnCall.idname, idname));
 }
 
 void analyseCallConst(tokenType type) {
-  const char* ts = _typeShort(type);
-  NOT_NULL(ts);
-
-  NOT_FALSE(stringConcatCStr(&fnCall.parameters, "_:"));
-  NOT_FALSE(stringConcatCStr(&fnCall.parameters, ts));
-  NOT_FALSE(stringConcatChar(&fnCall.parameters, ';'));
+  fnCallGrow();
+  fnCall.params[fnCall.paramCount].type = tokenToType(type);
 }
 
 void analyseCallIdOrLabel(const char* value) {
+  fnCallGrow();
   NOT_FALSE(stringReinit(&fnCall.idOrLabel, value));
 }
 
@@ -312,11 +422,11 @@ void analyseCallEpsAfterId(void) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  typeIsVariable(strToType(it->type));
+  typeIsVariable(it->data.dataType);
+  stringReinit(&fnCall.params[fnCall.paramCount].label, "_");
+  fnCall.params[fnCall.paramCount].type = it->data.dataType;
 
-  NOT_FALSE(stringConcatCStr(&fnCall.parameters, "_:"));
-  NOT_FALSE(stringConcatCStr(&fnCall.parameters, it->type));
-  NOT_FALSE(stringConcatChar(&fnCall.parameters, ';'));
+  fnCall.paramCount++;
 }
 
 void analyseCallIdAfterLabel(const char* idname) {
@@ -328,23 +438,22 @@ void analyseCallIdAfterLabel(const char* idname) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  typeIsVariable(strToType(it->type));
+  NOT_FALSE(typeIsVariable(it->data.dataType));
 
-  NOT_FALSE(stringConcat(&fnCall.parameters, &fnCall.idOrLabel));
-  NOT_FALSE(stringConcatChar(&fnCall.parameters, ':'));
-  NOT_FALSE(stringConcatCStr(&fnCall.parameters, it->type));
+  stringReinitS(&fnCall.params[fnCall.paramCount].label, &fnCall.idOrLabel);
+  fnCall.params[fnCall.paramCount].type = it->data.dataType;
 
-  ;
+  fnCall.paramCount++;
 }
+
 void analyseCallConstAfterLabel(tokenType type) {
   // idOrLabel was label
 
-  const char* ts = _typeShort(type);
-  NOT_NULL(ts);
+  Param* param = &fnCall.params[fnCall.paramCount];
+  stringReinitS(&param->label, &fnCall.idOrLabel);
+  param->type = tokenToType(type);
 
-  NOT_FALSE(stringConcat(&fnCall.parameters, &fnCall.idOrLabel));
-  NOT_FALSE(stringConcatChar(&fnCall.parameters, ':'));
-  NOT_FALSE(stringConcatCStr(&fnCall.parameters, ts));
+  fnCall.paramCount++;
 }
 
 Type analyseCallEnd(void) {
@@ -353,14 +462,21 @@ Type analyseCallEnd(void) {
   // function was called before declaration
   if (item == NULL) {
     // postpone semantic check until function declaration
-    NOT_FALSE(functionStackPush(postponedCheckStack, item->key,
-              stringCStr(&fnCall.parameters)));
+    NOT_FALSE(functionStackPush(postponedCheckStack, stringCStr(&fnCall.idname),
+              fnCall.params, fnCall.paramCount));
     return (Type) { 'u', false };
   }
 
-  _compareParams(stringCStr(&fnCall.parameters), item->type);
+  if (item->data.symbolType != symbol_FN) {
+    EXIT_WITH_MESSAGE(UNDEFINED_FN);
+  }
 
-  return strToType(item->type);
+  if (!item->data.variadic && !_compareParams(item->data.params, item->data.paramCount,
+    fnCall.params, fnCall.paramCount)) {
+      EXIT_WITH_MESSAGE(4);
+  }
+
+  return item->data.dataType;
 }
 
 // expression
@@ -406,7 +522,7 @@ Type analyseExprEnd(void) {
       ExprItem a = exprStackPop(stack);
       ExprItem b = exprStackPop(stack);
       Type resultType = _analyseOperation(it.value.operatorType, a, b);
-      exprStackPush(stack, (ExprItem) { .type=expr_CONST, .value={ .constType=resultType } });
+      exprStackPush(stack, (ExprItem) { .type=expr_INTERMEDIATE, .value={ .constType=resultType } });
     }
     else { // operand
       exprStackPush(stack, it);
@@ -414,10 +530,20 @@ Type analyseExprEnd(void) {
   }
 
   ExprItem top = exprStackPop(stack);
-  if (top.type != expr_CONST) {
+
+  if (stack->first != NULL) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
-  return top.value.constType;
+
+  if (top.type == expr_ID) {
+    return variableType(top.value.idName);
+  }
+
+  if (top.type == expr_INTERMEDIATE || top.type == expr_CONST) {
+    return top.value.constType;
+  }
+
+  EXIT_WITH_MESSAGE(INTERNAL_ERROR);
 }
 
 // reassignment
@@ -448,7 +574,7 @@ void analyseReassignRightId(const char* idname) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
   }
 
-  reassignment.type = strToType(it->type);
+  reassignment.type = it->data.dataType;
 }
 
 void analyseReassignEnd(void) {
@@ -462,7 +588,7 @@ void analyseReassignEnd(void) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  Type leftType = strToType(it->type);
+  Type leftType = it->data.dataType;
 
   if (!typeEq(leftType, reassignment.type)) {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
@@ -482,9 +608,12 @@ void analyseReassignEndType(Type rightType) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  // fail if it is let
+  if (it->data.symbolType != symbol_VAR) {
+    // is this the right exit code?
+    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
 
-  Type leftType = strToType(it->type);
+  Type leftType = it->data.dataType;
 
   if (!typeEq(leftType, rightType)) {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
@@ -495,196 +624,44 @@ void analyseReassignEndType(Type rightType) {
 
 // helper functions
 
-char* _getLabelType(char* params, char* out_label, char* out_type) {
-  // label
-  int i = 0;
-  while (*params != ':' && *params != '\0') {
-    out_label[i++] = *params;
-    params++;
-  }
-  out_label[i] = '\0';
-
-  // check premature end
-  if (*params == '\0' || *++params == '\0') {
-    return NULL;
+bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsigned callCount) {
+  if (fnCount != callCount) {
+    EXIT_WITH_MESSAGE(4);
   }
 
-  // type (single char)
-  *out_type = *params;
-
-  params++;
-
-  if (*params == ';') {
-    // return pointer first char of next label
-    return ++params;
-  }
-
-  if (*params == '\0') {
-    // return end of string
-    return params;
-  }
-
-  // bad format
-  return NULL;
-}
-
-char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type) {
-  // label
-  int i = 0;
-  while (*params != ',' && *params != '\0') {
-    out_label[i++] = *params;
-  }
-  out_label[i] = '\0';
-
-  // check premature end
-  if (*params == '\0') {
-    return NULL;
-  }
-
-  // ignore semarator
-  params++;
-
-  // name
-  i = 0;
-  while (*params != ':' && *params != '\0') {
-    out_name[i++] = *params;
-    params++;
-  }
-  out_name[i] = '\0';
-
-  // check premature end
-  if (*params == '\0' || *++params == '\0') {
-    return NULL;
-  }
-
-  // type (single char)
-  *out_type = *params;
-
-  if (*params == ';') {
-    // return pointer to first char of next label
-    return ++params;
-  }
-
-  if (*params == '\0') {
-    // return pointer to end of string
-    return params;
-  }
-
-  // bad format
-  return NULL;
-}
-
-void _compareParams(const char* callParams, const char* functionParams) {
-  if (*functionParams++ != 'f') {
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
-
-  if (*functionParams++ != ';') {
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
-
-  // ignore return type
-  functionParams++;
-
-  if (*functionParams++ != ';') {
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
-
-  // copy constant strings to get mutable strings
-  char* mutCallParams = malloc(strlen(callParams) + 1);
-  char* mutFunctionParams = malloc(strlen(functionParams) + 1);
-
-  if (mutCallParams == NULL || mutFunctionParams == NULL) {
-    free(mutCallParams);
-    free(mutFunctionParams);
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
-
-  strcpy(mutCallParams, callParams);
-  strcpy(mutFunctionParams, functionParams);
-
-  char* callLabel = malloc(strlen(callParams));
-  char* fnLabel = malloc(strlen(functionParams));
-  char* fnName = malloc(strlen(functionParams));
-  char callType;
-  char fnType;
-  error_codes result = SUCCESS;
-
-  if (callLabel == NULL || fnLabel == NULL || fnName == NULL) {
-    result = INTERNAL_ERROR;
-    goto end;
-  }
-
-  // cp and fp will be modified, mutCallParams and mutFunctionParams must be kept for free
-  char* cp = mutCallParams;
-  char* fp = mutFunctionParams;
-
-  while (*cp != '\0' && *fp != '\0') {
-    cp = _getLabelType(cp, callLabel, &callType);
-    fp = _getLabelNameType(fp, fnLabel, fnName, &fnType);
-
-    // params were in wrong format
-    if (cp == NULL || fp == NULL) {
-      result = INTERNAL_ERROR;
-      goto end;
+  for (unsigned i = 0; i < fnCount; i++) {
+    if (!stringEq(&fnParams[i].label, &callParams[i].label)) {
+      false;
     }
 
-    if (strcmp(callLabel, fnLabel) != 0 || callType != fnType) {
-      result = SEMANTIC_ERR;
-      goto end;
+    if (fnParams[i].type.base != callParams[i].type.base
+      && !(fnParams[i].type.nullable && callParams[i].type.base == 'N')) {
+      false;
+    }
+
+    if (!fnParams[i].type.nullable && fnParams[i].type.nullable) {
+      false;
     }
   }
 
-end:
-  free(mutCallParams);
-  free(mutFunctionParams);
-  free(callLabel);
-  free(fnLabel);
-  free(fnName);
-
-  if (result != SUCCESS) {
-    EXIT_WITH_MESSAGE(result);
-  }
+  return true;
 }
 
-const char* _typeShort(tokenType type) {
-  switch (type) {
-    case token_TYPE_STRING:
-    case token_TYPE_STRING_LINE:
-      return "S";
-
-    case token_TYPE_STRING_Q:
-      return "S?";
-
-    case token_CONST_WHOLE_NUMBER:
-    case token_TYPE_INT:
-      return "I";
-
-    case token_TYPE_INT_Q:
-      return "I?";
-
-    case token_CONST_SCIENTIFIC_NOTATION:
-    case token_TYPE_DOUBLE:
-      return "D";
-
-    case token_TYPE_DOUBLE_Q:
-      return "D?";
-
-    default:
-      return NULL;
-  }
-}
-
-void _checkPostponed(const char* fnId, const char* fnType) {
+void _checkPostponed(const char* fnId, SymbolData data) {
   FunctionStackItem* fn = functionStackRemove(postponedCheckStack, fnId);
 
   // function was called with wrong arguments
-  if (fn != NULL && strcmp(fn->params, fnType) != 0) {
-    EXIT_WITH_MESSAGE(UNDEFINED_FN);
+  if (fn != NULL) {
+    if (!_compareParams(fn->params, fn->paramCount, data.params, data.paramCount)) {
+      EXIT_WITH_MESSAGE(UNDEFINED_FN);
+    }
+
+    // function was called with correct arguments
+    free(fn->params);
+    fn->params = NULL;
   }
 
-  // function was not called or it was called with correct arguments
-  ;
+  // function was not called
 }
 
 Type strToType(const char* typeStr) {
@@ -713,7 +690,11 @@ Type variableType(const char* idname) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  return strToType(it->type);
+  if (it->data.symbolType == symbol_FN) {
+    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
+  }
+
+  return it->data.dataType;
 }
 
 Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
@@ -721,11 +702,11 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
-  Type typeA = (a.type == expr_CONST || a.type == expr_INTERMEDIATE)
+  Type typeB = (a.type == expr_CONST || a.type == expr_INTERMEDIATE)
     ? a.value.constType
     : variableType(a.value.idName);
 
-  Type typeB = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
+  Type typeA = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
     ? b.value.constType
     : variableType(b.value.idName);
 
@@ -784,4 +765,32 @@ String typeToStr(Type type) {
   return result;
 }
 
+Type tokenToType(tokenType token) {
+  switch (token) {
+    case token_CONST_WHOLE_NUMBER:
+    case token_TYPE_INT:
+      return (Type) { 'I', false };
+
+    case token_CONST_DEC_NUMBER:
+    case token_CONST_SCIENTIFIC_NOTATION:
+    case token_TYPE_DOUBLE:
+      return (Type) { 'D', false };
+
+    case token_TYPE_STRING_LINE:
+    case token_TYPE_STRING:
+      return (Type) { 'S', false };
+
+    case token_TYPE_INT_Q:
+      return (Type) { 'I', true };
+
+    case token_TYPE_DOUBLE_Q:
+      return (Type) { 'D', true };
+
+    case token_TYPE_STRING_Q:
+      return (Type) { 'S', true };
+
+    default:
+      EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+  }
+}
 
