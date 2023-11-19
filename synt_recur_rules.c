@@ -70,7 +70,8 @@ bool rule_EXPRESSION() {
     bool retVal = precedenceParser();
     Type exprType = analyseExprEnd();
     analyseAssignType(exprType);
-    analyseAssignEnd();
+    analyseAssignEndExpr();
+    analyseReassignEndType(exprType);
     return retVal;
 }
 
@@ -93,7 +94,6 @@ bool rule_PROGRAM() {
     }
     else if (t.type == token_EOF) {
         RLOG("EOF\n");
-        symtableStackPop(global_symtableStack);
         return true;
     }
 
@@ -136,6 +136,8 @@ bool rule_STATEMENT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<statement> -> id <after_id>\n");
+        analyseReassignId(t.value.STR_VAL);
+        analyseCallFnId(t.value.STR_VAL);
         lex_token idToken = t;
         getToken();
         return rule_AFTER_ID(idToken);
@@ -168,7 +170,6 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        // symtable for this functions local variables
         symtableStackPush(global_symtableStack);
 
         if (rule_FUNC_STAT_LIST() == false) {
@@ -178,7 +179,6 @@ bool rule_STATEMENT() {
             return false;
         }
 
-        // pop symtable for local variables
         symtableStackPop(global_symtableStack);
 
         getToken();
@@ -197,9 +197,13 @@ bool rule_STATEMENT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
+
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+
+        symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -216,9 +220,13 @@ bool rule_STATEMENT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
+
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
+
+        symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -240,9 +248,13 @@ bool rule_STATEMENT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
+
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+
+        symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -289,13 +301,14 @@ bool rule_BRACK_STATEMENT() {
     case token_LET:
     case token_VAR:
         RLOG("<brack_statement> -> <let_or_var> <var_assignment>\n");
+        analyseAssignBegin();
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<brack_statement> -> id <after_id>\n");
-        lex_token idToken = t;
+        analyseReassignId(t.value.STR_VAL);
         getToken();
 
-        return rule_AFTER_ID(idToken);
+        return rule_AFTER_ID();
     case token_IF:
         RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
@@ -400,7 +413,6 @@ bool rule_VAR_ASSIGNMENT() {
     if (t.type == token_COLON) {
         RLOG("<var_assignment> -> : type <val_assignment>\n");
         getToken();
-        /* (analyseTypeHint(t.type)); */
         if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
         }
@@ -446,6 +458,7 @@ bool rule_VAL_ASSIGNMENT() {
         if (t.type == token_ID) {
             RLOG("<val_assignment> -> = id <fn_or_exp>\n");
             analyseAssignRightId(t.value.STR_VAL);
+            analyseCallFnId(t.value.STR_VAL);
             stash = t;
             getToken();
             LEX_ERR_CHECK();
@@ -464,7 +477,7 @@ bool rule_VAL_ASSIGNMENT() {
     }
     // <val_assigment> -> EPSILON
     else if (EOL_flag) {
-        analyseAssignEndNoVal();
+        analyseAssignEndNodef();
         RLOG("<val_assignment> -> EPSILON\n");
         return true;
     }
@@ -475,7 +488,8 @@ bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
         RLOG("<fn_or_exp> -> id\n");
-        analyseAssignEnd();
+        analyseAssignEndExpr();
+        analyseReassignEnd();
         stash.type = token_EMPTY;
         return true;
     }
@@ -493,6 +507,11 @@ bool rule_FN_OR_EXP() {
         if (rule_INPUT_PARAM_LIST() == false) {
             return false;
         }
+
+        Type returnedType = analyseCallEnd();
+        analyseAssignEndCall(returnedType);
+        analyseReassignEndType(returnedType);
+
         if (t.type != token_PARENTHESES_R) {
             return false;
         }
@@ -503,7 +522,7 @@ bool rule_FN_OR_EXP() {
     return false;
 }
 
-bool rule_AFTER_ID(lex_token idToken) {
+bool rule_AFTER_ID() {
     // <after_id> -> = id <fn_or_exp> 
     if (t.type == token_ASSIGN) {
         getToken();
@@ -511,6 +530,7 @@ bool rule_AFTER_ID(lex_token idToken) {
 
         if (t.type == token_ID) {
             RLOG("<after_id> -> = id <fn_or_exp>\n");
+            analyseReassignRightId(t.value.STR_VAL);
             lex_token lastToken = t;
             getToken();
             stash = lastToken;
@@ -537,6 +557,7 @@ bool rule_AFTER_ID(lex_token idToken) {
         if (t.type != token_PARENTHESES_R) {
             return false;
         }
+        (void) analyseCallEnd();
         getToken();
         return true;
     }
@@ -625,6 +646,7 @@ bool rule_ID_OR_CONST() {
     if (t.type == token_ID) {
         RLOG("<id_or_const> -> id\n");
         LEX_ERR_CHECK();
+        analyseCallIdAfterLabel(t.value.STR_VAL);
         getToken();
 
         return true;

@@ -35,4 +35,6 @@ void global_generateInstruction();
 symtableItem* global_symbolSearch(const char* key);
 void global_insertTop(const char* key, const char* type, int data);
 
+const char* errorToString(error_codes err);
+
 #endif // IFJ23_GLOBAL_VARIABLES_H

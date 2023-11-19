@@ -58,28 +58,29 @@ void analyseAssignId(const char* idname);
 void analyseAssignHint(tokenType type);
 void analyseAssignRightId(const char* idname);
 void analyseAssignType(Type type);
-void analyseAssignEnd(void);
-void analyseAssignEndNoVal(void);
+void analyseAssignEndExpr(void);
+void analyseAssignEndNodef(void);
+void analyseAssignEndCall(Type returnedType);
 
-/* void analyseCallId(const char* idname); */
-/* void analyseCallLabel(const char* label); */
-/* void analyseCallParam(const char* paramIdname); */
-/* void analyseCallParamConst(const char* data); */
-/* void analyseCallEpsilon(void); */
-
-
+void analyseCallFnId(const char* idname);
 void analyseCallConst(tokenType type);
 void analyseCallIdOrLabel(const char* value);
 void analyseCallEpsAfterId(void);
 void analyseCallIdAfterLabel(const char* idname);
 void analyseCallConstAfterLabel(tokenType type);
-void analyseCallEnd(void);
+Type analyseCallEnd(void);
 
 void analyseExprBegin(void);
 void analyseExprOperand(lex_token token);
 void analyseExprOperator(lex_token token);
 void analyseExprDefault();
 Type analyseExprEnd(void);
+
+void analyseReassignStart();
+void analyseReassignId(const char* idname);
+void analyseReassignRightId(const char* idname);
+void analyseReassignEnd(void);
+void analyseReassignEndType(Type type);
 
 char* _getLabelType(char* params, char* out_label, char* out_type);
 char* _getLabelNameType(char* params, char* out_label, char* out_name, char* out_type);

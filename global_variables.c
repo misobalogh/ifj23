@@ -94,6 +94,36 @@ bool global_addVar(char* id, char* type, int value) {
     return true;
 }
 
+const char* errorToString(error_codes err) {
+  switch (err) {
+  case SUCCESS:
+    return "Program is syntactically and semantically correct";
+  case LEX_ANALYSIS_ERR:
+    return "Lexical error";
+  case SYNTAX_ANALYSIS_ERR:
+    return "Syntax error";
+  case UNDEFINED_FN:
+    return "Semantic error (undefined function or variable redefinition)";
+  case WRONG_PARAM:
+    return "Semantic error (function call)";
+  case UNDEFINED_VAR:
+    return "Semantic error (use of undefined or unitialized variable)";
+  case RETURN_EXPRESSION_ERR:
+    return "Semantic error (missing or excess expression in return statement)";
+  case TYPE_COMPATIBILITY_ERR:
+    return "Semantic error (type compatibility)";
+  case TYPE_INFERENCE_ERR:
+    return "Semantic error (type cannot be infered)";
+  case SEMANTIC_ERR:
+    return "Semantci error";
+  case INTERNAL_ERROR:
+    return "Internal error";
+  }
+
+  return "Undefined error code";
+}
+
+
 /**
  * generate instruction for interpret from global variable
  */

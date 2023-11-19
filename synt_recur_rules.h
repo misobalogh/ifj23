@@ -25,7 +25,7 @@ bool rule_WITH_NAME();
 bool rule_ID_OR_CONST();
 bool rule_LET_OR_VAR();
 bool rule_EXPRESSION();
-bool rule_AFTER_ID(lex_token idToken);
+bool rule_AFTER_ID();
 bool rule_FN_OR_EXP();
 bool rule_ID_OR_UNDERSCORE();
 bool rule_BRACK_STATEMENT();
