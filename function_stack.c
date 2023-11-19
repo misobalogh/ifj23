@@ -44,7 +44,7 @@ bool functionStackPush(FunctionStack* stack, const char* name, Param* params, un
     return false;
   }
 
-  stack->first->params = malloc(count);
+  stack->first->params = malloc(sizeof(Param) * count);
   if (stack->first->params == NULL) {
     free(stack->first->name);
     free(stack->first);
@@ -54,6 +54,7 @@ bool functionStackPush(FunctionStack* stack, const char* name, Param* params, un
 
   strcpy(stack->first->name, name);
   memcpy(stack->first->params, params, sizeof(Param) * count);
+  stack->first->paramCount = count;
   stack->first->next = first;
 
   return true;
@@ -61,10 +62,10 @@ bool functionStackPush(FunctionStack* stack, const char* name, Param* params, un
 
 FunctionStackItem* functionStackRemove(FunctionStack* stack, const char* name) {
   FunctionStackItem* current = stack->first;
-  FunctionStackItem* prev = stack->first;
+  FunctionStackItem* prev = NULL;
 
   while (current != NULL) {
-    if (strcmp(current->name, name)) {
+    if (strcmp(current->name, name) == 0) {
       if (prev == NULL) {
         stack->first = current->next;
       }
