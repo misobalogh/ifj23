@@ -12,7 +12,7 @@
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
-#include "function_stack.h"
+#include "function_list.h"
 #include "expr.h"
 
 #define NOT_FALSE(expr) do { if (!(expr)) EXIT_WITH_MESSAGE(INTERNAL_ERROR); } while (0)
