@@ -1,10 +1,16 @@
+/*
+ * Implementace překladače imperativního jazyka IFJ23
+ * Michal Cenek xcenek04
+ */
+
+
 #include "function_stack.h"
 #include "symtable.h"
 #include <string.h>
 #include <malloc.h>
 
-FunctionStack* functionStackInit(void) {
-  FunctionStack* stack = malloc(sizeof(FunctionStack));
+FunctionLList* functionStackInit(void) {
+  FunctionLList* stack = malloc(sizeof(FunctionLList));
   if (stack == NULL) {
     return NULL;
   }
@@ -14,11 +20,11 @@ FunctionStack* functionStackInit(void) {
   return stack;
 }
 
-void functionStackDeinit(FunctionStack* stack) {
-  FunctionStackItem* current = stack->first;
+void functionStackDeinit(FunctionLList* stack) {
+  FunctionLListItem* current = stack->first;
 
   while (current != NULL) {
-    FunctionStackItem* next = stack->first->next;
+    FunctionLListItem* next = stack->first->next;
 
     free(current->name);
     free(current->params);
@@ -29,10 +35,10 @@ void functionStackDeinit(FunctionStack* stack) {
   free(stack);
 }
 
-bool functionStackPush(FunctionStack* stack, const char* name, Param* params, unsigned count) {
-  FunctionStackItem* first = stack->first;
+bool functionStackPush(FunctionLList* stack, const char* name, Param* params, unsigned count) {
+  FunctionLListItem* first = stack->first;
 
-  stack->first = malloc(sizeof(FunctionStackItem));
+  stack->first = malloc(sizeof(FunctionLListItem));
   if (stack->first == NULL) {
     return false;
   }
@@ -60,9 +66,9 @@ bool functionStackPush(FunctionStack* stack, const char* name, Param* params, un
   return true;
 }
 
-FunctionStackItem* functionStackRemove(FunctionStack* stack, const char* name) {
-  FunctionStackItem* current = stack->first;
-  FunctionStackItem* prev = NULL;
+FunctionLListItem* functionStackRemove(FunctionLList* stack, const char* name) {
+  FunctionLListItem* current = stack->first;
+  FunctionLListItem* prev = NULL;
 
   while (current != NULL) {
     if (strcmp(current->name, name) == 0) {

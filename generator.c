@@ -1,3 +1,9 @@
+/*
+ * Implementace překladače imperativního jazyka IFJ23
+ * Michal Cenek xcenek04
+ */
+
+
 #include "generator.h"
 #include "global_variables.h"
 #include "dynamic_string.h"

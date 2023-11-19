@@ -1,3 +1,9 @@
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ23
+ * Authors: Michal Cenek xcenek04
+*/
+
+
 #include "symtablestack.h"
 #include <malloc.h>
 #include "global_variables.h"

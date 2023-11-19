@@ -53,8 +53,8 @@ static struct {
   Type type;
 } reassignment;
 
-static ExprList* exprList;
-static FunctionStack* postponedCheckStack;
+static ExprArray* exprList;
+static FunctionLList* postponedCheckStack;
 
 Type lastExprType;
 
@@ -683,7 +683,7 @@ bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsign
 }
 
 void _checkPostponed(const char* fnId, SymbolData data) {
-  FunctionStackItem* fn = functionStackRemove(postponedCheckStack, fnId);
+  FunctionLListItem* fn = functionStackRemove(postponedCheckStack, fnId);
 
   // function was called with wrong arguments
   if (fn != NULL) {

@@ -1,3 +1,9 @@
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ23
+ * Authors: Michal Cenek xcenek04
+*/
+
+
 #ifndef SYMTABLESTACK_H
 #define SYMTABLESTACK_H
 

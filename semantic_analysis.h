@@ -1,3 +1,11 @@
+
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ23
+ * Authors: Michal Cenek xcenek04
+*/
+
+
+
 #ifndef SEMANTIC_ANALYSIS_H
 #define SEMANTIC_ANALYSIS_H
 

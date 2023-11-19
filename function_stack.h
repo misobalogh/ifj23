@@ -1,25 +1,30 @@
+
+/*
+ * Implementace překladače imperativního jazyka IFJ23
+ * Michal Cenek xcenek04
+ */
+
+
 #ifndef FUNCTION_STACK_H
 #define FUNCTION_STACK_H
 
 #include "symtable.h"
 #include <stdbool.h>
 
-// stack je nejjednodušší ale hashovací tabulka by byla nejefektivnější, pokud bude čas přepsat
-
-typedef struct FunctionStackItem {
+typedef struct FunctionLListItem {
   char* name;
   Param* params;
   unsigned paramCount;
-  struct FunctionStackItem* next;
-} FunctionStackItem;
+  struct FunctionLListItem* next;
+} FunctionLListItem;
 
-typedef struct FunctionStack {
-  FunctionStackItem* first;
-} FunctionStack;
+typedef struct FunctionLList {
+  FunctionLListItem* first;
+} FunctionLList;
 
-FunctionStack* functionStackInit(void);
-FunctionStackItem* functionStackRemove(FunctionStack* stack, const char* fnName);
-void functionStackDeinit(FunctionStack* stack);
-bool functionStackPush(FunctionStack* stack, const char* name, Param* params, unsigned count);
+FunctionLList* functionStackInit(void);
+FunctionLListItem * functionStackRemove(FunctionLList* stack, const char* fnName);
+void functionStackDeinit(FunctionLList* stack);
+bool functionStackPush(FunctionLList* stack, const char* name, Param* params, unsigned count);
 
 #endif
