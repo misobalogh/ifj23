@@ -350,7 +350,7 @@ void analyseAssignEnd(void) {
   symtableItem* it = global_searchTop(stringCStr(&assignment.idname));
   if (it != NULL) {
     // multiple definitions in single scope not allowed
-    EXIT_WITH_MESSAGE(SEMANTIC_ERR);
+    EXIT_WITH_MESSAGE(3);
   }
 
   SymbolData data;
@@ -628,8 +628,12 @@ void analyseReassignEnd(void) {
     EXIT_WITH_MESSAGE(SEMANTIC_ERR);
   }
 
+  if (it->data.dataType.base != reassignment.type.base
+    || (!it->data.dataType.nullable && reassignment.type.nullable)) {
+      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
+
   SymbolData  data = it->data;
-  data.dataType = reassignment.type;
   global_insertTop(it->key, data);
 
   prepareStatement();
@@ -730,7 +734,7 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
     : variableType(b.value.idName);
 
   if (typeA.base == 'u' || typeB.base == 'u') {
-    /* return (Type) { 'u', false }; */
+    return (Type) { 'u', false };
   }
 
   if (optype == op_CONCAT) {
