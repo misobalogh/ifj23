@@ -722,7 +722,10 @@ void _checkPostponed(const char* fnId, SymbolData data) {
 
     // function was called with correct arguments
     free(fn->params);
+    free(fn->name);
+    fn->name = NULL;
     fn->params = NULL;
+    free(fn);
   }
 
   // function was not called

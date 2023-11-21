@@ -43,7 +43,7 @@ bool functionStackPush(FunctionLList* stack, const char* name, Param* params, un
     return false;
   }
 
-  stack->first->name = malloc(strlen(name));
+  stack->first->name = malloc(strlen(name) + 1);
   if (stack->first->name == NULL) {
     free(stack->first);
     stack->first = first;
