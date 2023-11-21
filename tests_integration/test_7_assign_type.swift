@@ -1,3 +1,3 @@
 
  let a = 3
-let b = "string"
+let b = a + "string"

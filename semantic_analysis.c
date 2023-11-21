@@ -55,13 +55,17 @@ static struct {
   Type type;
 } reassignment;
 
+static bool returnStarted;
+
 static ExprArray* exprList;
 static FunctionLList* postponedCheckStack;
 
-Type lastExprType;
+static Type lastExprType;
 
-Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
+static Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
   * ordParam, * chrParam;
+
+static String currentFunction;
 
 void prepareStatement(void) {
   iflet.started = false;
@@ -87,6 +91,8 @@ void prepareStatement(void) {
   reassignment.type = (Type) { 'u', false };
 
   lastExprType = (Type) { 'u', false };
+
+  returnStarted = false;
 }
 
 static void fnCallGrow(void) {
@@ -123,6 +129,8 @@ bool semanticAnalysisInit(void) {
   lastExprType =  (Type) { 'u', false };
 
   exprList = exprListInit();
+
+  stringInit(&currentFunction, "");
 
   fnDef.paramCapacity = 10;
   fnDef.params = malloc(sizeof(Param) * fnDef.paramCapacity);
@@ -401,7 +409,32 @@ void analyseFunctionParamType(tokenType type) {
 }
 
 void analyseFunctionType(tokenType type) {
-  fnDef.type = tokenToType(type);
+  if (type == token_EMPTY) {
+    fnDef.type = (Type) { 'v', false };
+  }
+  else {
+    fnDef.type = tokenToType(type);
+  }
+}
+
+void analyseReturnBegin(void) {
+  returnStarted = true;
+}
+
+void analyseReturn(Type type) {
+  if (!returnStarted) {
+    return;
+  }
+
+  symtableItem* it = symtableSearch(global_table, stringCStr(&currentFunction));
+  NOT_NULL(it);
+
+  if (type.base != it->data.dataType.base
+    || (!it->data.dataType.nullable && type.nullable)) {
+      EXIT_WITH_MESSAGE(4);
+  }
+
+  returnStarted = false;
 }
 
 void analyseFunctionEnd(void) {
@@ -870,3 +903,8 @@ void pushIfLet(void) {
 void analyseReassignAbort(void) {
   assignment.started = false;
 }
+
+void setCurrentFunction(String* idname) {
+  stringSetS(&currentFunction, idname);
+}
+

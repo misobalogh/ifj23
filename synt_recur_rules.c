@@ -67,6 +67,8 @@ bool rule_EXPRESSION() {
     }
     Type exprType = analyseExprEnd();
 
+    analyseReturn(exprType);
+
     analyseAssignType(exprType);
     analyseAssignEnd();
 
@@ -180,12 +182,15 @@ bool rule_STATEMENT() {
         symtableStackPush(global_symtableStack);
         pushFnParams(stringCStr(&idname));
 
+        setCurrentFunction(&idname);
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         if (t.type != token_BRACKET_R) {
             return false;
         }
+        stringClear(&idname);
+        setCurrentFunction(&idname);
 
         symtableStackPop(global_symtableStack);
 
@@ -938,6 +943,8 @@ bool rule_RETURN_STAT() {
 }
 
 bool rule_RET_VAL() {
+    analyseReturnBegin();
+
     // <ret_val> -> <expression>
     if (t.type == token_ID
         || t.type == token_PARENTHESES_L
@@ -952,6 +959,7 @@ bool rule_RET_VAL() {
     // <ret_value> -> EPSILON
     else if (EOL_flag) {
         RLOG("<ret_val> -> EPSILON\n");
+        analyseReturn((Type) { 'v', false });
         return true;
     }
     return false;
