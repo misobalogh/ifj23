@@ -780,6 +780,13 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
     ? b.value.constType
     : variableType(b.value.idName);
 
+  if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
+    typeA.base = 'D';
+  }
+  else if (typeA.base == 'D' && typeB.base == 'I' && a.type == expr_CONST) {
+    typeB.base = 'D';
+  }
+
   if (typeA.base == 'u' || typeB.base == 'u') {
     return (Type) { 'u', false };
   }
