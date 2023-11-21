@@ -45,7 +45,8 @@ typedef enum OperatorType {
     op_MORE,
     op_LESS_EQ,
     op_MORE_EQ,
-    op_DEFAULT
+    op_DEFAULT,
+    op_UNWRAP
 } OperatorType;
 
 OperatorType tokenToOperator(tokenType type);

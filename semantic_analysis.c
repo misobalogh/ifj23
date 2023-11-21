@@ -574,6 +574,8 @@ void analyseExprDefault(void) {
   exprListAddOperator(exprList, op_DEFAULT);
 }
 
+
+
 Type analyseExprEnd(void) {
   ExprStack* stack = exprStackInit();
 
@@ -581,10 +583,21 @@ Type analyseExprEnd(void) {
     ExprItem it = exprList->data[i];
 
     if (it.type == expr_OPERATOR) {
-      ExprItem a = exprStackPop(stack);
-      ExprItem b = exprStackPop(stack);
-      Type resultType = _analyseOperation(it.value.operatorType, a, b);
-      exprStackPush(stack, (ExprItem) { .type=expr_INTERMEDIATE, .value={ .constType=resultType } });
+      Type resultType;
+
+      if (it.value.operatorType == op_UNWRAP) {
+        ExprItem a = exprStackPop(stack);
+        resultType = _analyseUnwrap(a);
+      }
+      else {
+        ExprItem a = exprStackPop(stack);
+        ExprItem b = exprStackPop(stack);
+        resultType = _analyseOperation(it.value.operatorType, a, b);
+      }
+      exprStackPush(stack, (ExprItem) {
+          .type=expr_INTERMEDIATE,
+          .value={ .constType=resultType }
+        });
     }
     else { // operand
       exprStackPush(stack, it);
@@ -806,6 +819,23 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   }
 
   EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+}
+
+Type _analyseUnwrap(ExprItem e) {
+  if (e.type == expr_OPERATOR) {
+    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+  }
+
+  Type t = (e.type == expr_CONST || e.type == expr_INTERMEDIATE)
+    ? e.value.constType
+    : variableType(e.value.idName);
+
+  if (t.base == 'N') {
+    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
+
+  t.nullable = false;
+  return t;
 }
 
 String typeToStr(Type type) {

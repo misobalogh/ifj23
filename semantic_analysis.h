@@ -114,5 +114,6 @@ Type strToType(const char* typeStr);
 String typeToStr(Type type);
 Type tokenToType(tokenType token);
 Type variableType(const char* idname);
+Type _analyseUnwrap(ExprItem e);
 
 #endif

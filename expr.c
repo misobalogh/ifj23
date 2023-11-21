@@ -34,6 +34,8 @@ OperatorType tokenToOperator(tokenType type) {
       return op_LESS_EQ;
     case token_MORE_EQ:
       return op_MORE_EQ;
+    case token_FORCE_UNWRAP:
+      return op_UNWRAP;
     default:
       exit(99);
   }

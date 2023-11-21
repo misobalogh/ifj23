@@ -153,6 +153,9 @@ bool reduce(stack* s) {
         first->token.type == token_FORCE_UNWRAP &&
         second->token.type == token_NONTERMINAL) {
         PLOG("---rule E!---");
+
+        analyseExprOperator(first->token);
+
         rule_ID_FORCE_UNWRAP(s);
         stackPrint(s);
     }
