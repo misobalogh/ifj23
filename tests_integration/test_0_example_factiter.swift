@@ -8,7 +8,7 @@ if let a {
     }
     else {
         var a = Int2Double(a)
-        var vysl : Double = 1
+        var vysl : Double = 1.0
         while (a > 0.0) {
             vysl = vysl * a
             a = a - 1
