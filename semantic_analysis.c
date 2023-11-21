@@ -79,7 +79,7 @@ void prepareStatement(void) {
   stringClear(&assignment.idname);
   stringClear(&assignment.rightId);
   assignment.hintedType = (Type) { 0, false };
-  assignment.type = (Type) { 'u', false };
+  assignment.type = (Type) { 0, false };
 
   reassignment.started = false;
   stringClear(&reassignment.idname);
@@ -304,7 +304,7 @@ void analyseAssignBegin(void) {
   stringClear(&assignment.idname);
   stringClear(&assignment.rightId);
   assignment.hintedType = (Type) { 0, false };
-  assignment.type = (Type) { 'u', false };
+  assignment.type = (Type) { 0, false };
 }
 
 void analyseAssignLet(bool let) {
@@ -353,28 +353,29 @@ void analyseAssignEnd(void) {
     EXIT_WITH_MESSAGE(SEMANTIC_ERR);
   }
 
+  SymbolData data;
+  SymbolType st = assignment.let ? symbol_LET : symbol_VAR;
+
+  // type was hinted and actual type could not be inffered
+  if (typeIsValue(assignment.hintedType) && !typeIsValue(assignment.type)) {
+    if (assignment.let && assignment.hintedType.base == 0 && !assignment.hintedType.nullable) {
+      // let is initialized to null by default, must be nullable
+      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+    }
+
+    data = (SymbolData) { assignment.hintedType, NULL, 0, false, st };
+  }
   // type was hinted and actual type matches or
-  // type was hinted and actual type could not be inffered or
-  // type was not hinted and actual type is valid type
-  if ((typeIsValue(assignment.hintedType) && (assignment.type.base == 'u'
-      || typeEq(assignment.hintedType, assignment.type)))
-    || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
-      SymbolData data = {
-        assignment.type, NULL, 0, false,
-        (assignment.let ? symbol_LET : symbol_VAR)
-      };
-
-      // initilize let to nil if no value was provided
-      if (assignment.let && !typeIsValue(assignment.type) && assignment.hintedType.base == 0) {
-        data.dataType = (Type) { 'N', false };
-      }
-
-      global_insertTop(stringCStr(&assignment.idname), data);
+  // type was not inted and actual type is valid type
+  else if ((typeIsValue(assignment.hintedType) && typeEq(assignment.hintedType, assignment.type))
+      || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
+    data = (SymbolData) { assignment.type, NULL, 0, false, st };
   }
   else {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
 
+  global_insertTop(stringCStr(&assignment.idname), data);
   prepareStatement();
 }
 
@@ -619,8 +620,11 @@ void analyseReassignEnd(void) {
 
   symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname));
 
+  if (it == NULL) {
+    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
+  }
   // only var can be reassigned
-  if (it == NULL || it->data.symbolType != symbol_VAR)  {
+  if (it->data.symbolType != symbol_VAR)  {
     EXIT_WITH_MESSAGE(SEMANTIC_ERR);
   }
 

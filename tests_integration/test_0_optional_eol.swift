@@ -1,5 +1,5 @@
-let a: Int
-var id: Int
+let a: Int?
+var id: Int?
 
 id
 
