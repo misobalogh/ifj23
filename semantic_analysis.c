@@ -468,11 +468,12 @@ void analyseCallFnId(const char* idname) {
 void analyseCallConst(tokenType type) {
   fnCallGrow();
   fnCall.params[fnCall.paramCount].type = tokenToType(type);
+  fnCall.paramCount++;
 }
 
 void analyseCallIdOrLabel(const char* value) {
   fnCallGrow();
-  (stringSet(&fnCall.idOrLabel, value));
+  stringSet(&fnCall.idOrLabel, value);
 }
 
 void analyseCallEpsAfterId(void) {
