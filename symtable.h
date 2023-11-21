@@ -48,10 +48,6 @@ typedef struct SymbolData {
  * 
  * @param key name of variable
  * @param type  type of variable, for functions it is first letter of return type,
- * function type is f;RETURN_TYPE;LABEL_1,NAME_1:TYPE_1;...;LABEL_N,NAME_N:TYPE_N
- * LABEL_k can be _,
- * TYPE_k is I, D or S,
- * RETURN_TYPE is I, D, S, or v where v means no return type (void)
 
  * @param data value of variable, for functions it is number of parameters
  */

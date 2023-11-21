@@ -78,7 +78,7 @@ void prepareStatement(void) {
   assignment.started = false;
   stringClear(&assignment.idname);
   stringClear(&assignment.rightId);
-  assignment.hintedType = (Type) { 'u', false };
+  assignment.hintedType = (Type) { 0, false };
   assignment.type = (Type) { 'u', false };
 
   reassignment.started = false;
@@ -303,7 +303,7 @@ void analyseAssignBegin(void) {
   assignment.let = false;
   stringClear(&assignment.idname);
   stringClear(&assignment.rightId);
-  assignment.hintedType = (Type) { 'u', false };
+  assignment.hintedType = (Type) { 0, false };
   assignment.type = (Type) { 'u', false };
 }
 
@@ -358,11 +358,17 @@ void analyseAssignEnd(void) {
   // type was not hinted and actual type is valid type
   if ((typeIsValue(assignment.hintedType) && (assignment.type.base == 'u'
       || typeEq(assignment.hintedType, assignment.type)))
-    || !(typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
+    || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
       SymbolData data = {
         assignment.type, NULL, 0, false,
         (assignment.let ? symbol_LET : symbol_VAR)
       };
+
+      // initilize let to nil if no value was provided
+      if (assignment.let && !typeIsValue(assignment.type) && assignment.hintedType.base == 0) {
+        data.dataType = (Type) { 'N', false };
+      }
+
       global_insertTop(stringCStr(&assignment.idname), data);
   }
   else {
@@ -603,7 +609,7 @@ void analyseReassignIdType(void) {
 }
 
 void analyseReassignType(Type type) {
-  assignment.type = type;
+  reassignment.type = type;
 }
 
 void analyseReassignEnd(void) {
@@ -620,7 +626,7 @@ void analyseReassignEnd(void) {
 
   SymbolData  data = it->data;
   data.dataType = reassignment.type;
-  global_insertTop(it->key, it->data);
+  global_insertTop(it->key, data);
 
   prepareStatement();
 }
@@ -718,6 +724,10 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   Type typeA = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
     ? b.value.constType
     : variableType(b.value.idName);
+
+  if (typeA.base == 'u' || typeB.base == 'u') {
+    /* return (Type) { 'u', false }; */
+  }
 
   if (optype == op_CONCAT) {
     if (typeA.base == 'S' && typeB.base == 'S') {
