@@ -34,6 +34,7 @@ void global_generateInstruction();
 
 symtableItem* global_symbolSearch(const char* key);
 void global_insertTop(const char* key, SymbolData data);
+symtableItem* global_searchTop(const char* key);
 
 const char* errorToString(error_codes err);
 

@@ -20,7 +20,7 @@
 
 static struct {
   String idname;
-  bool iflet;
+  bool started;
 } iflet;
 
 static struct {
@@ -43,6 +43,7 @@ static struct {
   bool started;
   bool let;
   String idname;
+  String rightId;
   Type hintedType;
   Type type;
 } assignment;
@@ -50,6 +51,7 @@ static struct {
 static struct {
   bool started;
   String idname;
+  String rightId;
   Type type;
 } reassignment;
 
@@ -61,6 +63,32 @@ Type lastExprType;
 Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
   * ordParam, * chrParam;
 
+void prepareStatement(void) {
+  iflet.started = false;
+  stringClear(&iflet.idname);
+
+  stringClear(&fnCall.idname);
+  stringClear(&fnCall.idOrLabel);
+  fnCall.paramCount = 0;
+
+  stringClear(&fnDef.idname);
+  fnDef.paramCount = 0;
+  fnDef.type = (Type) { 'u', false };
+
+  assignment.started = false;
+  stringClear(&assignment.idname);
+  stringClear(&assignment.rightId);
+  assignment.hintedType = (Type) { 'u', false };
+  assignment.type = (Type) { 'u', false };
+
+  reassignment.started = false;
+  stringClear(&reassignment.idname);
+  stringClear(&reassignment.rightId);
+  reassignment.type = (Type) { 'u', false };
+
+  lastExprType = (Type) { 'u', false };
+}
+
 static void fnCallGrow(void) {
   if (fnCall.paramCount + 1 >= fnCall.paramCapacity) {
     fnCall.paramCapacity *= 2;
@@ -68,8 +96,8 @@ static void fnCallGrow(void) {
     CHECK_MEMORY_ALLOC(fnCall.params);
 
     for (unsigned i = fnCall.paramCount + 1; i < fnCall.paramCapacity; i++) {
-      NOT_FALSE(stringInit(&fnCall.params[i].label, ""));
-      NOT_FALSE(stringInit(&fnCall.params[i].name, ""));
+      (stringInit(&fnCall.params[i].label, ""));
+      (stringInit(&fnCall.params[i].name, ""));
     }
   }
 }
@@ -81,8 +109,8 @@ static void fnDefGrow(void) {
     CHECK_MEMORY_ALLOC(fnDef.params);
 
     for (unsigned i = fnDef.paramCount + 1; i < fnDef.paramCapacity; i++) {
-      NOT_FALSE(stringInit(&fnDef.params[i].label, ""));
-      NOT_FALSE(stringInit(&fnDef.params[i].name, ""));
+      (stringInit(&fnDef.params[i].label, ""));
+      (stringInit(&fnDef.params[i].name, ""));
     }
   }
 }
@@ -111,6 +139,9 @@ bool semanticAnalysisInit(void) {
   CHECK_MEMORY_ALLOC(fnDef.params);
   fnCall.paramCount = 0;
 
+  reassignment.started = false;
+  assignment.started = false;
+
   for (unsigned i = 0; i < fnCall.paramCapacity; i++) {
     stringInit(&fnCall.params[i].label, "");
     stringInit(&fnCall.params[i].name, "");
@@ -123,15 +154,14 @@ bool semanticAnalysisInit(void) {
     return false;
   }
 
-  iflet.iflet = false;
+  iflet.started = false;
 
-  if ( !stringInit(&fnDef.idname, "")
-    || !stringInit(&fnCall.idOrLabel, "")
-    || !stringInit(&fnCall.idname, "")
-    || !stringInit(&iflet.idname, "")) {
-      semanticAnalysisDeinit();
-      return false;
-  }
+   stringInit(&fnDef.idname, "");
+   stringInit(&fnCall.idOrLabel, "");
+   stringInit(&fnCall.idname, "");
+   stringInit(&iflet.idname, "");
+   stringInit(&reassignment.rightId, "");
+   stringInit(&assignment.rightId, "");
 
   symtableInsert(global_table, "readString", (SymbolData) {
       (Type) { 'S', true },
@@ -272,6 +302,7 @@ void analyseAssignBegin(void) {
   assignment.started = true;
   assignment.let = false;
   stringClear(&assignment.idname);
+  stringClear(&assignment.rightId);
   assignment.hintedType = (Type) { 'u', false };
   assignment.type = (Type) { 'u', false };
 }
@@ -281,122 +312,80 @@ void analyseAssignLet(bool let) {
 }
 
 void analyseAssignId(const char* idname) {
-  if (!assignment.started) {
-    return;
-  }
-
-  NOT_FALSE(stringReinit(&assignment.idname, idname));
+  stringSet(&assignment.idname, idname);
 }
 
 void analyseAssignHint(tokenType type) {
-  if (!assignment.started) {
-    return;
-  }
   assignment.hintedType = tokenToType(type);
 }
 
 void analyseAssignRightId(const char* idname) {
+  stringSet(&assignment.rightId, idname);
+}
+
+void analyseAssignIdType(void) {
   if (!assignment.started) {
     return;
   }
 
-  symtableItem* it = global_symbolSearch(idname);
+  symtableItem* it = global_searchTop(stringCStr(&assignment.rightId));
 
-  if (it == NULL) {
-    assignment.type.base = 'u';
+  if (it == NULL
+    || (it->data.symbolType != symbol_VAR && it->data.symbolType != symbol_LET)) {
+      EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
-  else {
-    assignment.type = it->data.dataType;
-  }
+
+  assignment.type = it->data.dataType;
 }
 
 void analyseAssignType(Type type) {
   assignment.type = type;
 }
 
-void analyseAssignEndExpr(void) {
+void analyseAssignEnd(void) {
   if (!assignment.started) {
     return;
   }
 
-  if (typeIsValue(assignment.hintedType)
-    && typeEq(assignment.hintedType, assignment.type)) {
-      // type hint is different than expression type
-      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-
-  if (!typeIsValue(assignment.hintedType) && !typeIsValue(assignment.type)) {
-    // type cannot be inferend
-      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-
-  SymbolData data = { assignment.type, NULL, 0, false, (assignment.let ? symbol_LET : symbol_VAR) };
-  global_insertTop(stringCStr(&assignment.idname), data);
-
-  assignment.started = false;
-}
-
-void analyseAssignEndNodef(void) {
-  if (!assignment.started) {
-    return;
-  }
-
-  if (!typeIsVariable(assignment.hintedType)) {
-    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-
-  SymbolData data = { assignment.hintedType, NULL, 0, false,
-    (assignment.let ? symbol_LET : symbol_VAR) };
-  global_insertTop(stringCStr(&assignment.idname), data);
-
-  assignment.started = false;
-}
-
-void analyseAssignEndCall(Type returnedType) {
-  if (!assignment.started) {
-    return;
-  }
-
-  if (typeIsValue(assignment.hintedType)) {
-    if (returnedType.base == 'u' || typeEq(assignment.hintedType, returnedType)) {
-
-    }
-  }
-  else {
-    if (typeIsValue(returnedType)) {
-
-    }
+  symtableItem* it = global_searchTop(stringCStr(&assignment.idname));
+  if (it != NULL) {
+    // multiple definitions in single scope not allowed
+    EXIT_WITH_MESSAGE(SEMANTIC_ERR);
   }
 
   // type was hinted and actual type matches or
   // type was hinted and actual type could not be inffered or
   // type was not hinted and actual type is valid type
-  if ((typeIsValue(assignment.hintedType) && (returnedType.base == 'u' || typeEq(assignment.hintedType, returnedType)))
-    || !(typeIsValue(assignment.hintedType) && typeIsValue(returnedType))) {
-      SymbolData data = { returnedType, NULL, 0, false, (assignment.let ? symbol_LET : symbol_VAR) };
+  if ((typeIsValue(assignment.hintedType) && (assignment.type.base == 'u'
+      || typeEq(assignment.hintedType, assignment.type)))
+    || !(typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
+      SymbolData data = {
+        assignment.type, NULL, 0, false,
+        (assignment.let ? symbol_LET : symbol_VAR)
+      };
       global_insertTop(stringCStr(&assignment.idname), data);
   }
   else {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
 
-  assignment.started = false;
+  prepareStatement();
 }
 
 // function definition
 
 void analyseFunctionId(const char* idname) {
   fnDef.paramCount = 0;
-  NOT_FALSE(stringReinit(&fnDef.idname, idname));
+  stringSet(&fnDef.idname, idname);
 }
 
 void analyseFunctionParamLabel(const char* label) {
   fnDefGrow();
-  stringReinit(&fnDef.params[fnDef.paramCount].label, label);
+  stringSet(&fnDef.params[fnDef.paramCount].label, label);
 }
 
 void analyseFunctionParamName(const char* name) {
-  stringReinit(&fnDef.params[fnDef.paramCount].name, name);
+  stringSet(&fnDef.params[fnDef.paramCount].name, name);
 }
 
 void analyseFunctionParamType(tokenType type) {
@@ -433,7 +422,7 @@ void analyseCallFnId(const char* idname) {
   stringClear(&fnCall.idname);
   stringClear(&fnCall.idOrLabel);
   fnCall.paramCount = 0;
-  NOT_FALSE(stringReinit(&fnCall.idname, idname));
+  (stringSet(&fnCall.idname, idname));
 }
 
 void analyseCallConst(tokenType type) {
@@ -443,7 +432,7 @@ void analyseCallConst(tokenType type) {
 
 void analyseCallIdOrLabel(const char* value) {
   fnCallGrow();
-  NOT_FALSE(stringReinit(&fnCall.idOrLabel, value));
+  (stringSet(&fnCall.idOrLabel, value));
 }
 
 void analyseCallEpsAfterId(void) {
@@ -456,7 +445,7 @@ void analyseCallEpsAfterId(void) {
   }
 
   typeIsVariable(it->data.dataType);
-  stringReinit(&fnCall.params[fnCall.paramCount].label, "_");
+  stringSet(&fnCall.params[fnCall.paramCount].label, "_");
   fnCall.params[fnCall.paramCount].type = it->data.dataType;
 
   fnCall.paramCount++;
@@ -473,7 +462,7 @@ void analyseCallIdAfterLabel(const char* idname) {
 
   NOT_FALSE(typeIsVariable(it->data.dataType));
 
-  stringReinitS(&fnCall.params[fnCall.paramCount].label, &fnCall.idOrLabel);
+  stringSetS(&fnCall.params[fnCall.paramCount].label, &fnCall.idOrLabel);
   fnCall.params[fnCall.paramCount].type = it->data.dataType;
 
   fnCall.paramCount++;
@@ -483,7 +472,7 @@ void analyseCallConstAfterLabel(tokenType type) {
   // idOrLabel was label
 
   Param* param = &fnCall.params[fnCall.paramCount];
-  stringReinitS(&param->label, &fnCall.idOrLabel);
+  stringSetS(&param->label, &fnCall.idOrLabel);
   param->type = tokenToType(type);
 
   fnCall.paramCount++;
@@ -591,25 +580,30 @@ void analyseReassignStart(void) {
 }
 
 void analyseReassignId(const char* idname) {
-  if (!reassignment.started) {
-    return;
-  }
-
-  NOT_FALSE(stringReinit(&reassignment.idname, idname));
+  stringSet(&reassignment.idname, idname);
 }
 
 void analyseReassignRightId(const char* idname) {
+  stringSet(&reassignment.rightId, idname);
+}
+
+void analyseReassignIdType(void) {
   if (!reassignment.started) {
     return;
   }
 
-  symtableItem* it = global_symbolSearch(idname);
+  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.rightId));
 
-  if (it == NULL) {
-    EXIT_WITH_MESSAGE(UNDEFINED_FN);
+  if (it == NULL
+    || (it->data.symbolType != symbol_LET && it->data.symbolType != symbol_VAR)) {
+      EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
   reassignment.type = it->data.dataType;
+}
+
+void analyseReassignType(Type type) {
+  assignment.type = type;
 }
 
 void analyseReassignEnd(void) {
@@ -619,42 +613,16 @@ void analyseReassignEnd(void) {
 
   symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname));
 
-  if (it == NULL) {
-    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
+  // only var can be reassigned
+  if (it == NULL || it->data.symbolType != symbol_VAR)  {
+    EXIT_WITH_MESSAGE(SEMANTIC_ERR);
   }
 
-  Type leftType = it->data.dataType;
+  SymbolData  data = it->data;
+  data.dataType = reassignment.type;
+  global_insertTop(it->key, it->data);
 
-  if (!typeEq(leftType, reassignment.type)) {
-    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-
-  reassignment.started = false;
-}
-
-void analyseReassignEndType(Type rightType) {
-  if (!reassignment.started) {
-    return;
-  }
-
-  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname));
-
-  if (it == NULL) {
-    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
-  }
-
-  if (it->data.symbolType != symbol_VAR) {
-    // is this the right exit code?
-    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-
-  Type leftType = it->data.dataType;
-
-  if (!typeEq(leftType, rightType)) {
-    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-
-  reassignment.started = false;
+  prepareStatement();
 }
 
 // helper functions
@@ -791,7 +759,7 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
 
 String typeToStr(Type type) {
   String result;
-  NOT_FALSE(stringInit(&result, ""));
+  (stringInit(&result, ""));
 
   if (type.base != 'I' && type.base != 'D' && type.base != 'S') {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
@@ -852,16 +820,16 @@ void pushFnParams(const char* idname) {
 }
 
 void analyseIfLetBegin(void) {
-  iflet.iflet = false;
+  iflet.started = false;
 }
 
 void analyseIfLet(const char* idname) {
-  iflet.iflet = true;
-  stringReinit(&iflet.idname, idname);
+  iflet.started = true;
+  stringSet(&iflet.idname, idname);
 }
 
 void pushIfLet(void) {
-  if (!iflet.iflet) {
+  if (!iflet.started) {
     return;
   }
 
@@ -881,3 +849,6 @@ void pushIfLet(void) {
   global_insertTop(stringCStr(&iflet.idname), data);
 }
 
+void analyseReassignAbort(void) {
+  assignment.started = false;
+}

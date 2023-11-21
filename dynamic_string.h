@@ -28,7 +28,7 @@ typedef struct String {
  * @param string String to initilize
  * @param cStr inital value
  */
-bool stringInit(String* string, const char* cStr);
+void stringInit(String* string, const char* cStr);
 
 /**
  * @brief Concatonate two strings. String will be resized of necesarry.
@@ -36,7 +36,7 @@ bool stringInit(String* string, const char* cStr);
  * @param a String that will be modified
  * @param b String to concatonate to a. Will not be modified
  */
-bool stringConcat(String* a, const String* const b);
+void stringConcat(String* a, const String* const b);
 
 /**
  * @brief Free all string allocated memory.
@@ -51,7 +51,7 @@ void stringFree(String* string);
  * @param string String to resize
  * @param size New capacity. If size < string.capacity this fuction has no effect.
  */
-bool stringResize(String* string, size_t size);
+void stringResize(String* string, size_t size);
 
 /**
  * @brief Get null terminated c-style string
@@ -67,7 +67,7 @@ const char* stringCStr(String* string);
  * @param string String to concatonate, will be modified
  * @param Null-terminated array of chars to concatonate to string
  */
-bool stringConcatCStr(String* string, const char* cStr);
+void stringConcatCStr(String* string, const char* cStr);
 
 /**
  * @brief Concatonate char to String. String will be resized if necesarry.
@@ -75,13 +75,13 @@ bool stringConcatCStr(String* string, const char* cStr);
  * @param string String that will be modified
  * @param c Char to concatonate to string
  */
-bool stringConcatChar(String* string, char c);
+void stringConcatChar(String* string, char c);
 
 void stringClear(String* string);
 
-bool stringReinit(String* string, const char* cStr);
+void stringSet(String* string, const char* cStr);
 
-bool stringReinitS(String* string, String* other);
+void stringSetS(String* string, String* other);
 
 bool stringEq(String* string, String* other);
 

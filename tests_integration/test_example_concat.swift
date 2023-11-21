@@ -1,6 +1,6 @@
-func concat(_ x : String, with y : String) -> String {
-let x = x + y
-return x + " " + y
+func concat(_ p : String, with y : String) -> String {
+    let x = p + y
+    return x + " " + y
 }
 let a = "ahoj "
 var ct : String

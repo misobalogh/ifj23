@@ -114,18 +114,27 @@ symtableItem* global_symbolSearch(const char* key) {
 }
 
 void global_insertTop(const char* key, SymbolData data) {
-  if (global_symtableStack == NULL) {
-    exit(INTERNAL_ERROR);
+  if (global_symtableStack == NULL || global_table == NULL) {
+    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
-  if (global_symtableStack->first == NULL) {
-    if (global_table == NULL) {
-      exit(99);
-    }
-
-    symtableInsert(global_table, key, data);
-    return;
+  symtable* table = global_table;
+  if (global_symtableStack->first != NULL) {
+    table = global_symtableStack->first->table;
   }
 
-  symtableInsert(global_symtableStack->first->table, key, data);
+  symtableInsert(table, key, data);
+}
+
+symtableItem* global_searchTop(const char* key) {
+  if (global_symtableStack == NULL || global_table == NULL) {
+    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+  }
+
+  symtable* table = global_table;
+  if (global_symtableStack->first != NULL) {
+    table = global_symtableStack->first->table;
+  }
+
+  return symtableSearch(table, key);
 }

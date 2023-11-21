@@ -62,12 +62,18 @@ void consume_optional_EOL() {
 bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
     analyseExprBegin();
-    bool retVal = precedenceParser();
+    if (!precedenceParser()) {
+      return false;
+    }
     Type exprType = analyseExprEnd();
+
     analyseAssignType(exprType);
-    analyseAssignEndExpr();
-    analyseReassignEndType(exprType);
-    return retVal;
+    analyseAssignEnd();
+
+    analyseReassignType(exprType);
+    analyseReassignEnd();
+
+    return true;
 }
 
 bool rule_PROGRAM() {
@@ -123,6 +129,8 @@ bool rule_STAT_LIST() {
 
 
 bool rule_STATEMENT() {
+    prepareStatement();
+
     switch (t.type) {
     case token_LET:
     case token_VAR:
@@ -131,6 +139,7 @@ bool rule_STATEMENT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<statement> -> id <after_id>\n");
+        analyseReassignStart();
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
         getToken();
@@ -297,6 +306,8 @@ bool rule_BRACK_STAT_LIST() {
 
 
 bool rule_BRACK_STATEMENT() {
+    prepareStatement();
+
     switch (t.type) {
     case token_LET:
     case token_VAR:
@@ -305,6 +316,7 @@ bool rule_BRACK_STATEMENT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<brack_statement> -> id <after_id>\n");
+        analyseReassignStart();
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
         getToken();
@@ -484,7 +496,7 @@ bool rule_VAL_ASSIGNMENT() {
     }
     // <val_assigment> -> EPSILON
     else if (EOL_flag) {
-        analyseAssignEndNodef();
+        analyseAssignEnd();
         RLOG("<val_assignment> -> EPSILON\n");
         return true;
     }
@@ -495,7 +507,10 @@ bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
         RLOG("<fn_or_exp> -> id\n");
-        analyseAssignEndExpr();
+        analyseAssignIdType();
+        analyseAssignEnd();
+
+        analyseReassignIdType();
         analyseReassignEnd();
         stash.type = token_EMPTY;
         return true;
@@ -516,8 +531,12 @@ bool rule_FN_OR_EXP() {
         }
 
         Type returnedType = analyseCallEnd();
-        analyseAssignEndCall(returnedType);
-        analyseReassignEndType(returnedType);
+
+        analyseAssignType(returnedType);
+        analyseAssignEnd();
+
+        analyseReassignType(returnedType);
+        analyseReassignEnd();
 
         if (t.type != token_PARENTHESES_R) {
             return false;
@@ -559,13 +578,14 @@ bool rule_AFTER_ID() {
     else if (t.type == token_PARENTHESES_L) {
         RLOG("<after_id> -> ( <input_param_list> )\n");
         getToken();
+        analyseReassignAbort();
         if (rule_INPUT_PARAM_LIST() == false) {
             return false;
         }
         if (t.type != token_PARENTHESES_R) {
             return false;
         }
-        (void) analyseCallEnd();
+        analyseCallEnd();
         getToken();
         return true;
     }
@@ -791,6 +811,8 @@ bool rule_FUNC_STAT_LIST() {
 }
 
 bool rule_FUNC_STAT() {
+    prepareStatement();
+
     switch (t.type) {
     case token_LET:
     case token_VAR:
@@ -799,6 +821,7 @@ bool rule_FUNC_STAT() {
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
         RLOG("<func_stat> -> id <after_id>\n");
+        analyseReassignStart();
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
         getToken();
@@ -872,9 +895,11 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack);
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+        symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {
             return false;

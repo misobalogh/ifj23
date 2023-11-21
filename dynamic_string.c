@@ -4,66 +4,59 @@
  */
 
 #include "dynamic_string.h"
+#include "macros.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <malloc.h>
 #include <stdio.h>
 
 
-bool stringInit(String* string, const char* cStr) {
+void stringInit(String* string, const char* cStr) {
   size_t len = strlen(cStr);
   string->capacity = (len + 1) * STRING_GROWTH;
   string->size = len;
 
   string->data = malloc(string->capacity);
-  if (string->data == NULL) {
-    return false;
-  }
+  CHECK_MEMORY_ALLOC(string->data);
 
   strncpy(string->data, cStr, string->capacity);
-  return true;
 }
 
-bool stringResize(String* string, size_t size) {
+void stringResize(String* string, size_t size) {
   if (size <= string->capacity) {
-    return true;
+    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
   char* ptr = realloc(string->data, size);
 
   if (ptr == NULL) {
-    return false;
+    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
   string->data = ptr;
   string->capacity = size;
-
-  return true;
 }
 
-bool stringConcat(String* string, const String* const other) {
-  if (string->size + other->size + 1 >= string->capacity
-    && !stringResize(string, (string->size + other->size + 1) * STRING_GROWTH)) {
-      return false;
+void stringConcat(String* string, const String* const other) {
+  if (string->size + other->size + 1 >= string->capacity) {
+    stringResize(string, (string->size + other->size + 1) * STRING_GROWTH);
   }
 
   strncpy(string->data + string->size, other->data, other->size);
   string->size += other->size;
-  return true;
 }
 
-bool stringConcatCStr(String* string, const char* cStr) {
+void stringConcatCStr(String* string, const char* cStr) {
   size_t len = strlen(cStr);
 
-  if (string->size + len + 1 >= string->capacity
-    && !stringResize(string, (string->size + len + 1) * STRING_GROWTH)) {
-      return false;
+  if (string->size + len + 1 >= string->capacity) {
+    stringResize(string, (string->size + len + 1) * STRING_GROWTH);
   }
 
   strncpy(string->data + string->size, cStr, len);
   string->size += len;
-  return true;
 }
 
 void stringFree(String* string) {
@@ -82,28 +75,26 @@ const char* stringCStr(String* string) {
   return string->data;
 }
 
-bool stringConcatChar(String* string, char c) {
-  if (string->size + 1 >= string->capacity
-      && !stringResize(string, (string->capacity + 1) * STRING_GROWTH)) {
-    return false;
+void stringConcatChar(String* string, char c) {
+  if (string->size + 1 >= string->capacity) {
+      stringResize(string, (string->capacity + 1) * STRING_GROWTH);
   }
 
   string->data[string->size++] = c;
-  return true;
 }
 
 void stringClear(String* string) {
   string->size = 0;
 }
 
-bool stringReinit(String* string, const char* cStr) {
+void stringSet(String* string, const char* cStr) {
   stringClear(string);
-  return stringConcatCStr(string, cStr);
+  stringConcatCStr(string, cStr);
 }
 
-bool stringReinitS(String* string, String* other) {
+void stringSetS(String* string, String* other) {
   stringClear(string);
-  return stringConcatCStr(string, stringCStr(other));
+  stringConcat(string, other);
 }
 
 bool stringEq(String* string, String* other) {

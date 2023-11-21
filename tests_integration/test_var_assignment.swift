@@ -1,7 +1,7 @@
-let a=2
-var b =4
-var c = b
-let d=           a
+var a=2
+let b =4
+let c = b
+var d=           a
 
 a = 4
 d = 3

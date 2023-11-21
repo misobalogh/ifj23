@@ -4,7 +4,7 @@ let
 easdasdasdasd
 =
 22+2+3+4+5+5+6
-let a = 33
+var a = 33
 var c = a
 a = 4
 a = b
@@ -15,7 +15,7 @@ let y = 15 + 2 + 3 + 7
 let customVar = 12 + 3 + 4 + 5
 let z = x + y + customVar
 
-let m = 50
+var m = 50
 var n = m
 m = 6
 m = x

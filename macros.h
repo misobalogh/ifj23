@@ -22,7 +22,7 @@
 const char* errorToString(error_codes err);
 
 #define EXIT_WITH_MESSAGE(err) do { \
-    printf("Error code: %i %s\n", err, errorToString(err)); \
+    printf("Error code: %i %s in %s\n", err, errorToString(err), __func__); \
     exit(err); \
   } while (0)
 

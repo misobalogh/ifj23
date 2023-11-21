@@ -67,10 +67,9 @@ void analyseAssignLet(bool let);
 void analyseAssignId(const char* idname);
 void analyseAssignHint(tokenType type);
 void analyseAssignRightId(const char* idname);
+void analyseAssignIdType(void);
 void analyseAssignType(Type type);
-void analyseAssignEndExpr(void);
-void analyseAssignEndNodef(void);
-void analyseAssignEndCall(Type returnedType);
+void analyseAssignEnd(void);
 
 void analyseCallFnId(const char* idname);
 void analyseCallConst(tokenType type);
@@ -89,8 +88,10 @@ Type analyseExprEnd(void);
 void analyseReassignStart();
 void analyseReassignId(const char* idname);
 void analyseReassignRightId(const char* idname);
+void analyseReassignIdType(void);
 void analyseReassignEnd(void);
-void analyseReassignEndType(Type type);
+void analyseReassignType(Type type);
+void analyseReassignAbort(void);
 
 void analyseCondition(void);
 
@@ -99,6 +100,8 @@ void analyseIfLet(const char* idname);
 void pushIfLet(void);
 
 void pushFnParams(const char* idname);
+
+void prepareStatement(void);
 
 bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsigned callCount);
 const char* _typeShort(tokenType type);
