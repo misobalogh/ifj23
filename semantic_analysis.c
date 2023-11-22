@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "expr_stack.h"
+#include "generator.h"
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
@@ -594,6 +595,7 @@ Type analyseExprEnd(void) {
         ExprItem a = exprStackPop(stack);
         ExprItem b = exprStackPop(stack);
         resultType = _analyseOperation(it.value.operatorType, a, b);
+        genExprOperator(it.value.operatorType);
       }
       exprStackPush(stack, (ExprItem) {
           .type=expr_INTERMEDIATE,
@@ -601,6 +603,7 @@ Type analyseExprEnd(void) {
         });
     }
     else { // operand
+      genExprOperand(it);
       exprStackPush(stack, it);
     }
   }

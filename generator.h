@@ -7,10 +7,12 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
+#include "expr.h"
 #include "stdbool.h"
 #include "stdio.h"
 
-void setOutputFile(FILE* file);
-bool genFunction(const char* idname);
+void genFunction(const char* idname);
+void genExprOperand(ExprItem e);
+void genExprOperator(OperatorType optype);
 
 #endif
