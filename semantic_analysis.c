@@ -385,6 +385,10 @@ void analyseAssignEnd(void) {
   }
 
   global_insertTop(stringCStr(&assignment.idname), data);
+
+  genDef(stringCStr(&assignment.idname));
+  genAssign(stringCStr(&assignment.idname));
+
   prepareStatement();
 }
 
@@ -435,6 +439,8 @@ void analyseReturn(Type type) {
       EXIT_WITH_MESSAGE(4);
   }
 
+  genReturn();
+
   returnStarted = false;
 }
 
@@ -451,6 +457,8 @@ void analyseFunctionEnd(void) {
   symtableInsert(global_table, stringCStr(&fnDef.idname), data);
 
   _checkPostponed(stringCStr(&fnDef.idname), data);
+
+  genFunction(stringCStr(&fnDef.idname));
 
   fnDef.paramCount = 0;
   stringClear(&fnDef.idname);
@@ -554,14 +562,14 @@ void analyseExprOperand(lex_token token) {
     exprListAddId(exprList, token.value.STR_VAL);
   }
   else if (token.type == token_CONST_WHOLE_NUMBER) {
-    exprListAddConst(exprList, (Type) { 'I', false });
+    exprListAddInt(exprList, token.value.INT_VAL);
   }
   else if (token.type == token_CONST_DEC_NUMBER
     || token.type == token_CONST_SCIENTIFIC_NOTATION) {
-      exprListAddConst(exprList, (Type) { 'D', false });
+      exprListAddFloat(exprList, token.value.FLOAT_VAL);
   }
   else if (token.type == token_TYPE_STRING_LINE) {
-    exprListAddConst(exprList, (Type) { 'S', false});
+    exprListAddString(exprList, token.value.STR_VAL);
   }
   else {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
@@ -595,11 +603,17 @@ Type analyseExprEnd(void) {
         ExprItem a = exprStackPop(stack);
         ExprItem b = exprStackPop(stack);
         resultType = _analyseOperation(it.value.operatorType, a, b);
-        genExprOperator(it.value.operatorType);
+
+        OperatorType optype = it.value.operatorType;
+        if (resultType.base == 'S') {
+          optype = op_CONCAT;
+        }
+
+        genExprOperator(optype);
       }
       exprStackPush(stack, (ExprItem) {
           .type=expr_INTERMEDIATE,
-          .value={ .constType=resultType }
+          .value={ .constValue.type=resultType }
         });
     }
     else { // operand
@@ -620,7 +634,7 @@ Type analyseExprEnd(void) {
   }
 
   if (top.type == expr_INTERMEDIATE || top.type == expr_CONST) {
-    lastExprType = top.value.constType;
+    lastExprType = top.value.constValue.type;
     return lastExprType;
   }
 
@@ -685,6 +699,13 @@ void analyseReassignEnd(void) {
 
   SymbolData  data = it->data;
   global_insertTop(it->key, data);
+
+  /* if (assignment.rightId.size > 0) { */
+    /* genAssignId(stringCStr(&assignment.idname), stringCStr(&assignment.rightId)); */
+  /* } */
+  /* else { */
+    genAssign(stringCStr(&assignment.idname));
+  /* } */
 
   prepareStatement();
 }
@@ -779,11 +800,11 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   }
 
   Type typeB = (a.type == expr_CONST || a.type == expr_INTERMEDIATE)
-    ? a.value.constType
+    ? a.value.constValue.type
     : variableType(a.value.idName);
 
   Type typeA = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
-    ? b.value.constType
+    ? b.value.constValue.type
     : variableType(b.value.idName);
 
   if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
@@ -797,7 +818,7 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
     return (Type) { 'u', false };
   }
 
-  if (optype == op_CONCAT) {
+  if (optype == op_CONCAT || optype == op_PLUS) {
     if (typeA.base == 'S' && typeB.base == 'S') {
       return (Type) { 'S', (typeA.nullable || typeB.nullable) };
     }
@@ -841,7 +862,7 @@ Type _analyseUnwrap(ExprItem e) {
   }
 
   Type t = (e.type == expr_CONST || e.type == expr_INTERMEDIATE)
-    ? e.value.constType
+    ? e.value.constValue.type
     : variableType(e.value.idName);
 
   if (t.base == 'N') {

@@ -13,12 +13,43 @@ void genFunction(const char* idname) {
   printf("LABEL function__%s\n", idname);
 }
 
+void genReturn(void) {
+  printf("RETURN\n");
+}
+
+void genDef(const char* idname) {
+  printf("DEFVAR LF@%s\n", idname);
+}
+
+void genAssign(const char* idname) {
+  /* printf("# pop to %s\n", idname); */
+  printf("POPS LF@%s\n", idname);
+}
+
+void genAssignId(const char* left, const char* right) {
+  printf("MOVE LF@%s LF@%s\n", left, right);
+}
+
 void genExprOperand(ExprItem e) {
   if (e.type == expr_ID) {
     printf("PUSHS LF@%s\n", e.value.idName);
   }
   else if (e.type == expr_CONST) {
-    printf("PUSHS int@1\n");
+    if (e.value.constValue.type.base == 'I') {
+      printf("PUSHS int@%i\n", e.value.constValue.value.INT_VAL);
+    }
+    else if (e.value.constValue.type.base == 'D') {
+      printf("PUSHS float@%a\n", e.value.constValue.value.FLOAT_VAL);
+    }
+    else if (e.value.constValue.type.base == 'S') {
+      printf("PUSHS string@%s\n", e.value.constValue.value.STR_VAL);
+    }
+    else if (e.value.constValue.type.base == 'N') {
+      printf("PUSHS nil@nil\n");
+    }
+    else {
+      EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
   }
   else if (e.type == expr_INTERMEDIATE) {
     return;
@@ -43,7 +74,15 @@ void genExprOperator(OperatorType optype) {
     printf("DIVS\n");
     break;
   case op_CONCAT:
-    printf("not implemented\n");
+    printf("CREATEFRAME\n");
+    printf("DEFVAR TF@A\n");
+    printf("DEFVAR TF@B\n");
+    printf("DEFVAR TF@C\n");
+    printf("POPS TF@A\n");
+    printf("POPS TF@B\n");
+    printf("POPS TF@C\n");
+    printf("CONCAT TF@A TF@B TF@C\n");
+    printf("PUSHS TF@C\n");
     break;
   case op_EQ:
     printf("EQS\n");

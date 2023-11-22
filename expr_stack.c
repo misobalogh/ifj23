@@ -29,6 +29,11 @@ void exprStackPush(ExprStack* stack, ExprItem item) {
     CHECK_MEMORY_ALLOC(it->item.value.idName);
     strcpy(it->item.value.idName, item.value.idName);
   }
+  else if (it->item.type == expr_CONST && it->item.value.constValue.type.base == 'S') {
+    it->item.value.constValue.value.STR_VAL = malloc(strlen(item.value.constValue.value.STR_VAL) + 1);
+    CHECK_MEMORY_ALLOC(it->item.value.constValue.value.STR_VAL);
+    strcpy(it->item.value.constValue.value.STR_VAL, item.value.constValue.value.STR_VAL);
+  }
 
   it->next = stack->first;
   stack->first = it;
