@@ -49,11 +49,11 @@ int main() {
     /* return EXIT_SUCCESS; */
 
     if (!recursiveParser()) {
-        LOG("Syntax Error: code %d", SYNTAX_ANALYSIS_ERR);
+        // LOG("Syntax Error: code %d", SYNTAX_ANALYSIS_ERR);
         return SYNTAX_ANALYSIS_ERR;
     }
-    else {
-        LOG("Program syntax is correct: code %d", EXIT_SUCCESS);
-    }
+    // else {
+    //     LOG("Program syntax is correct: code %d", EXIT_SUCCESS);
+    // }
     return EXIT_SUCCESS;
 }

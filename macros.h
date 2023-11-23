@@ -22,7 +22,7 @@
 const char* errorToString(error_codes err);
 
 #define EXIT_WITH_MESSAGE(err) do { \
-    printf("Error code: %i %s in %s\n", err, errorToString(err), __func__); \
+    fprintf(stderr,"Error code: %i %s in %s\n", err, errorToString(err), __func__); \
     exit(err); \
   } while (0)
 
@@ -89,61 +89,61 @@ const char* errorToString(error_codes err);
 #define PRINT_TOKEN(token) \
 do { \
     switch(token) { \
-        case token_LEX_ERROR: printf("token_LEX_ERROR\n"); break; \
-        case token_OP_START: printf("token_OP_START\n"); break; \
-        case token_PLUS: printf("token_PLUS\n"); break; \
-        case token_MINUS: printf("token_MINUS\n"); break; \
-        case token_MUL: printf("token_MUL\n"); break; \
-        case token_DIV: printf("token_DIV\n"); break; \
-        case token_DEFAULT_VALUE: printf("token_DEFAULT_VALUE\n"); break; \
-        case token_FORCE_UNWRAP: printf("token_FORCE_UNWRAP\n"); break; \
-        case token_REL: printf("token_REL\n"); break; \
-        case token_EQ: printf("token_EQ\n"); break; \
-        case token_NEQ: printf("token_NEQ\n"); break; \
-        case token_LESS: printf("token_LESS\n"); break; \
-        case token_MORE: printf("token_MORE\n"); break; \
-        case token_LESS_EQ: printf("token_LESS_EQ\n"); break; \
-        case token_MORE_EQ: printf("token_MORE_EQ\n"); break; \
-        case token_OP_END: printf("token_OP_END\n"); break; \
-        case token_PARENTHESES_L: printf("token_PARENTHESES_L\n"); break; \
-        case token_PARENTHESES_R: printf("token_PARENTHESES_R\n"); break; \
-        case token_ID: printf("token_ID\n"); break; \
-        case token_ID_OR_CONST: printf("token_ID_OR_CONST\n"); break; \
-        case token_CONST: printf("token_CONST\n"); break; \
-        case token_CONST_WHOLE_NUMBER: printf("token_CONST_WHOLE_NUMBER\n"); break; \
-        case token_CONST_DEC_NUMBER: printf("token_CONST_DEC_NUMBER\n"); break; \
-        case token_CONST_SCIENTIFIC_NOTATION: printf("token_CONST_SCIENTIFIC_NOTATION\n"); break; \
-        case token_DOLLAR: printf("token_DOLLAR\n"); break; \
-        case token_TERMINAL: printf("token_TERMINAL\n"); break; \
-        case token_NONTERMINAL: printf("token_NONTERMINAL\n"); break; \
-        case token_LET: printf("token_LET\n"); break; \
-        case token_VAR: printf("token_VAR\n"); break; \
-        case token_IF: printf("token_IF\n"); break; \
-        case token_ELSE: printf("token_ELSE\n"); break; \
-        case token_WHILE: printf("token_WHILE\n"); break; \
-        case token_NIL: printf("token_NIL\n"); break; \
-        case token_FUNC: printf("token_FUNC\n"); break; \
-        case token_RETURN: printf("token_RETURN\n"); break; \
-        case token_BRACKET_L: printf("token_BRACKET_L\n"); break; \
-        case token_BRACKET_R: printf("token_BRACKET_R\n"); break; \
-        case token_COMMA: printf("token_COMMA\n"); break; \
-        case token_ARROW: printf("token_ARROW\n"); break; \
-        case token_ASSIGN: printf("token_ASSIGN\n"); break; \
-        case token_COLON: printf("token_COLON\n"); break; \
-        case token_SEMICOLON: printf("token_SEMICOLON\n"); break; \
-        case token_UNDERSCORE: printf("token_UNDERSCORE\n"); break; \
-        case token_TYPE: printf("token_TYPE\n"); break; \
-        case token_TYPE_INT: printf("token_TYPE_INT\n"); break; \
-        case token_TYPE_INT_Q: printf("token_TYPE_INT_Q\n"); break; \
-        case token_TYPE_DOUBLE: printf("token_TYPE_DOUBLE\n"); break; \
-        case token_TYPE_DOUBLE_Q: printf("token_TYPE_DOUBLE_Q\n"); break; \
-        case token_TYPE_STRING_LINE: printf("token_TYPE_STRING_LINE\n"); break; \
-        case token_TYPE_STRING: printf("token_TYPE_STRING\n"); break; \
-        case token_TYPE_STRING_Q: printf("token_TYPE_STRING_Q\n"); break; \
-        case token_EOL: printf("token_EOL\n"); break; \
-        case token_EOF: printf("token_EOF\n"); break; \
-        case token_EMPTY: printf("token_EMPTY\n"); break; \
-        default: printf("Unknown token\n"); break; \
+        case token_LEX_ERROR: fprintf(stderr,"token_LEX_ERROR\n"); break; \
+        case token_OP_START: fprintf(stderr,"token_OP_START\n"); break; \
+        case token_PLUS: fprintf(stderr,"token_PLUS\n"); break; \
+        case token_MINUS: fprintf(stderr,"token_MINUS\n"); break; \
+        case token_MUL: fprintf(stderr,"token_MUL\n"); break; \
+        case token_DIV: fprintf(stderr,"token_DIV\n"); break; \
+        case token_DEFAULT_VALUE: fprintf(stderr,"token_DEFAULT_VALUE\n"); break; \
+        case token_FORCE_UNWRAP: fprintf(stderr,"token_FORCE_UNWRAP\n"); break; \
+        case token_REL: fprintf(stderr,"token_REL\n"); break; \
+        case token_EQ: fprintf(stderr,"token_EQ\n"); break; \
+        case token_NEQ: fprintf(stderr,"token_NEQ\n"); break; \
+        case token_LESS: fprintf(stderr,"token_LESS\n"); break; \
+        case token_MORE: fprintf(stderr,"token_MORE\n"); break; \
+        case token_LESS_EQ: fprintf(stderr,"token_LESS_EQ\n"); break; \
+        case token_MORE_EQ: fprintf(stderr,"token_MORE_EQ\n"); break; \
+        case token_OP_END: fprintf(stderr,"token_OP_END\n"); break; \
+        case token_PARENTHESES_L: fprintf(stderr,"token_PARENTHESES_L\n"); break; \
+        case token_PARENTHESES_R: fprintf(stderr,"token_PARENTHESES_R\n"); break; \
+        case token_ID: fprintf(stderr,"token_ID\n"); break; \
+        case token_ID_OR_CONST: fprintf(stderr,"token_ID_OR_CONST\n"); break; \
+        case token_CONST: fprintf(stderr,"token_CONST\n"); break; \
+        case token_CONST_WHOLE_NUMBER: fprintf(stderr,"token_CONST_WHOLE_NUMBER\n"); break; \
+        case token_CONST_DEC_NUMBER: fprintf(stderr,"token_CONST_DEC_NUMBER\n"); break; \
+        case token_CONST_SCIENTIFIC_NOTATION: fprintf(stderr,"token_CONST_SCIENTIFIC_NOTATION\n"); break; \
+        case token_DOLLAR: fprintf(stderr,"token_DOLLAR\n"); break; \
+        case token_TERMINAL: fprintf(stderr,"token_TERMINAL\n"); break; \
+        case token_NONTERMINAL: fprintf(stderr,"token_NONTERMINAL\n"); break; \
+        case token_LET: fprintf(stderr,"token_LET\n"); break; \
+        case token_VAR: fprintf(stderr,"token_VAR\n"); break; \
+        case token_IF: fprintf(stderr,"token_IF\n"); break; \
+        case token_ELSE: fprintf(stderr,"token_ELSE\n"); break; \
+        case token_WHILE: fprintf(stderr,"token_WHILE\n"); break; \
+        case token_NIL: fprintf(stderr,"token_NIL\n"); break; \
+        case token_FUNC: fprintf(stderr,"token_FUNC\n"); break; \
+        case token_RETURN: fprintf(stderr,"token_RETURN\n"); break; \
+        case token_BRACKET_L: fprintf(stderr,"token_BRACKET_L\n"); break; \
+        case token_BRACKET_R: fprintf(stderr,"token_BRACKET_R\n"); break; \
+        case token_COMMA: fprintf(stderr,"token_COMMA\n"); break; \
+        case token_ARROW: fprintf(stderr,"token_ARROW\n"); break; \
+        case token_ASSIGN: fprintf(stderr,"token_ASSIGN\n"); break; \
+        case token_COLON: fprintf(stderr,"token_COLON\n"); break; \
+        case token_SEMICOLON: fprintf(stderr,"token_SEMICOLON\n"); break; \
+        case token_UNDERSCORE: fprintf(stderr,"token_UNDERSCORE\n"); break; \
+        case token_TYPE: fprintf(stderr,"token_TYPE\n"); break; \
+        case token_TYPE_INT: fprintf(stderr,"token_TYPE_INT\n"); break; \
+        case token_TYPE_INT_Q: fprintf(stderr,"token_TYPE_INT_Q\n"); break; \
+        case token_TYPE_DOUBLE: fprintf(stderr,"token_TYPE_DOUBLE\n"); break; \
+        case token_TYPE_DOUBLE_Q: fprintf(stderr,"token_TYPE_DOUBLE_Q\n"); break; \
+        case token_TYPE_STRING_LINE: fprintf(stderr,"token_TYPE_STRING_LINE\n"); break; \
+        case token_TYPE_STRING: fprintf(stderr,"token_TYPE_STRING\n"); break; \
+        case token_TYPE_STRING_Q: fprintf(stderr,"token_TYPE_STRING_Q\n"); break; \
+        case token_EOL: fprintf(stderr,"token_EOL\n"); break; \
+        case token_EOF: fprintf(stderr,"token_EOF\n"); break; \
+        case token_EMPTY: fprintf(stderr,"token_EMPTY\n"); break; \
+        default: fprintf(stderr,"Unknown token\n"); break; \
     } \
 } while(0)
 

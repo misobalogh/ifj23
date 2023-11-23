@@ -112,52 +112,52 @@ bool reduce(stack* s) {
         || top->token.type == token_CONST_DEC_NUMBER
         || top->token.type == token_CONST_SCIENTIFIC_NOTATION
         || top->token.type == token_TYPE_STRING_LINE) && top->flag == true) {
-        PLOG("---rule ID---");
+        // PLOG("---rule ID---");
 
         analyseExprOperand(top->token);
 
         rule_E_ID(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
     else if (
         first->token.type == token_NONTERMINAL &&
         (second->token.type == token_PLUS || second->token.type == token_MINUS || second->token.type == token_MUL || second->token.type == token_DIV) &&
         third->token.type == token_NONTERMINAL) {
-        PLOG("---rule E op E---");
+        // PLOG("---rule E op E---");
 
         analyseExprOperator(second->token);
 
         rule_ID_OP_ID(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
     else if (
         first->token.type == token_NONTERMINAL &&
         second->token.type == token_DEFAULT_VALUE &&
         third->token.type == token_NONTERMINAL) {
-        PLOG("---rule E ?? E---");
+        // PLOG("---rule E ?? E---");
 
         analyseExprDefault();
 
         rule_ID_CONCAT_ID(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
     else if (
         first->token.type == token_PARENTHESES_R &&
         second->token.type == token_NONTERMINAL &&
         third->token.type == token_PARENTHESES_L) {
-        PLOG("---rule (E)---");
+        // PLOG("---rule (E)---");
         rule_PAR_ID_PAR(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
     else if (
         first->token.type == token_FORCE_UNWRAP &&
         second->token.type == token_NONTERMINAL) {
-        PLOG("---rule E!---");
+        // PLOG("---rule E!---");
 
         analyseExprOperator(first->token);
 
         rule_ID_FORCE_UNWRAP(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
     else if (
         first->token.type == token_NONTERMINAL
@@ -169,15 +169,15 @@ bool reduce(stack* s) {
             || second->token.type == token_LESS_EQ
             || second->token.type == token_MORE_EQ)
         && third->token.type == token_NONTERMINAL) {
-        PLOG("rule ID rel ID\n");
+        // PLOG("rule ID rel ID\n");
 
         analyseExprOperator(second->token);
 
-        stackPrint(s);
+        // stackPrint(s);
         rule_ID_REL_ID(s);
     }
     else {
-        PLOG("ERROR: unknown rule\n");
+        // PLOG("ERROR: unknown rule\n");
         return false;
     }
 
@@ -194,8 +194,8 @@ bool precedenceParser() {
     stackPush(&s, tokenDollar);
 
     // debug
-    PLOG("====INIT====");
-    stackPrint(&s);
+    // PLOG("====INIT====");
+    // stackPrint(&s);
 
     tokenType lastToken = token_DOLLAR;
 
@@ -249,8 +249,8 @@ bool precedenceParser() {
             lastToken = t.type;
             getToken();
 
-            PLOG("====EQUAL====");
-            stackPrint(&s);
+            // PLOG("====EQUAL====");
+            // stackPrint(&s);
             break;
         case LOW: // expand  "<"
             stackPush(&s, t);
@@ -259,13 +259,13 @@ bool precedenceParser() {
             lastToken = t.type;
             getToken();
 
-            PLOG("====LOW====");
-            stackPrint(&s);
+            // PLOG("====LOW====");
+            // stackPrint(&s);
             break;
         case HIGH: // reduce ">"
             if (reduce(&s)) {
-                PLOG("====HIGH====");
-                stackPrint(&s);
+                // PLOG("====HIGH====");
+                // stackPrint(&s);
                 break;
             }
             else {
@@ -273,12 +273,12 @@ bool precedenceParser() {
                 return false;
             }
         case EMPTY: // error
-            PLOG("====EMPTY====");
-            stackPrint(&s);
+            // PLOG("====EMPTY====");
+            // stackPrint(&s);
             stackFreeItems(&s);
             return false;
         default:
-            PLOG("ERROR: unknown precedence table value\n");
+            // PLOG("ERROR: unknown precedence table value\n");
             return false;
         }
 
@@ -286,7 +286,7 @@ bool precedenceParser() {
 
     stash.type = token_EMPTY;
 
-    PLOG("====END====\n");
+    // PLOG("====END====\n");
     stackFreeItems(&s);
 
     return true;

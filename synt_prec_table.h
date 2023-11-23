@@ -41,6 +41,7 @@ extern const precedenceType precedenceTable[9][9];
 
 
 //========== DEBUGGING ==========//
+/*
 #define LOG_TABLE(number) do { \
     if (number == HIGH) \
         printf("HIGH\n"); \
@@ -53,5 +54,5 @@ extern const precedenceType precedenceTable[9][9];
     else \
         printf("ERROR\n"); \
 } while (0)
-
+*/
 #endif // SYNT_PREC_TABLE_H

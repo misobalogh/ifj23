@@ -96,7 +96,7 @@ dynamic_string char_insert(dynamic_string* str, char c)
         str->data = (char*)realloc(str->data, str->capacity);
         if (str->data == NULL)
         {
-            printf("Realloc of dynamic string failed\n");
+            fprintf(stderr, "Realloc of dynamic string failed\n");
             // to do return error
         }
     }
