@@ -79,7 +79,7 @@ Running test {test_file}...
         print(f"\n{RED}Encountered error while running test '{test_file}': {e}{RESET}")
         continue
 
-    regex = re.compile(r'test_([0-9]+)_.+')
+    regex = re.compile(r"test_([0-9]+)_.+")
     matches = regex.findall(test_file)
 
     expected_code = 0
@@ -87,9 +87,9 @@ Running test {test_file}...
     try:
         expected_code = int(matches[0])
     except (ValueError, IndexError):
-        print(f'{MAGENTA}Could not parse expected exit code{RESET}')
+        print(f"{MAGENTA}Could not parse expected exit code{RESET}")
 
-    print(f'Expecting code: {expected_code}')
+    print(f"Expecting code: {expected_code}")
 
     if return_code == expected_code:
         print(f"\n{GREEN}Test '{test_file}' passed.{RESET}")

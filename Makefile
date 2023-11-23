@@ -6,7 +6,7 @@ CC = gcc
 TESTLIB = cunit
 
 SRC_DIR = .
-OBJ_DIR = obj
+OBJ_DIR = .
 TARGET = main
 
 SRC_FILES = $(filter-out $(SRC_DIR)/main.c, $(wildcard $(SRC_DIR)/*.c))
@@ -66,6 +66,6 @@ tests/%: tests/%.o $(filter-out $(OBJ_DIR)/main.o, $(OBJ_FILES))
 	$(CC) $(CFLAGS) $^ -o $@ -l$(TESTLIB)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) $(EXEC) $(UNIT_TESTS) *.log
+	rm -rf $(TARGET) $(EXEC) $(UNIT_TESTS) *.log *.o ./obj
 
 .PHONY: all clean
