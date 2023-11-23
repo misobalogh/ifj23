@@ -18,6 +18,14 @@
 #include "tests/colors.h"
 #include "token_types.h"
 
+
+const char* errorToString(error_codes err);
+
+#define EXIT_WITH_MESSAGE(err) do { \
+    printf("Error code: %i %s in %s\n", err, errorToString(err), __func__); \
+    exit(err); \
+  } while (0)
+
 /**
  * @brief Check if memory allocation was successful.
  *

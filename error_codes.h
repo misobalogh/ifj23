@@ -31,6 +31,7 @@
  * @param INTERNAL_ERROR Internal error of compailer, not influenced by the input program (memory allocation error...)
 */
 typedef enum {
+    SUCCESS = 0,
     LEX_ANALYSIS_ERR = 1, // Error in the program within lexical analysis (incorrect structure of the current lexeme)
     SYNTAX_ANALYSIS_ERR = 2, // Error in the program within syntactic analysis (incorrect program syntax, missing header...)
     UNDEFINED_FN = 3, // Semantic error in the program – undefined function

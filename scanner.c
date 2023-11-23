@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "macros.h"
 #include "scanner.h"
 #include <ctype.h>
 #include <stdlib.h>
@@ -239,7 +240,13 @@ lex_token get_next_token()
 
             else
             {
-                fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                fprintf(stderr, "ERROR: unexpected character encountered: ");
+                if (isprint(c)) {
+                    fprintf(stderr, "%c\n", c);
+                }
+                else {
+                    fprintf(stderr, "\\%i\n", c);
+                }
                 string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
@@ -409,7 +416,13 @@ lex_token get_next_token()
             }
             else
             {
-                fprintf(stderr, "ERROR: unexpected character encountered: %c\n", c);
+                fprintf(stderr, "ERROR: unexpected character encountered: ");
+                if (isprint(c)) {
+                    fprintf(stderr, "%c\n", c);
+                }
+                else {
+                    fprintf(stderr, "\\%i\n", c);
+                }
                 string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
@@ -661,7 +674,11 @@ lex_token get_next_token()
                 // current_lex_token.type = TYPE_IDENTIFIER;
                 char_insert(&str, '\0'); // TODO: check if this is correct
                 current_lex_token.type = keyword_check(str.data);
-                current_lex_token.value.STR_VAL = str.data;
+
+                current_lex_token.value.STR_VAL = malloc(str.size);
+                CHECK_MEMORY_ALLOC(current_lex_token.value.STR_VAL);
+                strncpy(current_lex_token.value.STR_VAL, str.data, str.size);
+
                 //  string_clear(&str);
                 return current_lex_token;
             }
@@ -1058,5 +1075,5 @@ lex_token get_next_token()
         }
     }
 
-    return (lex_token) { .type = TYPE_EOF };
+    return (lex_token) { .type = token_EOF };
 }

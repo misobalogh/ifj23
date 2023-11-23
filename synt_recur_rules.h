@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include "token_types.h"
+#include "error_codes.h"
 
 bool rule_PROGRAM();
 bool rule_RETURN_TYPE();

@@ -86,6 +86,7 @@ int getTableIndex(tokenType token) {
     }
 }
 
+#include "semantic_analysis.h"
 
 
 /**
@@ -105,58 +106,73 @@ bool reduce(stack* s) {
     stackItem* third = stackThird(s);
 
 
-    if ((top->type == token_ID
-        || top->type == token_CONST
-        || top->type == token_CONST_WHOLE_NUMBER
-        || top->type == token_CONST_DEC_NUMBER
-        || top->type == token_CONST_SCIENTIFIC_NOTATION
-        || top->type == token_TYPE_STRING_LINE) && top->flag == true) {
+    if ((top->token.type == token_ID
+        || top->token.type == token_CONST
+        || top->token.type == token_CONST_WHOLE_NUMBER
+        || top->token.type == token_CONST_DEC_NUMBER
+        || top->token.type == token_CONST_SCIENTIFIC_NOTATION
+        || top->token.type == token_TYPE_STRING_LINE) && top->flag == true) {
         PLOG("---rule ID---");
+
+        analyseExprOperand(top->token);
+
         rule_E_ID(s);
         stackPrint(s);
     }
     else if (
-        first->type == token_NONTERMINAL &&
-        (second->type == token_PLUS || second->type == token_MINUS || second->type == token_MUL || second->type == token_DIV) &&
-        third->type == token_NONTERMINAL) {
+        first->token.type == token_NONTERMINAL &&
+        (second->token.type == token_PLUS || second->token.type == token_MINUS || second->token.type == token_MUL || second->token.type == token_DIV) &&
+        third->token.type == token_NONTERMINAL) {
         PLOG("---rule E op E---");
+
+        analyseExprOperator(second->token);
+
         rule_ID_OP_ID(s);
         stackPrint(s);
     }
     else if (
-        first->type == token_NONTERMINAL &&
-        second->type == token_DEFAULT_VALUE &&
-        third->type == token_NONTERMINAL) {
+        first->token.type == token_NONTERMINAL &&
+        second->token.type == token_DEFAULT_VALUE &&
+        third->token.type == token_NONTERMINAL) {
         PLOG("---rule E ?? E---");
+
+        analyseExprDefault();
+
         rule_ID_CONCAT_ID(s);
         stackPrint(s);
     }
     else if (
-        first->type == token_PARENTHESES_R &&
-        second->type == token_NONTERMINAL &&
-        third->type == token_PARENTHESES_L) {
+        first->token.type == token_PARENTHESES_R &&
+        second->token.type == token_NONTERMINAL &&
+        third->token.type == token_PARENTHESES_L) {
         PLOG("---rule (E)---");
         rule_PAR_ID_PAR(s);
         stackPrint(s);
     }
     else if (
-        first->type == token_FORCE_UNWRAP &&
-        second->type == token_NONTERMINAL) {
+        first->token.type == token_FORCE_UNWRAP &&
+        second->token.type == token_NONTERMINAL) {
         PLOG("---rule E!---");
+
+        analyseExprOperator(first->token);
+
         rule_ID_FORCE_UNWRAP(s);
         stackPrint(s);
     }
     else if (
-        first->type == token_NONTERMINAL
-        && (second->type == token_REL
-            || second->type == token_EQ
-            || second->type == token_NEQ
-            || second->type == token_LESS
-            || second->type == token_MORE
-            || second->type == token_LESS_EQ
-            || second->type == token_MORE_EQ)
-        && third->type == token_NONTERMINAL) {
+        first->token.type == token_NONTERMINAL
+        && (second->token.type == token_REL
+            || second->token.type == token_EQ
+            || second->token.type == token_NEQ
+            || second->token.type == token_LESS
+            || second->token.type == token_MORE
+            || second->token.type == token_LESS_EQ
+            || second->token.type == token_MORE_EQ)
+        && third->token.type == token_NONTERMINAL) {
         PLOG("rule ID rel ID\n");
+
+        analyseExprOperator(second->token);
+
         stackPrint(s);
         rule_ID_REL_ID(s);
     }
@@ -174,7 +190,8 @@ bool precedenceParser() {
     // prepare stack
     stack s;
     stackInit(&s);
-    stackPush(&s, token_DOLLAR);
+    lex_token tokenDollar = { .type = token_DOLLAR, .value = 0 };
+    stackPush(&s, tokenDollar);
 
     // debug
     PLOG("====INIT====");
@@ -187,9 +204,15 @@ bool precedenceParser() {
         lex_token temp = t;
         t = stash;
         stash = temp;
+
+        /* if (stash.type == token_ID || stash.type == token_TYPE_STRING_LINE) { */
+        /*   stash.value.STR_VAL = malloc(sizeof(t.value.STR_VAL) + 1); */
+        /*   CHECK_MEMORY_ALLOC(stash.value.STR_VAL); */
+        /*   strcpy(stash.value.STR_VAL, t.value.STR_VAL); */
+        /* } */
     }
 
-    while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->type != token_DOLLAR) {
+    while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->token.type != token_DOLLAR) {
 
         // LOG("Last token: %s", TokenName(lastToken));
         // LOG("Current token: %s\n", TokenName(t.type));
@@ -206,7 +229,7 @@ bool precedenceParser() {
             table_index2 = getTableIndex(t.type);
         }
 
-        int table_index1 = getTableIndex(stackTopTerminal(&s)->type);
+        int table_index1 = getTableIndex(stackTopTerminal(&s)->token.type);
 
         if (table_index1 == -1 || table_index2 == -1) {
             return false;
@@ -221,7 +244,7 @@ bool precedenceParser() {
         switch (precedenceTable[table_index1][table_index2])
         {
         case EQUAL: // "="
-            stackPush(&s, t.type);
+            stackPush(&s, t);
 
             lastToken = t.type;
             getToken();
@@ -230,7 +253,7 @@ bool precedenceParser() {
             stackPrint(&s);
             break;
         case LOW: // expand  "<"
-            stackPush(&s, t.type);
+            stackPush(&s, t);
             stackTopTerminalSetFlag(&s);
 
             lastToken = t.type;

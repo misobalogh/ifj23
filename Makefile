@@ -15,6 +15,7 @@ EXEC = $(basename $(SRC_FILES))
 TEST_FILES = $(wildcard tests/*.c)
 UNIT_TESTS = $(basename $(TEST_FILES))
 
+all: main
 
 help:
 	@echo ""
@@ -33,7 +34,10 @@ help:
 	@echo ""
 
 
-all: main tests
+
+string_test: stest.c dynamic_string.c
+	$(CC) $(CFLAGS) $^ -o $@
+
 
 test: main
 	rm -rf *.log

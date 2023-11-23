@@ -7,10 +7,10 @@ write("Pozice retezce \"text\" v str2: ", i, "\n")
 write("Zadejte serazenou posloupnost vsech malych pismen a-h, ")
 let newInput = readString()
 if let newInput {
-str1 = newInput
-while (str1 != "abcdefgh") {
-write("Spatne zadana posloupnost, zkuste znovu:\n")
-let tmp = readString()
-str1 = tmp ?? ""
-}
+    str1 = newInput
+    while (str1 != "abcdefgh") {
+        write("Spatne zadana posloupnost, zkuste znovu:\n")
+        let tmp = readString()
+        str1 = tmp ?? ""
+    }
 } else {}

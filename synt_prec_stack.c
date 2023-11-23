@@ -13,6 +13,7 @@
 #include "synt_prec_stack.h"
 #include "token_types.h"
 #include <stdlib.h>
+#include <string.h>
 
 
 /**
@@ -31,10 +32,18 @@ void stackInit(stack* s) {
  * @param s Pointer to stack.
  * @param type Type of token.
  */
-void stackPush(stack* s, tokenType type) {
+void stackPush(stack* s, lex_token token) {
     stackItem* newItem = malloc(sizeof(stackItem));
     CHECK_MEMORY_ALLOC(newItem);
-    newItem->type = type;
+    newItem->token = token;
+
+    /* if (token.type == token_ID) { */
+    /*   size_t len = strlen(token.value.STR_VAL) + 1; */
+    /*   newItem->token.value.STR_VAL = malloc(len); */
+    /*   CHECK_MEMORY_ALLOC(newItem->token.value.STR_VAL); */
+    /*   strncpy(newItem->token.value.STR_VAL, token.value.STR_VAL, len); */
+    /* } */
+
     newItem->lower = s->top;
     newItem->flag = false;
     s->top = newItem;
@@ -53,6 +62,11 @@ void stackPop(stack* s) {
         return;
     }
     stackItem* topItem = s->top;
+
+    if (topItem->token.type == token_ID) {
+      free(topItem->token.value.STR_VAL);
+    }
+
     s->top = s->top->lower;
     s->size--;
     free(topItem);
@@ -99,7 +113,7 @@ void stackFreeItems(stack* s) {
 */
 stackItem* stackTopTerminal(stack* s) {
     stackItem* item = s->top;
-    while (item && !isTerminal(item->type)) {
+    while (item && !isTerminal(item->token.type)) {
         item = item->lower;
     }
     return item;
@@ -113,7 +127,7 @@ stackItem* stackTopTerminal(stack* s) {
  */
 void stackTopTerminalSetFlag(stack* s) {
     stackItem* item = s->top;
-    while (item && !isTerminal(item->type)) {
+    while (item && !isTerminal(item->token.type)) {
         item = item->lower;
     }
     item->flag = true;
@@ -175,7 +189,7 @@ void stackPrint(stack* s) {
     }
     stackItem* item = s->top;
     while (item) {
-        const char* str = TokenName(item->type);
+        const char* str = TokenName(item->token.type);
         fprintf(logFile, "%s\n", str);
         item = item->lower;
     }

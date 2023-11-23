@@ -2,8 +2,9 @@ import os
 import sys
 import subprocess
 from subprocess import TimeoutExpired
+import re
 
-timeout_seconds = 1
+timeout_seconds = 15
 
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -78,16 +79,28 @@ Running test {test_file}...
         print(f"\n{RED}Encountered error while running test '{test_file}': {e}{RESET}")
         continue
 
-    if return_code == 0:
+    regex = re.compile(r'test_([0-9]+)_.+')
+    matches = regex.findall(test_file)
+
+    expected_code = 0
+
+    try:
+        expected_code = int(matches[0])
+    except (ValueError, IndexError):
+        print(f'{MAGENTA}Could not parse expected exit code{RESET}')
+
+    print(f'Expecting code: {expected_code}')
+
+    if return_code == expected_code:
         print(f"\n{GREEN}Test '{test_file}' passed.{RESET}")
         tests_passed += 1
-    elif "test_lex_" in test_file and return_code == 1:
-        print(
-            f"\n{MAGENTA}Program should exit with 1 (testing lexical errors).{RESET}",
-            end="",
-        )
-        print(f"\n{GREEN}Test '{test_file}' passed.{RESET}")
-        tests_passed += 1
+    # elif "test_lex_" in test_file and return_code == 1:
+    #     print(
+    #         f"\n{MAGENTA}Program should exit with 1 (testing lexical errors).{RESET}",
+    #         end="",
+    #     )
+    #     print(f"\n{GREEN}Test '{test_file}' passed.{RESET}")
+    #     tests_passed += 1
     else:
         failed_tests.append((test_file, return_code))
         print(
