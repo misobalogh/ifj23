@@ -1,6 +1,6 @@
 /********************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23  *
-* File Name: global_variables.c                                     *  
+* File Name: global_variables.c                                     *
 * Description: Table of symbols                                     *
 * Author:  Michal Balogh xbalog06                                   *
 * Faculty: FIT VUT                                                  *
@@ -18,14 +18,14 @@
 /**
  * @brief Global table of symbols
 */
-symtable *global_table; 
+symtable* global_table;
 SymtableStack* global_symtableStack;
 
 /**
  * @brief Initialize global table of symbols
  */
 void global_initSymtable(void) {
-    global_table = symtableInit(SYMTABLE_SIZE);
+  global_table = symtableInit(SYMTABLE_SIZE);
 }
 
 void global_freeSymtable(void) {
@@ -56,18 +56,20 @@ void global_freeSymtableStack(void) {
 
 /**
  * @brief Checks if variable is already declared in global table of symbols
- * 
+ *
  * @param id Variable name
- * 
+ *
  * @return true if variable is already declared
  */
-static bool global_doubleDeclaration(char* id) {
-    symtableItem *found = symtableSearch(global_table, id);
-    if (found != NULL) {
-        return true;
-    }
-    return false;
-}
+
+ // ? TODO: Unused, do we need it?
+ // static bool global_doubleDeclaration(char* id) {
+ //     symtableItem *found = symtableSearch(global_table, id);
+ //     if (found != NULL) {
+ //         return true;
+ //     }
+ //     return false;
+ // }
 
 const char* errorToString(error_codes err) {
   switch (err) {

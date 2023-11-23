@@ -242,10 +242,10 @@ lex_token get_next_token()
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: ");
                 if (isprint(c)) {
-                  fprintf(stderr, "%c\n", c);
+                    fprintf(stderr, "%c\n", c);
                 }
                 else {
-                  fprintf(stderr, "\\%i\n", c);
+                    fprintf(stderr, "\\%i\n", c);
                 }
                 string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
@@ -418,10 +418,10 @@ lex_token get_next_token()
             {
                 fprintf(stderr, "ERROR: unexpected character encountered: ");
                 if (isprint(c)) {
-                  fprintf(stderr, "%c\n", c);
+                    fprintf(stderr, "%c\n", c);
                 }
                 else {
-                  fprintf(stderr, "\\%i\n", c);
+                    fprintf(stderr, "\\%i\n", c);
                 }
                 string_clear(&str);
                 return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
@@ -1075,5 +1075,5 @@ lex_token get_next_token()
         }
     }
 
-    return (lex_token) { .type = TYPE_EOF };
+    return (lex_token) { .type = token_EOF };
 }
