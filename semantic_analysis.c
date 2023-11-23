@@ -397,7 +397,10 @@ void analyseAssignEnd(void) {
   global_insertTop(stringCStr(&assignment.idname), data);
 
   genDef(stringCStr(&assignment.idname));
-  genAssign(stringCStr(&assignment.idname));
+
+  if (typeIsValue(assignment.type)) {
+    genAssign(stringCStr(&assignment.idname));
+  }
 
   prepareStatement();
 }
@@ -659,6 +662,8 @@ Type analyseExprEnd(void) {
           optype = op_CONCAT;
         }
 
+        genExprOperand(a);
+        genExprOperand(b);
         genExprOperator(optype);
       }
       exprStackPush(stack, (ExprItem) {
@@ -667,7 +672,6 @@ Type analyseExprEnd(void) {
         });
     }
     else { // operand
-      genExprOperand(it);
       exprStackPush(stack, it);
     }
   }
@@ -684,6 +688,7 @@ Type analyseExprEnd(void) {
   }
 
   if (top.type == expr_INTERMEDIATE || top.type == expr_CONST) {
+    genExprOperand(top);
     lastExprType = top.value.constValue.type;
     return lastExprType;
   }
