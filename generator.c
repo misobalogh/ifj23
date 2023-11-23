@@ -8,9 +8,135 @@
 #include "global_variables.h"
 #include "dynamic_string.h"
 
+static bool firstGenerated = false;
+static bool entryGenerated = false;
+
+extern char _binary_substring_code_start[];
+
+void genSubstring(void) {
+  printf("%s\n", _binary_substring_code_start);
+}
+
+void genFirst(void) {
+  if (!firstGenerated) {
+    printf("JUMP main\n");
+    firstGenerated = true;
+  }
+}
+
+void genEntry(void) {
+  if (!entryGenerated) {
+    printf("LABEL main\n");
+    entryGenerated = true;
+  }
+}
+
+void _genWrite(Param* params, unsigned paramCount) {
+  for (unsigned i = 0; i < paramCount; i++) {
+    if (params[i].isConst) {
+      if (params[i].type.base == 'I') {
+        printf("WRITE int@%i\n", params[i].intVal);
+      }
+      else if (params[i].type.base == 'D') {
+        printf("WRITE float@%a\n", params[i].floatVal);
+      }
+      else if (params[i].type.base == 'S') {
+        printf("WRITE string@%s\n", stringCStr(&params[i].name));
+      }
+      else {
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+      }
+    }
+    else {
+      const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
+      printf("WRITE %s@%s\n", l, stringCStr(&params[i].name));
+    }
+  }
+}
+
+void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
+  if (strcmp(idname, "readString") == 0
+    || strcmp(idname, "readInt") == 0
+    || strcmp(idname, "readDouble") == 0) {
+      printf("CREATEFRAME\n");
+      printf("DEFVAR A\n");
+      printf("READ TF@A\n");
+      printf("PUSHS TF@A");
+  }
+  else if (strcmp(idname, "write") == 0) {
+    _genWrite(params, paramCount);
+  }
+  else if (strcmp(idname, "Int2Double") == 0) {
+    printf("PUSHS LF@%s\n", stringCStr(&params[0].name));
+    printf("INT2FLOATS\n");
+  }
+  else if (strcmp(idname, "Double2Int") == 0) {
+    printf("PUSHS LF@%s\n", stringCStr(&params[0].name));
+    printf("FLOAT2INT\n");
+  }
+  else if (strcmp(idname, "length") == 0) {
+    const char* l = global_isLocal(stringCStr(&params->name)) ? "LF" : "GF";
+    printf("STRLEN %s@%s\n", l, stringCStr(&params[0].name));
+  }
+  else if (strcmp(idname, "substring") == 0) {
+    printf("CALL substring");
+  }
+  else if (strcmp(idname, "ord") == 0) {
+    printf("STR2INTS LF@c int@0\n");
+  }
+  else if (strcmp(idname, "chr") == 0) {
+    printf("INT2CHARS LF@c\n");
+  }
+}
+
+void genCall(const char* idname, Param* params, unsigned paramCount) {
+  symtableItem* it = symtableSearch(global_table, idname);
+
+  if (it->data.flags & FN_BUILTIN) {
+    _genBuiltinCall(idname, params, paramCount);
+    return;
+  }
+
+  if (it == NULL || it->data.paramCount != paramCount) {
+    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+  }
+
+  printf("CREATEFRAME\n");
+
+  for (unsigned i = 0; i < paramCount; i++) {
+    Param callParam = params[i];
+    Param funcParam = it->data.params[i];
+
+    printf("DEFVAR TF@%s\n", stringCStr(&funcParam.name));
+
+    if (callParam.isConst) {
+      if (callParam.type.base == 'I') {
+        printf("MOVE TF@%s int@%i\n", stringCStr(&funcParam.name), callParam.intVal);
+      }
+      else if (callParam.type.base == 'D') {
+        printf("MOVE TF@%s float@%a\n", stringCStr(&funcParam.name), callParam.floatVal);
+      }
+      else if (callParam.type.base == 'S') {
+        printf("MOVE TF@%s string@%s\n", stringCStr(&funcParam.name), stringCStr(&callParam.name));
+      }
+      else {
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+      }
+    }
+    else {
+      const char* l = global_isLocal(stringCStr(&callParam.name)) ? "LF" : "GF";
+      printf("MOVE TF@%s %s@%s\n", stringCStr(&funcParam.name), l, stringCStr(&callParam.name));
+    }
+  }
+
+  printf("PUSHFRAME\n");
+  printf("CALL func__%s\n", idname);
+  printf("POPFRAME\n");
+
+}
 
 void genFunction(const char* idname) {
-  printf("LABEL function__%s\n", idname);
+  printf("LABEL func__%s\n", idname);
 }
 
 void genReturn(void) {
@@ -18,21 +144,33 @@ void genReturn(void) {
 }
 
 void genDef(const char* idname) {
-  printf("DEFVAR LF@%s\n", idname);
+  if (global_isLocal(idname)) {
+    printf("DEFVAR LF@%s\n", idname);
+  }
+  else {
+    printf("DEFVAR GF@%s\n", idname);
+  }
 }
 
 void genAssign(const char* idname) {
-  /* printf("# pop to %s\n", idname); */
-  printf("POPS LF@%s\n", idname);
+  if (global_isLocal(idname)) {
+    printf("POPS LF@%s\n", idname);
+  }
+  else {
+    printf("POPS GF@%s\n", idname);
+  }
 }
 
 void genAssignId(const char* left, const char* right) {
-  printf("MOVE LF@%s LF@%s\n", left, right);
+  const char* ll = global_isLocal(left) ? "LF" : "GF";
+  const char* lr = global_isLocal(left) ? "LF" : "GF";
+  printf("MOVE %s@%s %s@%s\n", ll, left, lr, right);
 }
 
 void genExprOperand(ExprItem e) {
   if (e.type == expr_ID) {
-    printf("PUSHS LF@%s\n", e.value.idName);
+    const char* l = global_isLocal(e.value.idName) ? "LF" : "GF";
+    printf("PUSHS %s@%s\n", l, e.value.idName);
   }
   else if (e.type == expr_CONST) {
     if (e.value.constValue.type.base == 'I') {

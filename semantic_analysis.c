@@ -174,25 +174,29 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "readString", (SymbolData) {
       (Type) { 'S', true },
-      NULL, 0, false,
+      NULL, 0,
+      FN_BUILTIN,
       symbol_FN
   });
 
   symtableInsert(global_table, "readInt", (SymbolData) {
       (Type) { 'I', true },
-      NULL, 0, false,
+      NULL, 0,
+      FN_BUILTIN,
       symbol_FN
   });
 
   symtableInsert(global_table, "readDouble", (SymbolData) {
       (Type) { 'D', true },
-      NULL, 0, false,
+      NULL, 0,
+      FN_BUILTIN,
       symbol_FN
   });
 
   symtableInsert(global_table, "write", (SymbolData) {
       (Type) { 'D', true },
-      NULL, 0, true,
+      NULL, 0,
+      FN_BUILTIN | FN_VARIADIC,
       symbol_FN
   });
 
@@ -204,7 +208,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "Int2Double", (SymbolData) {
       (Type) { 'D', false },
-      int2DoubleParam, 1, false,
+      int2DoubleParam, 1,
+      FN_BUILTIN,
       symbol_FN
   });
 
@@ -216,7 +221,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "Double2Int", (SymbolData) {
       (Type) { 'D', false },
-      double2IntParam, 1, false,
+      double2IntParam, 1,
+      FN_BUILTIN,
       symbol_FN
   });
 
@@ -228,7 +234,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "length", (SymbolData) {
       (Type) { 'I', false },
-      lengthParam, 1, false,
+      lengthParam, 1,
+      FN_BUILTIN,
       symbol_FN
   });
 
@@ -246,7 +253,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "substring", (SymbolData) {
       (Type) { 'I', false },
-      substringParams, 3, false,
+      substringParams, 3,
+      FN_BUILTIN,
       symbol_FN
   });
 
@@ -258,7 +266,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "ord", (SymbolData) {
       (Type) { 'I', false },
-      ordParam, 1, false,
+      ordParam, 1,
+      FN_BUILTIN,
       symbol_FN
   });
 
@@ -270,7 +279,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "chr", (SymbolData) {
       (Type) { 'S', false },
-      chrParam, 1, false,
+      chrParam, 1,
+      FN_BUILTIN,
       symbol_FN
   });
 
@@ -453,7 +463,7 @@ void analyseFunctionEnd(void) {
 
   NOT_FALSE(typeIsValid(fnDef.type));
 
-  SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, false, symbol_FN };
+  SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, 0u, symbol_FN };
   symtableInsert(global_table, stringCStr(&fnDef.idname), data);
 
   _checkPostponed(stringCStr(&fnDef.idname), data);
@@ -470,13 +480,36 @@ void analyseFunctionEnd(void) {
 void analyseCallFnId(const char* idname) {
   stringClear(&fnCall.idname);
   stringClear(&fnCall.idOrLabel);
+  stringClear(&fnCall.idOrLabel);
   fnCall.paramCount = 0;
   (stringSet(&fnCall.idname, idname));
+
+  for (unsigned i = 0; i < fnCall.paramCount; i++) {
+    stringSet(&fnCall.params[fnCall.paramCount].name, "");
+    stringSet(&fnCall.params[fnCall.paramCount].label, "");
+    fnCall.params[fnCall.paramCount].type = (Type) { 0, false };
+    fnCall.params[fnCall.paramCount].isConst = false;
+  }
 }
 
-void analyseCallConst(tokenType type) {
+void analyseCallConst(lex_token token) {
   fnCallGrow();
-  fnCall.params[fnCall.paramCount].type = tokenToType(type);
+  Type t = tokenToType(token.type);
+  fnCall.params[fnCall.paramCount].type = t;
+  fnCall.params[fnCall.paramCount].isConst = true;
+
+  stringSet(&fnCall.params[fnCall.paramCount].label, "_");
+
+  if (t.base == 'I') {
+    fnCall.params[fnCall.paramCount].intVal = token.value.INT_VAL;
+  }
+  else if (t.base == 'D') {
+    fnCall.params[fnCall.paramCount].floatVal = token.value.FLOAT_VAL;
+  }
+  else if (t.base == 'S') {
+    stringSet(&fnCall.params[fnCall.paramCount].name, token.value.STR_VAL);
+  }
+
   fnCall.paramCount++;
 }
 
@@ -496,7 +529,9 @@ void analyseCallEpsAfterId(void) {
 
   typeIsVariable(it->data.dataType);
   stringSet(&fnCall.params[fnCall.paramCount].label, "_");
+  stringSet(&fnCall.params[fnCall.paramCount].name, it->key);
   fnCall.params[fnCall.paramCount].type = it->data.dataType;
+  fnCall.params[fnCall.paramCount].isConst = false;
 
   fnCall.paramCount++;
 }
@@ -514,16 +549,29 @@ void analyseCallIdAfterLabel(const char* idname) {
 
   stringSetS(&fnCall.params[fnCall.paramCount].label, &fnCall.idOrLabel);
   fnCall.params[fnCall.paramCount].type = it->data.dataType;
+  stringSet(&fnCall.params[fnCall.paramCount].name, idname);
+  fnCall.params[fnCall.paramCount].isConst = false;
 
   fnCall.paramCount++;
 }
 
-void analyseCallConstAfterLabel(tokenType type) {
+void analyseCallConstAfterLabel(lex_token token) {
   // idOrLabel was label
 
   Param* param = &fnCall.params[fnCall.paramCount];
   stringSetS(&param->label, &fnCall.idOrLabel);
-  param->type = tokenToType(type);
+  param->type = tokenToType(token.type);
+  fnCall.params[fnCall.paramCount].isConst = true;
+
+  if (param->type.base == 'I') {
+    fnCall.params[fnCall.paramCount].intVal = token.value.INT_VAL;
+  }
+  else if (param->type.base == 'D') {
+    fnCall.params[fnCall.paramCount].floatVal = token.value.FLOAT_VAL;
+  }
+  else if (param->type.base == 'S') {
+    stringSet(&fnCall.params[fnCall.paramCount].name, token.value.STR_VAL);
+  }
 
   fnCall.paramCount++;
 }
@@ -543,10 +591,12 @@ Type analyseCallEnd(void) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
   }
 
-  if (!item->data.variadic && !_compareParams(item->data.params, item->data.paramCount,
+  if (!(item->data.flags & FN_VARIADIC) && !_compareParams(item->data.params, item->data.paramCount,
     fnCall.params, fnCall.paramCount)) {
       EXIT_WITH_MESSAGE(4);
   }
+
+  genCall(item->key, fnCall.params, fnCall.paramCount);
 
   return item->data.dataType;
 }
@@ -704,7 +754,7 @@ void analyseReassignEnd(void) {
     /* genAssignId(stringCStr(&assignment.idname), stringCStr(&assignment.rightId)); */
   /* } */
   /* else { */
-    genAssign(stringCStr(&assignment.idname));
+    genAssign(stringCStr(&reassignment.idname));
   /* } */
 
   prepareStatement();

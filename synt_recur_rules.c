@@ -81,6 +81,9 @@ bool rule_EXPRESSION() {
 bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
 
+    genFirst();
+    genSubstring();
+
     getToken();
     RLOG("\n\n<program> -> <stat_list> EOF\n");
     if (t.type == token_LET ||
@@ -131,6 +134,10 @@ bool rule_STAT_LIST() {
 
 
 bool rule_STATEMENT() {
+    if (t.type != token_FUNC) {
+      genEntry();
+    }
+
     prepareStatement();
 
     switch (t.type) {
@@ -191,6 +198,7 @@ bool rule_STATEMENT() {
         }
         stringClear(&idname);
         setCurrentFunction(&idname);
+        stringFree(&idname);
 
         symtableStackPop(global_symtableStack);
 
@@ -641,7 +649,7 @@ bool rule_INPUT_PARAM() {
         || t.type == token_TYPE_STRING_LINE) {
 
         RLOG("<input_param> -> const\n");
-        (analyseCallConst(t.type));
+        analyseCallConst(t);
         getToken();
         return true;
     }
@@ -691,7 +699,7 @@ bool rule_ID_OR_CONST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE) {
         RLOG("<id_or_const> -> const\n");
-        (analyseCallConstAfterLabel(t.type));
+        analyseCallConstAfterLabel(t);
         getToken();
 
         return true;
@@ -738,7 +746,7 @@ bool rule_PARAM() {
     if (t.type != token_ID) {
         return false;
     }
-    (analyseFunctionParamName(t.value.STR_VAL));
+    analyseFunctionParamName(t.value.STR_VAL);
     getToken();
     LEX_ERR_CHECK();
     consume_optional_EOL();

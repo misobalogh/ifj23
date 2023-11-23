@@ -53,22 +53,6 @@ void global_freeSymtableStack(void) {
   global_symtableStack = NULL;
 }
 
-
-/**
- * @brief Checks if variable is already declared in global table of symbols
- * 
- * @param id Variable name
- * 
- * @return true if variable is already declared
- */
-static bool global_doubleDeclaration(char* id) {
-    symtableItem *found = symtableSearch(global_table, id);
-    if (found != NULL) {
-        return true;
-    }
-    return false;
-}
-
 const char* errorToString(error_codes err) {
   switch (err) {
   case SUCCESS:
@@ -137,4 +121,18 @@ symtableItem* global_searchTop(const char* key) {
   }
 
   return symtableSearch(table, key);
+}
+
+bool global_isLocal(const char* key) {
+  symtableItem* result = symtableStackSearch(global_symtableStack, key);
+  if (result != NULL) {
+    return true;
+  }
+
+  result = symtableSearch(global_table, key);
+  if (result != NULL) {
+    return false;
+  }
+
+  EXIT_WITH_MESSAGE(INTERNAL_ERROR);
 }

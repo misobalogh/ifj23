@@ -70,11 +70,11 @@ void analyseAssignType(Type type);
 void analyseAssignEnd(void);
 
 void analyseCallFnId(const char* idname);
-void analyseCallConst(tokenType type);
+void analyseCallConst(lex_token token);
 void analyseCallIdOrLabel(const char* value);
 void analyseCallEpsAfterId(void);
 void analyseCallIdAfterLabel(const char* idname);
-void analyseCallConstAfterLabel(tokenType type);
+void analyseCallConstAfterLabel(lex_token token);
 Type analyseCallEnd(void);
 
 void analyseExprBegin(void);

@@ -38,4 +38,6 @@ symtableItem* global_searchTop(const char* key);
 
 const char* errorToString(error_codes err);
 
+bool global_isLocal(const char* key);
+
 #endif // IFJ23_GLOBAL_VARIABLES_H

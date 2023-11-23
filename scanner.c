@@ -675,9 +675,10 @@ lex_token get_next_token()
                 char_insert(&str, '\0'); // TODO: check if this is correct
                 current_lex_token.type = keyword_check(str.data);
 
-                current_lex_token.value.STR_VAL = malloc(str.size);
+                current_lex_token.value.STR_VAL = malloc(str.size + 1);
                 CHECK_MEMORY_ALLOC(current_lex_token.value.STR_VAL);
                 strncpy(current_lex_token.value.STR_VAL, str.data, str.size);
+                current_lex_token.value.STR_VAL[str.size] = '\0';
 
                 //  string_clear(&str);
                 return current_lex_token;
@@ -1065,7 +1066,10 @@ lex_token get_next_token()
 
             ungetc(c, stdin);
             current_lex_token.type = token_TYPE_STRING_LINE;
-            current_lex_token.value.STR_VAL = str.data;
+            current_lex_token.value.STR_VAL = malloc(str.size + 1);
+            CHECK_MEMORY_ALLOC(current_lex_token.value.STR_VAL);
+            strncpy(current_lex_token.value.STR_VAL, str.data, str.size);
+            current_lex_token.value.STR_VAL[str.size] = '\0';
             return current_lex_token;
 
             break;
@@ -1075,5 +1079,5 @@ lex_token get_next_token()
         }
     }
 
-    return (lex_token) { .type = TYPE_EOF };
+    return (lex_token) { .type = (tokenType) TYPE_EOF };
 }

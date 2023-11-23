@@ -21,6 +21,9 @@
 #include "expr.h"
 #include "macros.h"
 
+#define FN_VARIADIC 1
+#define FN_BUILTIN 2
+
 /* Prime number for size of hash table */
 #define SYMTABLE_SIZE 257   
 
@@ -31,6 +34,9 @@ typedef struct Param {
   String label;
   String name;
   Type type;
+  int intVal;
+  float floatVal;
+  bool isConst;
 } Param;
 
 typedef enum SymbolType { symbol_VAR, symbol_LET, symbol_FN } SymbolType;
@@ -39,7 +45,7 @@ typedef struct SymbolData {
   Type dataType;
   Param* params;
   unsigned paramCount;
-  bool variadic;
+  unsigned flags;
   SymbolType symbolType;
 } SymbolData;
 
