@@ -7,7 +7,10 @@
 #include <stdbool.h>
 #include "token_types.h"
 
+// global variable to count nested comments
 int nested_counter = 1;
+// flag to make nested comments work properlz
+int nested_flag = 0;
 
 dynamic_string str = {.data = NULL, .size = 0, .capacity = 0};
 
@@ -300,15 +303,15 @@ lex_token get_next_token()
         case STATE_ROWCOMMENT:
             if (c == '\n')
             {
-                ungetc(c, stdin); // zmena
+                ungetc(c, stdin);
                 // printf("ukoncil se radkovy komentar\n");
                 current_lex_state = STATE_START;
             }
             else if (c == EOF)
             {
                 ungetc(c, stdin); // zmena
-                // printf("ukoncil se radkovy komentar\n"); // zmena
-                current_lex_state = STATE_START; // zmena
+                // printf("ukoncil se radkovy komentar\n");
+                current_lex_state = STATE_START;
             }
             else
             {
@@ -351,14 +354,22 @@ lex_token get_next_token()
             }
             else if (c == '*')
             {
-                nested_check(&nested_counter, 1);
-                current_lex_state = STATE_NESTED_COMMENT2;
-                // printf("increased, currently: %d\n", nested_counter);
+                if (nested_flag == 0)
+                {
+                    nested_check(&nested_counter, 1);
+                    current_lex_state = STATE_NESTED_COMMENT2;
+                    // printf("increased, currently: %d\n", nested_counter);
+                }
+                nested_flag = 0;
             }
             else if (c == EOF && nested_counter != 0)
             {
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
+            }
+            else if (c == '\n')
+            {
+                nested_flag = 1;
             }
             break;
 
