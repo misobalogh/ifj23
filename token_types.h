@@ -66,11 +66,11 @@ typedef enum
     token_CONST_WHOLE_NUMBER,
     token_CONST_DEC_NUMBER,
     token_CONST_SCIENTIFIC_NOTATION,
-    token_TYPE_STRING_LINE,
+    token_TYPE_STRING_LINE, //"hello world"
 
     token_DOLLAR,
     // ...
-    token_TERMINAL,  //25
+    token_TERMINAL, // 25
     // ...
     token_NONTERMINAL, // remove later
     token_LET,
@@ -78,7 +78,6 @@ typedef enum
     token_IF,
     token_ELSE,
     token_WHILE,
-
 
     token_NIL,
     token_FUNC,
@@ -96,7 +95,7 @@ typedef enum
     token_TYPE_INT_Q,
     token_TYPE_DOUBLE,
     token_TYPE_DOUBLE_Q,
-    token_TYPE_STRING,
+    token_TYPE_STRING, // data type string
     token_TYPE_STRING_Q,
     token_EOL,
     token_EOF,
@@ -106,7 +105,7 @@ typedef enum
 typedef struct token
 {
     tokenType type;
-    char* value;
+    char *value;
 } tokenStruct;
 
 bool isTerminal(tokenType type);
@@ -116,7 +115,7 @@ typedef union Value_of_token
 {
     int INT_VAL;
     float FLOAT_VAL;
-    char* STR_VAL;
+    char *STR_VAL;
 } value_of_token;
 
 // structure of token
@@ -130,7 +129,7 @@ typedef struct Token
 // structure of dynamic string
 typedef struct Dynamic_String
 {
-    char* data;            // current cuntent
+    char *data;            // current cuntent
     unsigned int size;     // current size
     unsigned int capacity; // max capacity
 } dynamic_string;
@@ -144,8 +143,7 @@ extern lex_token current_lex_token;
 // current state
 // extern states current_lex_state;
 
-
 //======DEBUG======
-const char* TokenName(tokenType token);
+const char *TokenName(tokenType token);
 
 #endif // _TOKEN_TYPES_H
