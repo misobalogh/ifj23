@@ -1,0 +1,21 @@
+.IFJcode23
+PUSHS int@1
+DEFVAR GF@vyraz
+POPS GF@vyraz
+JUMPIFEQS if0
+JUMP if_else0
+PUSHS int@2
+PUSHS GF@vyraz
+LTS
+LABEL if0
+PUSHS int@2
+DEFVAR LF@sekvence_prikazu
+POPS LF@sekvence_prikazu
+JUMP if_end0
+LABEL if_else0
+PUSHS int@1
+PUSHS int@13
+ADDS
+DEFVAR LF@sekvence_prikazu2
+POPS LF@sekvence_prikazu2
+LABEL if_end0

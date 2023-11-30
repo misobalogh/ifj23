@@ -46,6 +46,10 @@ test: main
 	rm -rf *.log
 	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))
 
+test-code: main
+	rm -rf ./tests_code/*.diff ./tests_code/output.code
+	python3 ./test.py
+
 rununit: $(UNIT_TESTS)
 	@for test in $(UNIT_TESTS); do \
 		./$$test; \
