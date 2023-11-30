@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 from io import TextIOWrapper
 from enum import IntEnum
-from typing import List, Tuple, Iterator
+from typing import List, Tuple
 from difflib import Differ
 
 
@@ -12,6 +12,7 @@ GREEN = '\033[92m'
 RED = '\033[91m'
 BLUE = '\033[94m'
 MAGENTA = '\033[95m'
+CYAN = '\033[96m'
 RESET = '\033[0m'
 
 PATH = './tests_code'
@@ -26,58 +27,64 @@ class TestResultType(IntEnum):
 
 
 class TestResult:
-    def __init__(self, result_type: TestResultType, code: int = -1, diff: 'Iterator[str]|None' = None):
+    def __init__(self, result_type: TestResultType, code: int = -1, diff: 'List[str]|None' = None):
         self.result_type = result_type
         self.exit_code = code
         self.diff = diff
 
 
 def test(test_file: TextIOWrapper) -> TestResult:
-    FILE = 'tests_code/output.code'
-    TIMEOUT = 8
+    CODE_FILE = 'tests_code/output.code'
+    TEMP_FILE = 'tests_code/temp'
+    TIMEOUT_SECONDS = 16
+    BUILTINS_FILE = 'ifj23.swift'
+    file_name = Path(test_file.name).name
 
     try:
-        print('generating code')
-        with open(FILE, 'w') as code_file:
-            result = subprocess.run('./main',
-                                    stdin=test_file,
-                                    stdout=code_file,
-                                    # stderr=subprocess.DEVNULL,
-                                    timeout=TIMEOUT)
+        print('[generating code]')
+        with open(CODE_FILE, 'w') as code_file:
+            result = subprocess.run('./main', stdin=test_file, stdout=code_file, timeout=TIMEOUT_SECONDS)
 
         if result.returncode != 0:
             return TestResult(TestResultType.COMPILATION_FAILED, result.returncode)
 
-        print('interpreting code')
-        int_pipe = subprocess.Popen(['ic23int', FILE], stdout=subprocess.PIPE,
-                                    # stderr=subprocess.DEVNULL
-                                    )
-        int_out, _ = int_pipe.communicate(timeout=TIMEOUT)
+        try:
+            with open('tests_code/' + file_name + '.in', 'r') as input_file:
+                test_input = input_file.read().encode()
+        except FileNotFoundError:
+              test_input = b''
+
+        print('[interpreting code]')
+        int_pipe = subprocess.Popen(['ic23int', CODE_FILE],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE)
+        int_out, _ = int_pipe.communicate(input=test_input, timeout=TIMEOUT_SECONDS)
         if int_pipe.returncode != 0:
             return TestResult(TestResultType.INTERPRETATION_FAILED, int_pipe.returncode)
 
         test_file.seek(0)
 
-        print('comparing interpreter output with swift output')
-        with open('ifj23.swift', 'r') as builtins:
-            bts = builtins.read().encode() + b'\n' + test_file.read().encode()
-            swift_process = subprocess.Popen(['swift', '-'],
-                                           stdin=subprocess.PIPE,
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.DEVNULL)
+        print('[comparing interpreter output with swift output]')
+        with open(BUILTINS_FILE, 'r') as builtins_file, open(TEMP_FILE, 'w') as temp_file:
+            temp_file.write(builtins_file.read() + '\n' + test_file.read())
 
-        swift_out, _  = swift_process.communicate(input=bts)
+        swift_process = subprocess.Popen(['swift', TEMP_FILE],
+                                       stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.DEVNULL)
+
+        swift_out, _  = swift_process.communicate(input=test_input, timeout=TIMEOUT_SECONDS)
         swift_process.wait()
 
         int_out = int_out.decode()
         swift_out = swift_out.decode()
 
         if int_out != swift_out:
-            d = Differ().compare(int_out, swift_out)
-            print(d)
+            d = list(Differ().compare(int_out.splitlines(), swift_out.splitlines()))
+            print_diff(d)
             return TestResult(TestResultType.OUTPUT_DIFFERS, diff=d)
 
-    except TimeoutError:
+    except subprocess.TimeoutExpired:
         return TestResult(TestResultType.TIMEOUT)
 
     return TestResult(TestResultType.SUCCESS)
@@ -108,14 +115,27 @@ def print_table(table: List[Tuple[str, TestResult]]):
 
     for test_name, test_result in table:
         color = GREEN if test_result.result_type == TestResultType.SUCCESS else RED
-        print(f'{color}{test_name:{cellsize}} {test_result.result_type.name}{RESET}')
+        print(f'{test_name:{cellsize}} {color}{test_result.result_type.name}{RESET}')
+
+def print_diff(diff: List[str]):
+    print('-------------------- diff --------------------')
+    for line in diff:
+        if line[0] == '-':
+            color = MAGENTA
+        elif line[0] == '+':
+            color = CYAN
+        else:
+            color = RESET
+
+        print(f'{color}{line}{RESET}')
+    print('------------------- end diff -----------------')
 
 test_files = [f.resolve() for f in Path(PATH).iterdir() if f.is_file() and f.match('*.swift')]
 test_results = dict()
 passed_count = 0
 
 for test_name in test_files:
-    print(f'running test {test_name.name}')
+    print(f'[running test {test_name.name}]')
 
     with open(test_name, 'r') as test_file:
         result = test(test_file)
