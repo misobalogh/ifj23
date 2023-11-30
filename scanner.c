@@ -303,14 +303,14 @@ lex_token get_next_token()
         case STATE_ROWCOMMENT:
             if (c == '\n')
             {
-                ungetc(c, stdin);
-                // printf("ukoncil se radkovy komentar\n");
+                // ungetc(c, stdin);
+                //   printf("ukoncil se radkovy komentar\n");
                 current_lex_state = STATE_START;
             }
             else if (c == EOF)
             {
                 ungetc(c, stdin); // zmena
-                // printf("ukoncil se radkovy komentar\n");
+                //  printf("ukoncil se radkovy komentar\n");
                 current_lex_state = STATE_START;
             }
             else
@@ -350,7 +350,14 @@ lex_token get_next_token()
         case STATE_NESTED_COMMENT1:
             if (c == '/')
             {
-                current_lex_state = current_lex_state;
+                if (nested_flag == 0)
+                {
+                    current_lex_state = STATE_NESTED_COMMENT1;
+                }
+                else
+                {
+                    nested_flag = 0;
+                }
             }
             else if (c == '*')
             {
@@ -360,14 +367,18 @@ lex_token get_next_token()
                     current_lex_state = STATE_NESTED_COMMENT2;
                     // printf("increased, currently: %d\n", nested_counter);
                 }
-                nested_flag = 0;
+                else
+                {
+                    current_lex_state = STATE_NESTED_COMMENT3;
+                    nested_flag = 0;
+                }
             }
             else if (c == EOF && nested_counter != 0)
             {
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
             }
-            else if (c == '\n')
+            else if (c == '\n' || isspace(c) || c != '/' || c != '*')
             {
                 nested_flag = 1;
             }
@@ -394,18 +405,38 @@ lex_token get_next_token()
 
             if (c == '*')
             {
-                current_lex_state = current_lex_state;
+                if (nested_flag == 0)
+                {
+                    current_lex_state = STATE_NESTED_COMMENT3;
+                }
+                else
+                {
+                    nested_flag = 0;
+                }
             }
             else if (c == '/')
             {
-                nested_check(&nested_counter, 0);
-                current_lex_state = STATE_NESTED_COMMENT4;
-                // printf("decrease, currently: %d\n", nested_counter);
+
+                if (nested_flag == 0)
+                {
+                    nested_check(&nested_counter, 0);
+                    current_lex_state = STATE_NESTED_COMMENT4;
+                    // printf("decrease, currently: %d\n", nested_counter);
+                }
+                else
+                {
+                    current_lex_state = STATE_NESTED_COMMENT1;
+                    nested_flag = 0;
+                }
             }
             else if (c == EOF && nested_counter != 0)
             {
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
+            }
+            else if (c == '\n' || isspace(c) || c != '/' || c != '*')
+            {
+                nested_flag = 1;
             }
 
             break;
@@ -550,6 +581,7 @@ lex_token get_next_token()
 
         case STATE_DEFAULT_VALUE:
             current_lex_token.type = token_CONCAT;
+            current_lex_state = STATE_START;
             ungetc(c, stdin);
             return current_lex_token;
 
@@ -1084,8 +1116,9 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_ML_STRING_ASSEMBLING;
             }
-            else if (c != '\n' && c != EOF)
+            else if (c != EOF)
             {
+                ungetc(c, stdin);
                 current_lex_state = STATE_STRING_DONE;
             }
             else
@@ -1231,6 +1264,7 @@ lex_token get_next_token()
             }
             else if (c == '"')
             {
+                ungetc(c, stdin);
                 current_lex_state = STATE_STRING_DONE;
             }
             else if (c == '\\')
@@ -1328,7 +1362,7 @@ lex_token get_next_token()
 
         case STATE_STRING_DONE:
 
-            ungetc(c, stdin);
+            // ungetc(c, stdin);
             current_lex_token.type = token_TYPE_STRING_LINE;
             current_lex_token.value.STR_VAL = str.data;
             return current_lex_token;
