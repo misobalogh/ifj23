@@ -57,6 +57,7 @@ static struct {
 } reassignment;
 
 static bool returnStarted;
+static bool exprConstOnly;
 
 static ExprArray* exprList;
 static FunctionLList* postponedCheckStack;
@@ -388,7 +389,11 @@ void analyseAssignEnd(void) {
   // type was not inted and actual type is valid type
   else if ((typeIsValue(assignment.hintedType) && typeEq(assignment.hintedType, assignment.type))
       || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
-    data = (SymbolData) { assignment.type, NULL, 0, false, st };
+    data = (SymbolData) { assignment.type, NULL, 0, 0, st };
+  }
+  else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
+          && assignment.rightId.size == 0 && exprConstOnly) {
+      data = (SymbolData) { assignment.hintedType, NULL, 0, 0, st };
   }
   else {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
@@ -637,10 +642,9 @@ void analyseExprDefault(void) {
   exprListAddOperator(exprList, op_DEFAULT);
 }
 
-
-
 Type analyseExprEnd(void) {
   ExprStack* stack = exprStackInit();
+  exprConstOnly = true;
 
   for (size_t i = 0; i < exprList->size; i++) {
     ExprItem it = exprList->data[i];
@@ -673,6 +677,9 @@ Type analyseExprEnd(void) {
     }
     else { // operand
       exprStackPush(stack, it);
+      if (it.type != expr_CONST) {
+          exprConstOnly = false;
+      }
     }
   }
 
@@ -682,13 +689,14 @@ Type analyseExprEnd(void) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
+  genExprOperand(top);
+
   if (top.type == expr_ID) {
     lastExprType = variableType(top.value.idName);
     return lastExprType;
   }
 
   if (top.type == expr_INTERMEDIATE || top.type == expr_CONST) {
-    genExprOperand(top);
     lastExprType = top.value.constValue.type;
     return lastExprType;
   }
@@ -997,6 +1005,7 @@ void analyseIfLetBegin(void) {
 void analyseIfLet(const char* idname) {
   iflet.started = true;
   stringSet(&iflet.idname, idname);
+  genIfLet(idname);
 }
 
 void pushIfLet(void) {

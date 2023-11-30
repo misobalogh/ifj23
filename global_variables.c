@@ -124,15 +124,5 @@ symtableItem* global_searchTop(const char* key) {
 }
 
 bool global_isLocal(const char* key) {
-  symtableItem* result = symtableStackSearch(global_symtableStack, key);
-  if (result != NULL) {
-    return true;
-  }
-
-  result = symtableSearch(global_table, key);
-  if (result != NULL) {
-    return false;
-  }
-
-  EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    return symtableStackIsLocal(global_symtableStack, key);
 }

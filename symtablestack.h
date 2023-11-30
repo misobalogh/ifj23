@@ -11,6 +11,7 @@
 
 typedef struct SymtableStackItem {
   symtable* table;
+  bool flag;
   struct SymtableStackItem* next;
 } SymtableStackItem;
 
@@ -19,8 +20,9 @@ typedef struct SymtableStack {
 } SymtableStack;
 
 void symtableStackInit(SymtableStack* stack);
-bool symtableStackPush(SymtableStack* stack);
+bool symtableStackPush(SymtableStack* stack, bool flag);
 void symtableStackPop(SymtableStack* stack);
 symtableItem* symtableStackSearch(SymtableStack* stack, const char* key);
+bool symtableStackIsLocal(SymtableStack* stack, const char* key);
 
 #endif

@@ -184,7 +184,7 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, true);
         pushFnParams(stringCStr(&idname));
 
         setCurrentFunction(&idname);
@@ -210,18 +210,19 @@ bool rule_STATEMENT() {
         getToken();
 
         analyseIfLetBegin();
-        genIfBegin();
 
         if (rule_CONDITION() == false) {
             return false;
         }
+        genIfBegin();
 
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+
+        symtableStackPush(global_symtableStack, false);
         pushIfLet();
         genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
@@ -244,7 +245,7 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         genIfElse();
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
@@ -276,7 +277,7 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         genWhileStats();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
@@ -348,17 +349,17 @@ bool rule_BRACK_STATEMENT() {
         getToken();
 
         analyseIfLetBegin();
-        genIfBegin();
         if (rule_CONDITION() == false) {
             return false;
         }
+        genIfBegin();
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         pushIfLet();
         genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
@@ -381,7 +382,7 @@ bool rule_BRACK_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         genIfElse();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
@@ -410,7 +411,7 @@ bool rule_BRACK_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         genWhileStats();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
@@ -865,18 +866,18 @@ bool rule_FUNC_STAT() {
         getToken();
 
         analyseIfLetBegin();
-        genIfBegin();
 
         if (rule_CONDITION() == false) {
             return false;
         }
 
+        genIfBegin();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         pushIfLet();
         genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
@@ -899,7 +900,7 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         genIfElse();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
@@ -930,7 +931,7 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         genWhileStats();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;

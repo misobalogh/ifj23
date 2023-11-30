@@ -157,6 +157,7 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
 }
 
 void genCall(const char* idname, Param* params, unsigned paramCount) {
+    printf("# call `%s`\n", idname);
   symtableItem* it = symtableSearch(global_table, idname);
 
   if (it->data.flags & FN_BUILTIN) {
@@ -201,6 +202,7 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
   printf("PUSHFRAME\n");
   printf("CALL func__%s\n", idname);
   printf("POPFRAME\n");
+  printf("# end call `%s`\n", idname);
 }
 
 void genFunction(const char* idname) {
@@ -339,23 +341,28 @@ void genExprOperator(OperatorType optype) {
 
 
 void genIfBegin(void) {
+  printf("# if begin\n");
   unsigned ifId = uid();
   istackPush(ifStack, ifId);
 
+  printf("PUSHS bool@true\n");
   printf("JUMPIFEQS if%x\n", ifId);
   printf("JUMP if_else%x\n", ifId);
 }
 
 void genIfBlock(void) {
+    printf("# if block\n");
   printf("LABEL if%x\n", istackTop(ifStack));
 }
 
 void genIfElse(void) {
+    printf("# if else\n");
   printf("JUMP if_end%x\n", istackTop(ifStack));
   printf("LABEL if_else%x\n", istackTop(ifStack));
 }
 
 void genIfEnd(void) {
+    printf("# if end\n");
   printf("LABEL if_end%x\n", istackTop(ifStack));
   istackPop(ifStack);
 }
@@ -367,12 +374,21 @@ void genWhileBegin(void) {
 }
 
 void genWhileStats(void) {
-  printf("JUMPIFNEQS while_end%x\n", istackTop(whileStack));
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS while_end%x\n", istackTop(whileStack));
 }
 
 void genWhileEnd(void) {
   printf("JUMP while_condition%x\n", istackTop(whileStack));
   printf("LABEL while_end%x\n", istackTop(whileStack));
   istackPop(whileStack);
+}
+
+void genIfLet(const char* idname) {
+    const char* l = global_isLocal(idname) ? "LF" : "GF";
+    printf("PUSHS %s@%s\n", l, idname);
+    printf("PUSHS nil@nil\n");
+    printf("EQS\n");
+    printf("NOTS\n");
 }
 

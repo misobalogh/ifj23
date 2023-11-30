@@ -12,7 +12,7 @@ void symtableStackInit(SymtableStack* stack) {
   stack->first = NULL;
 }
 
-bool symtableStackPush(SymtableStack* stack) {
+bool symtableStackPush(SymtableStack* stack, bool flag) {
   SymtableStackItem* item = malloc(sizeof(SymtableStackItem));
 
   if (item == NULL) {
@@ -21,6 +21,7 @@ bool symtableStackPush(SymtableStack* stack) {
 
   item->next = stack->first;
   item->table = symtableInit(SYMTABLE_SIZE);
+  item->flag = flag;
 
   stack->first = item;
 
@@ -40,17 +41,40 @@ void symtableStackPop(SymtableStack* stack) {
 }
 
 symtableItem* symtableStackSearch(SymtableStack* stack, const char* key) {
-  SymtableStackItem* item = stack->first;
+    SymtableStackItem* item = stack->first;
 
-  while (item != NULL) {
-    symtableItem* result = symtableSearch(item->table, key);
-    if (result != NULL) {
-      return result;
+    while (item != NULL) {
+        symtableItem* result = symtableSearch(item->table, key);
+        if (result != NULL) {
+            return result;
+        }
+
+        item = item->next;
     }
 
-    item = item->next;
-  }
-
-  return NULL;
+    return NULL;
 }
 
+bool symtableStackIsLocal(SymtableStack* stack, const char* key) {
+    SymtableStackItem* item = stack->first;
+    bool found = false;
+
+    while (item != NULL) {
+        if (found) {
+            if (item->flag) {
+                return true;
+            }
+        }
+        else {
+            symtableItem* result = symtableSearch(item->table, key);
+            if (result != NULL) {
+                found = true;
+            }
+        }
+
+        item = item->next;
+    }
+
+    return false;
+
+}

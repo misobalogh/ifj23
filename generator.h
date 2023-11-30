@@ -41,6 +41,8 @@ void genMainLabel(void);
 
 void genExprResult(ExprItem e);
 
+void genIfLet(const char* idname);
+
 void _printEscaped(const char* str);
 
 #endif
