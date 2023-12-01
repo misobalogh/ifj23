@@ -53,6 +53,11 @@ else {
     let a = 2
 }
 
+if (3 + a) > (5 - a) {
+}
+else {
+}
+
 let c: Int?
 
 if let c {

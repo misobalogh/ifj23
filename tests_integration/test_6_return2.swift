@@ -1,0 +1,4 @@
+
+func foo() -> Double {
+    return
+}

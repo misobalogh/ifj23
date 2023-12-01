@@ -21,8 +21,9 @@
 #include "expr.h"
 #include "macros.h"
 
-#define FN_VARIADIC 1
-#define FN_BUILTIN 2
+#define symbol_flag_VARIADIC 1
+#define symbol_flag_BUILTIN 2
+#define symbol_flag_INITIALIZED 4
 
 /* Prime number for size of hash table */
 #define SYMTABLE_SIZE 257   

@@ -369,19 +369,22 @@ void genIfEnd(void) {
 
 
 void genWhileBegin(void) {
-  istackPush(whileStack, uid());
-  printf("LABEL while_condition%x\n", istackTop(whileStack));
+    printf("# while begin\n");
+    istackPush(whileStack, uid());
+    printf("LABEL while_condition%x\n", istackTop(whileStack));
 }
 
 void genWhileStats(void) {
+    printf("# while condition\n");
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS while_end%x\n", istackTop(whileStack));
 }
 
 void genWhileEnd(void) {
-  printf("JUMP while_condition%x\n", istackTop(whileStack));
-  printf("LABEL while_end%x\n", istackTop(whileStack));
-  istackPop(whileStack);
+    printf("# while end\n");
+    printf("JUMP while_condition%x\n", istackTop(whileStack));
+    printf("LABEL while_end%x\n", istackTop(whileStack));
+    istackPop(whileStack);
 }
 
 void genIfLet(const char* idname) {
