@@ -221,7 +221,7 @@ bool semanticAnalysisInit(void) {
   double2IntParam->type = (Type) { 'D', false };
 
   symtableInsert(global_table, "Double2Int", (SymbolData) {
-      (Type) { 'D', false },
+      (Type) { 'I', false },
       double2IntParam, 1,
       symbol_flag_BUILTIN,
       symbol_FN
@@ -253,7 +253,7 @@ bool semanticAnalysisInit(void) {
   substringParams[2].type = (Type) { 'I', false };
 
   symtableInsert(global_table, "substring", (SymbolData) {
-      (Type) { 'I', false },
+      (Type) { 'S', true },
       substringParams, 3,
       symbol_flag_BUILTIN,
       symbol_FN
@@ -263,7 +263,7 @@ bool semanticAnalysisInit(void) {
   CHECK_MEMORY_ALLOC(ordParam);
   stringInit(&ordParam->label, "_");
   stringInit(&ordParam->name, "c");
-  ordParam->type = (Type) { 'I', false };
+  ordParam->type = (Type) { 'S', false };
 
   symtableInsert(global_table, "ord", (SymbolData) {
       (Type) { 'I', false },
@@ -276,7 +276,7 @@ bool semanticAnalysisInit(void) {
   CHECK_MEMORY_ALLOC(chrParam);
   stringInit(&chrParam->label, "_");
   stringInit(&chrParam->name, "i");
-  chrParam->type = (Type) { 'S', false };
+  chrParam->type = (Type) { 'I', false };
 
   symtableInsert(global_table, "chr", (SymbolData) {
       (Type) { 'S', false },
@@ -934,6 +934,13 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   }
 
   if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
+    if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
+        typeA.base = 'D';
+    }
+    else if (typeA.base == 'D' && typeB.base == 'I' && a.type == expr_CONST) {
+        typeB.base = 'D';
+    }
+
     if (typeA.base == typeB.base && !typeA.nullable && !typeB.nullable) {
       return (Type) { 'B', false };
     }
