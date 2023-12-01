@@ -17,27 +17,14 @@
 #include "synt_analysis.h"
 
 int main() {
+
     // lex_token t;
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
-    // t = get_next_token();
-    // LOG("Token: %s", TokenName(t.type));
+    // unsigned num_tokens = 20;
+    // for (unsigned i = 0; i < num_tokens; i++) {
+
+    //     t = get_next_token();
+    //     LOG("Token: %s", TokenName(t.type));
+    // }
 
     // return 0;
 

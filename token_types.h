@@ -67,6 +67,7 @@ typedef enum
     token_CONST_DEC_NUMBER,
     token_CONST_SCIENTIFIC_NOTATION,
     token_TYPE_STRING_LINE, //"hello world"
+    token_NIL,
 
     token_DOLLAR,
     // ...
@@ -79,7 +80,7 @@ typedef enum
     token_ELSE,
     token_WHILE,
 
-    token_NIL,
+
     token_FUNC,
     token_RETURN,
     token_BRACKET_L,
@@ -105,7 +106,7 @@ typedef enum
 typedef struct token
 {
     tokenType type;
-    char *value;
+    char* value;
 } tokenStruct;
 
 bool isTerminal(tokenType type);
@@ -115,7 +116,7 @@ typedef union Value_of_token
 {
     int INT_VAL;
     float FLOAT_VAL;
-    char *STR_VAL;
+    char* STR_VAL;
 } value_of_token;
 
 // structure of token
@@ -129,7 +130,7 @@ typedef struct Token
 // structure of dynamic string
 typedef struct Dynamic_String
 {
-    char *data;            // current cuntent
+    char* data;            // current cuntent
     unsigned int size;     // current size
     unsigned int capacity; // max capacity
 } dynamic_string;
@@ -144,6 +145,6 @@ extern lex_token current_lex_token;
 // extern states current_lex_state;
 
 //======DEBUG======
-const char *TokenName(tokenType token);
+const char* TokenName(tokenType token);
 
 #endif // _TOKEN_TYPES_H

@@ -11,6 +11,4 @@ this is nested
 /* comment */
 */
 
-
-/* /* 
-o */ */
+/* /*  */  let a = 2
