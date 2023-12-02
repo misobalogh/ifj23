@@ -330,8 +330,19 @@ void genExprOperator(OperatorType optype) {
     printf("EQS\n");
     printf("ORS\n");
     break;
-  case op_DEFAULT:
-    printf("not implemented\n");
+  case op_DEFAULT: {
+    unsigned id = uid();
+    printf("# default\n");
+    printf("CREATEFRAME\n");
+    printf("POPS TF@left\n");
+    printf("POPS TF@right\n");
+    printf("JUMPIFNEQ TF@left nil@nil default_not_null%i\n", id);
+    printf("PUSHS TF@right\n");
+    printf("JUMP default_end%i\n", id);
+    printf("LABEL default_end_null%i\n", id);
+    printf("PUSHS TF@left\n");
+    printf("LABEL default_end%i\n", id);
+   }
     break;
   case op_UNWRAP:
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);

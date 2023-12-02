@@ -27,7 +27,7 @@ class TestResultType(IntEnum):
 
 
 class TestResult:
-    def __init__(self, result_type: TestResultType, code: int = -1, diff: 'List[str]|None' = None):
+    def __init__(self, result_type: TestResultType, code: 'int|None' = None, diff: 'List[str]|None' = None):
         self.result_type = result_type
         self.exit_code = code
         self.diff = diff
@@ -112,14 +112,14 @@ def print_test(name: str, result: TestResult):
 def print_table(table: List[Tuple[str, TestResult]]):
     cellsize = len(max(table, key=lambda t : len(t[0]))[0]) + 1
     table.sort(key=lambda t : t[1].result_type)
+    # resultsize = max(len(r.name) for r in TestResultType) + 1
 
     for test_name, test_result in table:
         color = GREEN if test_result.result_type == TestResultType.SUCCESS else RED
         print(test_name.ljust(cellsize, '.'),
-              color,
-              test_result.result_type.name,
-              ' ', test_result.exit_code,
-              RESET, sep='')
+              (color + test_result.result_type.name + RESET).ljust(31, '.'),
+              test_result.exit_code,
+              sep='')
 
 def print_diff(diff: List[str]):
     print('-------------------- diff --------------------')

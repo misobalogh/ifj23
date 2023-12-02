@@ -493,6 +493,7 @@ void analyseFunctionEnd(void) {
 
   genFunction(stringCStr(&fnDef.idname));
 
+
   fnDef.paramCount = 0;
   stringClear(&fnDef.idname);
   fnDef.type = (Type) { 0, false };
@@ -897,6 +898,7 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
 
   if (optype == op_PLUS || optype == op_MINUS || optype == op_MUL || optype == op_DIV ) {
 
+      // implicit const conversion
     if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
         typeA.base = 'D';
     }
@@ -921,6 +923,7 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   }
 
   if (optype == op_EQ || optype == op_NEQ) {
+      // implicit const conversion
     if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
         typeA.base = 'D';
     }
@@ -934,6 +937,7 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   }
 
   if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
+      // implicit const conversion
     if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
         typeA.base = 'D';
     }

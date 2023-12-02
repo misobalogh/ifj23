@@ -198,6 +198,7 @@ bool rule_STATEMENT() {
         setCurrentFunction(&idname);
         stringFree(&idname);
 
+        genReturn();
         symtableStackPop(global_symtableStack);
 
         genMainLabel();

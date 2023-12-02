@@ -69,6 +69,7 @@ bool symtableStackIsLocal(SymtableStack* stack, const char* key) {
             symtableItem* result = symtableSearch(item->table, key);
             if (result != NULL) {
                 found = true;
+                continue;
             }
         }
 

@@ -11,7 +11,7 @@
 
 typedef struct SymtableStackItem {
   symtable* table;
-  bool flag;
+  bool flag; // is this function frame
   struct SymtableStackItem* next;
 } SymtableStackItem;
 
