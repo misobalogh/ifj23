@@ -252,7 +252,7 @@ bool rule_STATEMENT() {
 
         symtableStackPush(global_symtableStack, false);
         genIfElse();
-        if (rule_FUNC_STAT_LIST() == false) {
+        if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
@@ -892,7 +892,7 @@ bool rule_FUNC_STAT() {
         getToken();
 
         genIfBlock();
-        if (rule_BRACK_STAT_LIST() == false) {
+        if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
@@ -914,7 +914,7 @@ bool rule_FUNC_STAT() {
 
         symtableStackPush(global_symtableStack, false);
         genIfElse();
-        if (rule_BRACK_STAT_LIST() == false) {
+        if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
@@ -945,7 +945,7 @@ bool rule_FUNC_STAT() {
 
         symtableStackPush(global_symtableStack, false);
         genWhileStats();
-        if (rule_BRACK_STAT_LIST() == false) {
+        if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         genWhileEnd();
