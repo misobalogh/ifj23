@@ -1101,8 +1101,9 @@ lex_token get_next_token()
             }
             else if (c != '\n' && c != EOF)
             {
+                ungetc(c, stdin);
                 current_lex_state = STATE_STRING_ASSEMBLING;
-                char_insert(&str, c);
+                // char_insert(&str, c);
             }
             else
             {
