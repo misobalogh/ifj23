@@ -29,10 +29,14 @@ bool recursiveParser(void) {
 
     genInit();
 
-    bool result = rule_PROGRAM();
+    if (!rule_PROGRAM()) {
+        return false;
+    }
+
     semanticAnalysisDeinit();
     genDeinit();
-    return result;
+
+    return true;
 }
 
 
