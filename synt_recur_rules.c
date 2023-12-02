@@ -209,6 +209,7 @@ bool rule_STATEMENT() {
             return false;
         }
 
+
         if (t.type != token_BRACKET_L) {
             return false;
         }
@@ -852,7 +853,6 @@ bool rule_FUNC_STAT() {
         if (rule_CONDITION() == false) {
             return false;
         }
-
         if (t.type != token_BRACKET_L) {
             return false;
         }
@@ -860,7 +860,7 @@ bool rule_FUNC_STAT() {
 
         symtableStackPush(global_symtableStack);
         pushIfLet();
-        if (rule_BRACK_STAT_LIST() == false) {
+        if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
@@ -881,7 +881,7 @@ bool rule_FUNC_STAT() {
         getToken();
 
         symtableStackPush(global_symtableStack);
-        if (rule_BRACK_STAT_LIST() == false) {
+        if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
@@ -909,7 +909,7 @@ bool rule_FUNC_STAT() {
         getToken();
 
         symtableStackPush(global_symtableStack);
-        if (rule_BRACK_STAT_LIST() == false) {
+        if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
