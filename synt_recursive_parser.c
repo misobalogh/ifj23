@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 14.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -22,13 +22,13 @@
 #include "semantic_analysis.h"
 
 bool recursiveParser(void) {
-    if (!semanticAnalysisInit()) {
-      return false;
-    }
+  if (!semanticAnalysisInit()) {
+    return false;
+  }
 
-    bool result = rule_PROGRAM();
-    semanticAnalysisDeinit();
-    return result;
+  bool result = rule_PROGRAM();
+  semanticAnalysisDeinit();
+  return result;
 }
 
 
