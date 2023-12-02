@@ -11,8 +11,8 @@
 
 static unsigned cmain = 0;
 
-static IStack* ifStack;
-static IStack* whileStack;
+static unsigned vertical_block = 0;
+static unsigned horizontal_block = 0;
 
 extern char _binary_substring_code_start[];
 
@@ -22,14 +22,10 @@ unsigned uid(void) {
 }
 
 void genInit(void) {
-    ifStack = istackInit();
-    whileStack = istackInit();
     printf(".IFJcode23\n");
 }
 
 void genDeinit(void) {
-  istackFree(ifStack);
-  istackFree(whileStack);
 }
 
 void genMainJump(void) {
@@ -334,9 +330,11 @@ void genExprOperator(OperatorType optype) {
     unsigned id = uid();
     printf("# default\n");
     printf("CREATEFRAME\n");
+    printf("DEFVAR TF@left\n");
+    printf("DEFVAR TF@right\n");
     printf("POPS TF@left\n");
     printf("POPS TF@right\n");
-    printf("JUMPIFNEQ TF@left nil@nil default_not_null%i\n", id);
+    printf("JUMPIFNEQ default_not_null%i TF@left nil@nil\n", id);
     printf("PUSHS TF@right\n");
     printf("JUMP default_end%i\n", id);
     printf("LABEL default_end_null%i\n", id);
@@ -352,50 +350,53 @@ void genExprOperator(OperatorType optype) {
 
 
 void genIfBegin(void) {
-  printf("# if begin\n");
-  unsigned ifId = uid();
-  istackPush(ifStack, ifId);
+    horizontal_block++;
 
-  printf("PUSHS bool@true\n");
-  printf("JUMPIFEQS if%x\n", ifId);
-  printf("JUMP if_else%x\n", ifId);
+    printf("# if begin\n");
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFEQS if%04X%04X\n", vertical_block, horizontal_block);
+    printf("JUMP if_else%04X%04X\n", vertical_block, horizontal_block);
 }
 
 void genIfBlock(void) {
     printf("# if block\n");
-  printf("LABEL if%x\n", istackTop(ifStack));
+    printf("LABEL if%04X%04X\n", vertical_block, horizontal_block);
 }
 
 void genIfElse(void) {
     printf("# if else\n");
-  printf("JUMP if_end%x\n", istackTop(ifStack));
-  printf("LABEL if_else%x\n", istackTop(ifStack));
+    printf("JUMP if_end%04X%04X\n", vertical_block, horizontal_block);
+    printf("LABEL if_else%04X%04X\n", vertical_block, horizontal_block);
 }
 
 void genIfEnd(void) {
     printf("# if end\n");
-  printf("LABEL if_end%x\n", istackTop(ifStack));
-  istackPop(ifStack);
+    printf("LABEL if_end%04X%04X\n", vertical_block, horizontal_block);
+
+    horizontal_block--;
+    vertical_block++;
 }
 
-
 void genWhileBegin(void) {
+    horizontal_block++;
+
     printf("# while begin\n");
-    istackPush(whileStack, uid());
-    printf("LABEL while_condition%x\n", istackTop(whileStack));
+    printf("LABEL while_condition%04X%04X\n", vertical_block, horizontal_block);
 }
 
 void genWhileStats(void) {
     printf("# while condition\n");
     printf("PUSHS bool@true\n");
-    printf("JUMPIFNEQS while_end%x\n", istackTop(whileStack));
+    printf("JUMPIFNEQS while_end%04X%04X\n", vertical_block, horizontal_block);
 }
 
 void genWhileEnd(void) {
     printf("# while end\n");
-    printf("JUMP while_condition%x\n", istackTop(whileStack));
-    printf("LABEL while_end%x\n", istackTop(whileStack));
-    istackPop(whileStack);
+    printf("JUMP while_condition%04X%04X\n", vertical_block, horizontal_block);
+    printf("LABEL while_end%04X%04X\n", vertical_block, horizontal_block);
+
+    horizontal_block--;
+    vertical_block++;
 }
 
 void genIfLet(const char* idname) {

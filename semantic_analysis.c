@@ -355,6 +355,11 @@ void analyseAssignIdType(void) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
+  genExprOperand((ExprItem) {
+      .type=expr_ID,
+      .value.idName=(char*) stringCStr(&assignment.rightId)
+  });
+
   assignment.type = it->data.dataType;
 }
 
@@ -413,10 +418,7 @@ void analyseAssignEnd(void) {
   global_insertTop(stringCStr(&assignment.idname), data);
 
   genDef(stringCStr(&assignment.idname));
-
-  if (typeIsValue(assignment.type)) {
-    genAssign(stringCStr(&assignment.idname));
-  }
+  genAssign(stringCStr(&assignment.idname));
 
   prepareStatement();
 }
@@ -682,8 +684,8 @@ Type analyseExprEnd(void) {
           optype = op_CONCAT;
         }
 
-        genExprOperand(a);
         genExprOperand(b);
+        genExprOperand(a);
         genExprOperator(optype);
       }
       exprStackPush(stack, (ExprItem) {
@@ -750,6 +752,8 @@ void analyseReassignIdType(void) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
+  genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&reassignment.rightId) });
+
   reassignment.type = it->data.dataType;
 }
 
@@ -780,10 +784,10 @@ void analyseReassignEnd(void) {
     it->data.flags |= symbol_flag_INITIALIZED;
     /* global_insertTop(it->key, data); */
 
-    if (assignment.rightId.size > 0) {
-        // push the value on stack
-        genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&assignment.idname) });
-    }
+    /* if (reassignment.rightId.size > 0) { */
+    /*     // push the value on stack */
+    /*     genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&assignment.idname) }); */
+    /* } */
     genAssign(stringCStr(&reassignment.idname));
 
     prepareStatement();

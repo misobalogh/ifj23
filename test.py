@@ -59,6 +59,7 @@ def test(test_file: TextIOWrapper) -> TestResult:
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
         int_out, _ = int_pipe.communicate(input=test_input, timeout=TIMEOUT_SECONDS)
+        int_pipe.wait()
         if int_pipe.returncode != 0:
             return TestResult(TestResultType.INTERPRETATION_FAILED, int_pipe.returncode)
 
