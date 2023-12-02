@@ -6,7 +6,7 @@
 * Faculty: FIT VUT
 * Date: 14.10.2023
 
-* Comments: 
+* Comments:
 
 ***************************************************************/
 
@@ -24,7 +24,7 @@
 
 bool recursiveParser(void) {
     if (!semanticAnalysisInit()) {
-      return false;
+        return false;
     }
 
     genInit();

@@ -7,7 +7,7 @@ TESTLIB = cunit
 LD = ld
 
 SRC_DIR = .
-OBJ_DIR = obj
+OBJ_DIR = .
 TARGET = main
 
 SRC_FILES = $(filter-out $(SRC_DIR)/main.c, $(wildcard $(SRC_DIR)/*.c))
@@ -16,6 +16,7 @@ EXEC = $(basename $(SRC_FILES))
 TEST_FILES = $(wildcard tests/*.c)
 UNIT_TESTS = $(basename $(TEST_FILES))
 
+all: main
 
 help:
 	@echo ""
@@ -34,7 +35,6 @@ help:
 	@echo ""
 
 
-all: main tests
 
 string_test: stest.c dynamic_string.c
 	$(CC) $(CFLAGS) $^ -o $@
@@ -72,6 +72,6 @@ tests/%: tests/%.o $(filter-out $(OBJ_DIR)/main.o, $(OBJ_FILES))
 	$(CC) $(CFLAGS) $^ -o $@ -l$(TESTLIB)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) $(EXEC) $(UNIT_TESTS) *.log
+	rm -rf $(TARGET) $(EXEC) $(UNIT_TESTS) *.log *.o ./obj
 
 .PHONY: all clean

@@ -25,7 +25,8 @@ bool connstTypes(tokenType type) {
         || type == token_CONST_WHOLE_NUMBER
         || type == token_CONST_DEC_NUMBER
         || type == token_CONST_SCIENTIFIC_NOTATION
-        || type == token_TYPE_STRING_LINE) {
+        || type == token_TYPE_STRING_LINE
+        || type == token_NIL) {
         return true;
     }
     return false;
@@ -70,6 +71,7 @@ int getTableIndex(tokenType token) {
         return 6;
     case token_ID:
     case token_CONST:
+    case token_NIL:
     case token_CONST_WHOLE_NUMBER:
     case token_CONST_DEC_NUMBER:
     case token_CONST_SCIENTIFIC_NOTATION:
@@ -111,7 +113,8 @@ bool reduce(stack* s) {
         || top->token.type == token_CONST_WHOLE_NUMBER
         || top->token.type == token_CONST_DEC_NUMBER
         || top->token.type == token_CONST_SCIENTIFIC_NOTATION
-        || top->token.type == token_TYPE_STRING_LINE) && top->flag == true) {
+        || top->token.type == token_TYPE_STRING_LINE
+        || top->token.type == token_NIL) && top->flag == true) {
         PLOG("---rule ID---");
 
         analyseExprOperand(top->token);
@@ -212,8 +215,9 @@ bool precedenceParser() {
         /* } */
     }
 
-    while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->token.type != token_DOLLAR) {
+    bool expression_is_empty = true;
 
+    while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->token.type != token_DOLLAR) {
         // LOG("Last token: %s", TokenName(lastToken));
         // LOG("Current token: %s\n", TokenName(t.type));
 
@@ -231,16 +235,12 @@ bool precedenceParser() {
 
         int table_index1 = getTableIndex(stackTopTerminal(&s)->token.type);
 
-        if (table_index1 == -1 || table_index2 == -1) {
-            return false;
-        }
-
         if (table_index1 == getTableIndex(token_DOLLAR) && table_index2 == getTableIndex(token_DOLLAR)) {
             break;
         }
 
         // LOG("table indexes: %d %d\n", table_index1, table_index2);
-
+        expression_is_empty = false;
         switch (precedenceTable[table_index1][table_index2])
         {
         case EQUAL: // "="
@@ -281,7 +281,6 @@ bool precedenceParser() {
             PLOG("ERROR: unknown precedence table value\n");
             return false;
         }
-
     }
 
     stash.type = token_EMPTY;
@@ -289,6 +288,9 @@ bool precedenceParser() {
     PLOG("====END====\n");
     stackFreeItems(&s);
 
+    if (expression_is_empty) {
+        return false;
+    }
     return true;
 }
 

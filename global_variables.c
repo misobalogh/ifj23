@@ -1,6 +1,6 @@
 /********************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23  *
-* File Name: global_variables.c                                     *  
+* File Name: global_variables.c                                     *
 * Description: Table of symbols                                     *
 * Author:  Michal Balogh xbalog06                                   *
 * Faculty: FIT VUT                                                  *
@@ -18,14 +18,14 @@
 /**
  * @brief Global table of symbols
 */
-symtable *global_table; 
+symtable* global_table;
 SymtableStack* global_symtableStack;
 
 /**
  * @brief Initialize global table of symbols
  */
 void global_initSymtable(void) {
-    global_table = symtableInit(SYMTABLE_SIZE);
+  global_table = symtableInit(SYMTABLE_SIZE);
 }
 
 void global_freeSymtable(void) {

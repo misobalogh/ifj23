@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: synt_recur_rules.c
 * Description: rules for top-down syntactic analysis
-* Author: MICHAL BALOGH
+// * Author: MICHAL BALOGH
 * Faculty: FIT VUT
 * Date: 21.10.2023
 
@@ -63,7 +63,7 @@ bool rule_EXPRESSION() {
     RLOG("<expression> => switching to precedence parser\n");
     analyseExprBegin();
     if (!precedenceParser()) {
-      return false;
+        return false;
     }
     Type exprType = analyseExprEnd();
 
@@ -94,14 +94,16 @@ bool rule_PROGRAM() {
         ) {
         if (rule_STAT_LIST()) {
             RLOG("EOF\n");
+            RLOG("Returned TRUE");
             return true;
         }
     }
     else if (t.type == token_EOF) {
-        RLOG("EOF\n");
+        RLOG("Returned TRUE");
+        RLOG("DONE");
         return true;
     }
-
+    RLOG("Returned FALSE");
     return false;
 }
 
@@ -217,6 +219,7 @@ bool rule_STATEMENT() {
         }
         genIfBegin();
 
+
         if (t.type != token_BRACKET_L) {
             return false;
         }
@@ -315,7 +318,6 @@ bool rule_BRACK_STAT_LIST() {
         RLOG("<brack_stat_list> -> <brack_statement> EOL <brack_stat_list>\n");
         if (rule_BRACK_STATEMENT()) {
             if (EOL_flag == true) {
-                LEX_ERR_CHECK();
                 return rule_BRACK_STAT_LIST();
             }
         }
@@ -394,8 +396,9 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         getToken();
-        LEX_ERR_CHECK();
+
         return true;
+
     case token_WHILE:
         RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
@@ -423,7 +426,6 @@ bool rule_BRACK_STATEMENT() {
             return false;
         }
         getToken();
-        LEX_ERR_CHECK();
         return true;
     case token_EOL:
         RLOG("<brack_statement> -> EPSILON\n");
@@ -492,7 +494,8 @@ bool rule_VAR_ASSIGNMENT() {
             || t.type == token_CONST_DEC_NUMBER
             || t.type == token_CONST_SCIENTIFIC_NOTATION
             || t.type == token_PARENTHESES_L
-            || t.type == token_TYPE_STRING_LINE) {
+            || t.type == token_TYPE_STRING_LINE
+            || t.type == token_NIL) {
             RLOG("<var_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -521,7 +524,8 @@ bool rule_VAL_ASSIGNMENT() {
             || t.type == token_CONST_DEC_NUMBER
             || t.type == token_CONST_SCIENTIFIC_NOTATION
             || t.type == token_PARENTHESES_L
-            || t.type == token_TYPE_STRING_LINE) {
+            || t.type == token_TYPE_STRING_LINE
+            || t.type == token_NIL) {
             RLOG("<val_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -601,7 +605,8 @@ bool rule_AFTER_ID() {
             || t.type == token_CONST_DEC_NUMBER
             || t.type == token_CONST_SCIENTIFIC_NOTATION
             || t.type == token_PARENTHESES_L
-            || t.type == token_TYPE_STRING_LINE) {
+            || t.type == token_TYPE_STRING_LINE
+            || t.type == token_NIL) {
             RLOG("<after_id> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
@@ -636,7 +641,8 @@ bool rule_INPUT_PARAM_LIST() {
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
-        || t.type == token_TYPE_STRING_LINE) {
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_NIL) {
         RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
@@ -665,7 +671,8 @@ bool rule_INPUT_PARAM() {
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
-        || t.type == token_TYPE_STRING_LINE) {
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_NIL) {
 
         RLOG("<input_param> -> const\n");
         analyseCallConst(t);
@@ -716,7 +723,8 @@ bool rule_ID_OR_CONST() {
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
-        || t.type == token_TYPE_STRING_LINE) {
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_NIL) {
         RLOG("<id_or_const> -> const\n");
         analyseCallConstAfterLabel(t);
         getToken();
@@ -835,7 +843,7 @@ bool rule_FUNC_STAT_LIST() {
         }
     }
     // <func_stat_list> -> EPSILON    
-    else if (t.type == token_BRACKET_R) {
+    if (t.type == token_BRACKET_R) {
         RLOG("<func_stat_list> -> EPSILON\n");
         return true;
     }
@@ -857,6 +865,7 @@ bool rule_FUNC_STAT() {
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
         getToken();
+
         return rule_AFTER_ID();
     case token_RETURN:
         // <func_stat> -> <return_stat>
@@ -986,7 +995,8 @@ bool rule_RET_VAL() {
         || t.type == token_CONST_WHOLE_NUMBER
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
-        || t.type == token_TYPE_STRING_LINE) {
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_NIL) {
         RLOG("<ret_val> -> <expression>\n");
         return rule_EXPRESSION();
     }
@@ -1007,10 +1017,11 @@ bool rule_CONDITION() {
         || t.type == token_CONST_DEC_NUMBER
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_PARENTHESES_L
-        || t.type == token_TYPE_STRING_LINE) {
+        || t.type == token_TYPE_STRING_LINE
+        || t.type == token_NIL) {
         RLOG("<condition> -> <expression>\n");
         if (!rule_EXPRESSION()) {
-          return false;
+            return false;
         }
         analyseCondition();
         return true;
