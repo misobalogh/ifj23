@@ -49,7 +49,7 @@ def test(test_file: TextIOWrapper) -> TestResult:
             return TestResult(TestResultType.COMPILATION_FAILED, result.returncode)
 
         try:
-            with open('tests_code/' + file_name + '.in', 'r') as input_file:
+            with open('tests_code/' + file_name.removesuffix('.swift') + '.in', 'r') as input_file:
                 test_input = input_file.read().encode()
         except FileNotFoundError:
               test_input = b''
@@ -110,12 +110,16 @@ def print_test(name: str, result: TestResult):
 
 
 def print_table(table: List[Tuple[str, TestResult]]):
-    cellsize = len(max(table, key=lambda t : len(t[0]))[0])
+    cellsize = len(max(table, key=lambda t : len(t[0]))[0]) + 1
     table.sort(key=lambda t : t[1].result_type)
 
     for test_name, test_result in table:
         color = GREEN if test_result.result_type == TestResultType.SUCCESS else RED
-        print(f'{test_name:{cellsize}} {color}{test_result.result_type.name}{RESET}')
+        print(test_name.ljust(cellsize, '.'),
+              color,
+              test_result.result_type.name,
+              ' ', test_result.exit_code,
+              RESET, sep='')
 
 def print_diff(diff: List[str]):
     print('-------------------- diff --------------------')
@@ -148,4 +152,3 @@ for test_name in test_files:
 print('\nsummary:')
 print_table(list(test_results.items()))
 print(f'passed {passed_count} / {len(test_files)}')
-
