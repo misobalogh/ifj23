@@ -11,8 +11,7 @@
 
 static unsigned cmain = 0;
 
-static unsigned vertical_blocks[256] = { 0 };
-static unsigned horizontal_block = 0;
+IStack* blockStack;
 
 extern char _binary_substring_code_start[];
 
@@ -23,9 +22,11 @@ unsigned uid(void) {
 
 void genInit(void) {
     printf(".IFJcode23\n");
+    blockStack = istackInit();
 }
 
 void genDeinit(void) {
+    istackFree(blockStack);
 }
 
 void genMainJump(void) {
@@ -366,7 +367,7 @@ void genExprOperator(OperatorType optype) {
     printf("ORS\n");
     break;
   case op_DEFAULT: {
-    horizontal_block++;
+    unsigned id = uid();
 
     printf("# default\n");
     printf("CREATEFRAME\n");
@@ -374,15 +375,12 @@ void genExprOperator(OperatorType optype) {
     printf("DEFVAR TF@temp_right\n");
     printf("POPS TF@temp_left\n");
     printf("POPS TF@temp_right\n");
-    printf("JUMPIFNEQ default_not_null%04X%04X TF@temp_left nil@nil\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMPIFNEQ default_not_null%04XTF@temp_left nil@nil\n", id);
     printf("PUSHS TF@temp_right\n");
-    printf("JUMP default_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
-    printf("LABEL default_end_null%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMP default_end%04X\n", id);
+    printf("LABEL default_end_null%04X\n", id);
     printf("PUSHS TF@temp_left\n");
-    printf("LABEL default_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
-
-    horizontal_block--;
-    vertical_blocks[horizontal_block]++;
+    printf("LABEL default_end%04X\n", id);
    }
     break;
   case op_UNWRAP:
@@ -393,53 +391,53 @@ void genExprOperator(OperatorType optype) {
 
 
 void genIfBegin(void) {
-    horizontal_block++;
+    unsigned id = uid();
+    istackPush(blockStack, id);
 
     printf("# if begin\n");
     printf("PUSHS bool@true\n");
-    printf("JUMPIFEQS if%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
-    printf("JUMP if_else%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMPIFEQS if%04X\n", id);
+    printf("JUMP if_else%04X\n", id);
 }
 
 void genIfBlock(void) {
     printf("# if block\n");
-    printf("LABEL if%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("LABEL if%04X\n", istackTop(blockStack));
 }
 
 void genIfElse(void) {
     printf("# if else\n");
-    printf("JUMP if_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
-    printf("LABEL if_else%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMP if_end%04X\n", istackTop(blockStack));
+    printf("LABEL if_else%04X\n", istackTop(blockStack));
 }
 
 void genIfEnd(void) {
     printf("# if end\n");
-    printf("LABEL if_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("LABEL if_end%04X\n", istackTop(blockStack));
 
-    vertical_blocks[horizontal_block]++;
-    horizontal_block--;
+    istackPop(blockStack);
 }
 
 void genWhileBegin(void) {
-    horizontal_block++;
+    unsigned id = uid();
+    istackPush(blockStack, id);
 
     printf("# while begin\n");
-    printf("LABEL while_condition%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("LABEL while_condition%04X\n", id);
 }
 
 void genWhileStats(void) {
     printf("# while condition\n");
     printf("PUSHS bool@true\n");
-    printf("JUMPIFNEQS while_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMPIFNEQS while_end%04X\n", istackTop(blockStack));
 }
 
 void genWhileEnd(void) {
     printf("# while end\n");
-    printf("JUMP while_condition%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
-    printf("LABEL while_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMP while_condition%04X\n", istackTop(blockStack));
+    printf("LABEL while_end%04X\n", istackTop(blockStack));
 
-    vertical_blocks[horizontal_block]++;
-    horizontal_block--;
+    istackPop(blockStack);
 }
 
 void genIfLet(const char* idname) {
