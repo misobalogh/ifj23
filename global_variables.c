@@ -88,10 +88,14 @@ const char* errorToString(error_codes err) {
  */
 void global_generateInstruction();
 
-symtableItem* global_symbolSearch(const char* key) {
-  symtableItem* result = symtableStackSearch(global_symtableStack, key);
+symtableItem* global_symbolSearch(const char* key, unsigned* out_id) {
+  symtableItem* result = symtableStackSearch(global_symtableStack, key, out_id);
   if (result != NULL) {
     return result;
+  }
+
+  if (out_id != NULL) {
+      *out_id = 0;
   }
 
   return symtableSearch(global_table, key);

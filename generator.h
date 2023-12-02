@@ -31,6 +31,8 @@ void genIfBlock(void);
 void genIfElse(void);
 void genIfEnd(void);
 
+void genIfLetShadow(const char* idname, unsigned oldId, unsigned newId);
+
 void genWhileBegin(void);
 void genWhileCondition(void);
 void genWhileStats(void);

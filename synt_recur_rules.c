@@ -217,6 +217,9 @@ bool rule_STATEMENT() {
         if (rule_CONDITION() == false) {
             return false;
         }
+        symtableStackPush(global_symtableStack, false);
+        pushIfLet();
+
         genIfBegin();
 
 
@@ -226,8 +229,6 @@ bool rule_STATEMENT() {
         getToken();
 
 
-        symtableStackPush(global_symtableStack, false);
-        pushIfLet();
         genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
@@ -881,14 +882,15 @@ bool rule_FUNC_STAT() {
             return false;
         }
 
+        symtableStackPush(global_symtableStack, false);
+        pushIfLet();
+
         genIfBegin();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
 
-        symtableStackPush(global_symtableStack, false);
-        pushIfLet();
         genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;

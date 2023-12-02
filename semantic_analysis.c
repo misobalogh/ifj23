@@ -410,6 +410,7 @@ void analyseAssignEnd(void) {
   else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
           && assignment.rightId.size == 0 && exprConstOnly) {
       data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+      printf("INT2FLOATS\n");
   }
   else {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
@@ -547,7 +548,7 @@ void analyseCallIdOrLabel(const char* value) {
 void analyseCallEpsAfterId(void) {
   //idOrLabel was id
 
-  symtableItem* it = global_symbolSearch(stringCStr(&fnCall.idOrLabel));
+  symtableItem* it = global_symbolSearch(stringCStr(&fnCall.idOrLabel), NULL);
 
   if (it == NULL) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -565,7 +566,7 @@ void analyseCallEpsAfterId(void) {
 void analyseCallIdAfterLabel(const char* idname) {
   // idOrLabel was label
 
-  symtableItem* it = global_symbolSearch(idname);
+  symtableItem* it = global_symbolSearch(idname, NULL);
 
   if (it == NULL) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -603,7 +604,7 @@ void analyseCallConstAfterLabel(lex_token token) {
 }
 
 Type analyseCallEnd(void) {
-  symtableItem* item = global_symbolSearch(stringCStr(&fnCall.idname));
+  symtableItem* item = global_symbolSearch(stringCStr(&fnCall.idname), NULL);
 
   // function was called before declaration
   if (item == NULL) {
@@ -677,7 +678,7 @@ Type analyseExprEnd(void) {
       else {
         ExprItem a = exprStackPop(stack);
         ExprItem b = exprStackPop(stack);
-        resultType = _analyseOperation(it.value.operatorType, a, b);
+        resultType = _analyseOperation(it.value.operatorType, &b, &a);
 
         OperatorType optype = it.value.operatorType;
         if (resultType.base == 'S') {
@@ -744,7 +745,7 @@ void analyseReassignIdType(void) {
     return;
   }
 
-  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.rightId));
+  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.rightId), NULL);
 
   if (it == NULL
     || (it->data.symbolType != symbol_LET && it->data.symbolType != symbol_VAR)
@@ -766,7 +767,7 @@ void analyseReassignEnd(void) {
         return;
     }
 
-    symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname));
+    symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname), NULL);
 
     if (it == NULL) {
         EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -858,7 +859,7 @@ Type strToType(const char* typeStr) {
 }
 
 Type variableType(const char* idname) {
-  symtableItem* it = global_symbolSearch(idname);
+  symtableItem* it = global_symbolSearch(idname, NULL);
 
   if (it == NULL) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -877,18 +878,18 @@ void analyseCondition(void) {
   }
 }
 
-Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
-  if (a.type == expr_OPERATOR || b.type == expr_OPERATOR) {
+Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
+  if (a->type == expr_OPERATOR || b->type == expr_OPERATOR) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
-  Type typeB = (a.type == expr_CONST || a.type == expr_INTERMEDIATE)
-    ? a.value.constValue.type
-    : variableType(a.value.idName);
+  Type typeA = (a->type == expr_CONST || a->type == expr_INTERMEDIATE)
+    ? a->value.constValue.type
+    : variableType(a->value.idName);
 
-  Type typeA = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
-    ? b.value.constValue.type
-    : variableType(b.value.idName);
+  Type typeB = (b->type == expr_CONST || b->type == expr_INTERMEDIATE)
+    ? b->value.constValue.type
+    : variableType(b->value.idName);
 
   if (!typeIsValue(typeA) || !typeIsValue(typeB)) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -903,11 +904,15 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   if (optype == op_PLUS || optype == op_MINUS || optype == op_MUL || optype == op_DIV ) {
 
       // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
+    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
         typeA.base = 'D';
+        a->value.constValue.type = typeA;
+        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
     }
-    else if (typeA.base == 'D' && typeB.base == 'I' && a.type == expr_CONST) {
+    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
         typeB.base = 'D';
+        b->value.constValue.type = typeB;
+        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
     }
 
     if (typeA.base == typeB.base) {
@@ -928,11 +933,15 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
 
   if (optype == op_EQ || optype == op_NEQ) {
       // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
+    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
         typeA.base = 'D';
+        a->value.constValue.type = typeA;
+        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
     }
-    else if (typeA.base == 'D' && typeB.base == 'I' && a.type == expr_CONST) {
+    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
         typeB.base = 'D';
+        b->value.constValue.type = typeB;
+        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
     }
 
     if (typeA.base == typeB.base) {
@@ -942,11 +951,15 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
 
   if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
       // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
+    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
         typeA.base = 'D';
+        a->value.constValue.type = typeA;
+        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
     }
-    else if (typeA.base == 'D' && typeB.base == 'I' && a.type == expr_CONST) {
+    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
         typeB.base = 'D';
+        b->value.constValue.type = typeB;
+        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
     }
 
     if (typeA.base == typeB.base && !typeA.nullable && !typeB.nullable) {
@@ -1051,7 +1064,8 @@ void pushIfLet(void) {
     return;
   }
 
-  symtableItem* it = global_symbolSearch(stringCStr(&iflet.idname));
+  unsigned oldId;
+  symtableItem* it = global_symbolSearch(stringCStr(&iflet.idname), &oldId);
 
   if (it == NULL || it->data.symbolType == symbol_FN) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -1065,6 +1079,11 @@ void pushIfLet(void) {
   }
 
   global_insertTop(stringCStr(&iflet.idname), data);
+
+  unsigned newId;
+  global_symbolSearch(stringCStr(&iflet.idname), &newId);
+
+  genIfLetShadow(stringCStr(&iflet.idname), oldId, newId);
 }
 
 void analyseReassignAbort(void) {
