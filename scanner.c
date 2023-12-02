@@ -303,8 +303,8 @@ lex_token get_next_token()
         case STATE_ROWCOMMENT:
             if (c == '\n')
             {
-                // ungetc(c, stdin);
-                //   printf("ukoncil se radkovy komentar\n");
+                ungetc(c, stdin);
+                //    printf("ukoncil se radkovy komentar\n");
                 current_lex_state = STATE_START;
             }
             else if (c == EOF)
