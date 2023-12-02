@@ -160,7 +160,7 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
     printf("# call `%s`\n", idname);
   symtableItem* it = symtableSearch(global_table, idname);
 
-  if (it->data.flags & FN_BUILTIN) {
+  if (it->data.flags & symbol_flag_BUILTIN) {
     _genBuiltinCall(idname, params, paramCount);
     return;
   }
