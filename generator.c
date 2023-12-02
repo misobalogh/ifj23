@@ -11,7 +11,7 @@
 
 static unsigned cmain = 0;
 
-static unsigned vertical_block = 0;
+static unsigned vertical_blocks[256] = { 0 };
 static unsigned horizontal_block = 0;
 
 extern char _binary_substring_code_start[];
@@ -374,15 +374,15 @@ void genExprOperator(OperatorType optype) {
     printf("DEFVAR TF@temp_right\n");
     printf("POPS TF@temp_left\n");
     printf("POPS TF@temp_right\n");
-    printf("JUMPIFNEQ default_not_null%04X%04X TF@temp_left nil@nil\n", vertical_block, horizontal_block);
+    printf("JUMPIFNEQ default_not_null%04X%04X TF@temp_left nil@nil\n", vertical_blocks[horizontal_block], horizontal_block);
     printf("PUSHS TF@temp_right\n");
-    printf("JUMP default_end%04X%04X\n", vertical_block, horizontal_block);
-    printf("LABEL default_end_null%04X%04X\n", vertical_block, horizontal_block);
+    printf("JUMP default_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("LABEL default_end_null%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
     printf("PUSHS TF@temp_left\n");
-    printf("LABEL default_end%04X%04X\n", vertical_block, horizontal_block);
+    printf("LABEL default_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 
     horizontal_block--;
-    vertical_block++;
+    vertical_blocks[horizontal_block]++;
    }
     break;
   case op_UNWRAP:
@@ -397,49 +397,49 @@ void genIfBegin(void) {
 
     printf("# if begin\n");
     printf("PUSHS bool@true\n");
-    printf("JUMPIFEQS if%04X%04X\n", vertical_block, horizontal_block);
-    printf("JUMP if_else%04X%04X\n", vertical_block, horizontal_block);
+    printf("JUMPIFEQS if%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("JUMP if_else%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 }
 
 void genIfBlock(void) {
     printf("# if block\n");
-    printf("LABEL if%04X%04X\n", vertical_block, horizontal_block);
+    printf("LABEL if%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 }
 
 void genIfElse(void) {
     printf("# if else\n");
-    printf("JUMP if_end%04X%04X\n", vertical_block, horizontal_block);
-    printf("LABEL if_else%04X%04X\n", vertical_block, horizontal_block);
+    printf("JUMP if_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("LABEL if_else%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 }
 
 void genIfEnd(void) {
     printf("# if end\n");
-    printf("LABEL if_end%04X%04X\n", vertical_block, horizontal_block);
+    printf("LABEL if_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 
+    vertical_blocks[horizontal_block]++;
     horizontal_block--;
-    vertical_block++;
 }
 
 void genWhileBegin(void) {
     horizontal_block++;
 
     printf("# while begin\n");
-    printf("LABEL while_condition%04X%04X\n", vertical_block, horizontal_block);
+    printf("LABEL while_condition%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 }
 
 void genWhileStats(void) {
     printf("# while condition\n");
     printf("PUSHS bool@true\n");
-    printf("JUMPIFNEQS while_end%04X%04X\n", vertical_block, horizontal_block);
+    printf("JUMPIFNEQS while_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 }
 
 void genWhileEnd(void) {
     printf("# while end\n");
-    printf("JUMP while_condition%04X%04X\n", vertical_block, horizontal_block);
-    printf("LABEL while_end%04X%04X\n", vertical_block, horizontal_block);
+    printf("JUMP while_condition%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
+    printf("LABEL while_end%04X%04X\n", vertical_blocks[horizontal_block], horizontal_block);
 
+    vertical_blocks[horizontal_block]++;
     horizontal_block--;
-    vertical_block++;
 }
 
 void genIfLet(const char* idname) {
