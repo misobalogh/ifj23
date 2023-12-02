@@ -24,7 +24,12 @@ bool symtableStackPush(SymtableStack* stack, bool flag) {
   item->next = stack->first;
   item->table = symtableInit(SYMTABLE_SIZE);
   item->flag = flag;
-  item->id = counter++;
+  if (item->flag) {
+      item->id = -1;
+  }
+  else {
+      item->id = counter++;
+  }
 
   stack->first = item;
 

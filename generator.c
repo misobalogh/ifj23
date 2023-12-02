@@ -10,14 +10,33 @@
 #include "istack.h"
 
 static unsigned cmain = 0;
+static bool inWhile = false;
 
 IStack* blockStack;
 
 extern char _binary_substring_code_start[];
 
+// TODO: rewrite this with linked list or dynamic array
+static struct { char* idname; unsigned id; } whileVariables[256] = { 0 };
+static unsigned whileVariableCount = 0;
+
 unsigned uid(void) {
   static unsigned state = 0;
   return state++;
+}
+
+void genWhileDeclaration(const char* idname) {
+    if (whileVariables[whileVariableCount].idname == NULL) {
+        whileVariables[whileVariableCount].idname = malloc(strlen(idname) + 1);
+        CHECK_MEMORY_ALLOC(whileVariables[whileVariableCount].idname);
+    }
+    strcpy(whileVariables[whileVariableCount].idname, idname);
+
+    unsigned id;
+    global_symbolSearch(idname, &id);
+    whileVariables[whileVariableCount].id = id;
+
+    whileVariableCount++;
 }
 
 void genInit(void) {
@@ -27,6 +46,10 @@ void genInit(void) {
 
 void genDeinit(void) {
     istackFree(blockStack);
+
+    for (unsigned i = 0; i < sizeof(whileVariables) / sizeof(whileVariables[0]); i++) {
+        free(whileVariables[i].idname);
+    }
 }
 
 void genMainJump(void) {
@@ -184,25 +207,17 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
     Param callParam = params[i];
     Param funcParam = it->data.params[i];
 
-    unsigned id;
-    global_symbolSearch(stringCStr(&funcParam.name), &id);
-    printf("DEFVAR TF@%s%i\n", stringCStr(&funcParam.name), id);
+    printf("DEFVAR TF@%s-1\n", stringCStr(&funcParam.name));
 
     if (callParam.isConst) {
       if (callParam.type.base == 'I') {
-          unsigned id;
-          global_symbolSearch(stringCStr(&params[0].name), &id);
-        printf("MOVE TF@%s int@%i\n", stringCStr(&funcParam.name), callParam.intVal);
+        printf("MOVE TF@%s-1 int@%i\n", stringCStr(&funcParam.name), callParam.intVal);
       }
       else if (callParam.type.base == 'D') {
-          unsigned id;
-          global_symbolSearch(stringCStr(&params[0].name), &id);
-        printf("MOVE TF@%s float@%a\n", stringCStr(&funcParam.name), callParam.floatVal);
+        printf("MOVE TF@%s-1 float@%a\n", stringCStr(&funcParam.name), callParam.floatVal);
       }
       else if (callParam.type.base == 'S') {
-          unsigned id;
-          global_symbolSearch(stringCStr(&params[0].name), &id);
-        printf("MOVE TF@%s string@", stringCStr(&funcParam.name));
+        printf("MOVE TF@%s-1 string@", stringCStr(&funcParam.name));
         _printEscaped(stringCStr(&callParam.name));
         putchar('\n');
       }
@@ -212,10 +227,9 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
     }
     else {
       const char* l = global_isLocal(stringCStr(&callParam.name)) ? "LF" : "GF";
-      unsigned paramId, varId;
+      unsigned varId;
       global_symbolSearch(stringCStr(&callParam.name), &varId);
-      global_symbolSearch(stringCStr(&funcParam.name), &paramId);
-      printf("MOVE TF@%s%i %s@%s%i\n", stringCStr(&funcParam.name), paramId, l, stringCStr(&callParam.name), varId);
+      printf("MOVE TF@%s-1 %s@%s%i\n", stringCStr(&funcParam.name), l, stringCStr(&callParam.name), varId);
     }
   }
 
@@ -234,17 +248,22 @@ void genReturn(void) {
 }
 
 void genDef(const char* idname) {
+    if (inWhile) {
+        genWhileDeclaration(idname);
+        return;
+    }
+
     printf("# variable definition\n");
-  if (global_isLocal(idname)) {
-      unsigned id;
-      global_symbolSearch(idname, &id);
-    printf("DEFVAR LF@%s%i\n", idname, id);
-  }
-  else {
-      unsigned id;
-      global_symbolSearch(idname, &id);
+    if (global_isLocal(idname)) {
+        unsigned id;
+        global_symbolSearch(idname, &id);
+        printf("DEFVAR LF@%s%i\n", idname, id);
+    }
+    else {
+        unsigned id;
+        global_symbolSearch(idname, &id);
     printf("DEFVAR GF@%s%i\n", idname, id);
-  }
+    }
 }
 
 void genAssign(const char* idname) {
@@ -357,8 +376,16 @@ void genExprOperator(OperatorType optype) {
     printf("GTS\n");
     break;
   case op_LESS_EQ:
-    printf("LTS\n");
-    printf("EQS\n");
+    printf("CREATEFRAME\n");
+    printf("DEFVAR TF@temp_A\n");
+    printf("DEFVAR TF@temp_B\n");
+    printf("DEFVAR TF@temp_C\n");
+    printf("POPS TF@temp_B\n");
+    printf("POPS TF@temp_A\n");
+    printf("LT TF@temp_C TF@temp_A TF@temp_B\n");
+    printf("PUSHS TF@temp_C\n");
+    printf("EQ TF@temp_C TF@temp_A TF@temp_B\n");
+    printf("PUSHS TF@temp_C\n");
     printf("ORS\n");
     break;
   case op_MORE_EQ:
@@ -375,7 +402,7 @@ void genExprOperator(OperatorType optype) {
     printf("DEFVAR TF@temp_right\n");
     printf("POPS TF@temp_left\n");
     printf("POPS TF@temp_right\n");
-    printf("JUMPIFNEQ default_not_null%04XTF@temp_left nil@nil\n", id);
+    printf("JUMPIFNEQ default_not_null%04X TF@temp_left nil@nil\n", id);
     printf("PUSHS TF@temp_right\n");
     printf("JUMP default_end%04X\n", id);
     printf("LABEL default_end_null%04X\n", id);
@@ -419,10 +446,13 @@ void genIfEnd(void) {
 }
 
 void genWhileBegin(void) {
+    inWhile = true;
+    whileVariableCount = 0;
     unsigned id = uid();
     istackPush(blockStack, id);
 
     printf("# while begin\n");
+    printf("JUMP while_declaration%04X\n", istackTop(blockStack));
     printf("LABEL while_condition%04X\n", id);
 }
 
@@ -434,6 +464,14 @@ void genWhileStats(void) {
 
 void genWhileEnd(void) {
     printf("# while end\n");
+    printf("JUMP while_condition%04X\n", istackTop(blockStack));
+    printf("LABEL while_declaration%04X\n", istackTop(blockStack));
+
+    for (unsigned i = 0; i < whileVariableCount; i++) {
+        const char* l = global_isLocal(whileVariables[i].idname) ? "LF" : "GF";
+        printf("DEFVAR %s@%s%i\n", l, whileVariables[i].idname, whileVariables[i].id);
+    }
+
     printf("JUMP while_condition%04X\n", istackTop(blockStack));
     printf("LABEL while_end%04X\n", istackTop(blockStack));
 

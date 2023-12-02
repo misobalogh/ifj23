@@ -11,6 +11,7 @@ func g(applyOn x:Int) -> Int {
   if (x > 0) {
     write("calling f with ", x, "\n") 
     let x = f(x) // modifikace parametru x, ale az po zavolani funkce f
+    return 1
   } else {
   
   return 200

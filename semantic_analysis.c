@@ -380,6 +380,7 @@ void analyseAssignEnd(void) {
 
   SymbolData data;
   SymbolType st = assignment.let ? symbol_LET : symbol_VAR;
+  bool assign = false;
 
   // tyep was hinted and expression is omitted
   // let a: T
@@ -404,6 +405,7 @@ void analyseAssignEnd(void) {
   else if ((typeIsValue(assignment.hintedType) && typeEq(assignment.hintedType, assignment.type))
       || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
     data = (SymbolData) { assignment.type, NULL, 0, symbol_flag_INITIALIZED, st };
+    assign = true;
   }
   // hinted type is Double and actual type is Int and assigned value is const
   // let a: Double = <Int-const>
@@ -411,6 +413,7 @@ void analyseAssignEnd(void) {
           && assignment.rightId.size == 0 && exprConstOnly) {
       data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
       printf("INT2FLOATS\n");
+      assign = true;
   }
   else {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
@@ -419,7 +422,9 @@ void analyseAssignEnd(void) {
   global_insertTop(stringCStr(&assignment.idname), data);
 
   genDef(stringCStr(&assignment.idname));
-  genAssign(stringCStr(&assignment.idname));
+  if (assign) {
+      genAssign(stringCStr(&assignment.idname));
+  }
 
   prepareStatement();
 }
@@ -674,6 +679,9 @@ Type analyseExprEnd(void) {
       if (it.value.operatorType == op_UNWRAP) {
         ExprItem a = exprStackPop(stack);
         resultType = _analyseUnwrap(a);
+        if (a.type == expr_ID) {
+            genExprOperand(a);
+        }
       }
       else {
         ExprItem a = exprStackPop(stack);

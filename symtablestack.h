@@ -13,7 +13,7 @@ typedef struct SymtableStackItem {
   symtable* table;
   bool flag; // is this function frame
   struct SymtableStackItem* next;
-  unsigned id;
+  int id;
 } SymtableStackItem;
 
 typedef struct SymtableStack {
