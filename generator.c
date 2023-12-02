@@ -297,8 +297,8 @@ void genExprOperator(OperatorType optype) {
     printf("DEFVAR TF@A\n");
     printf("DEFVAR TF@B\n");
     printf("DEFVAR TF@C\n");
-    printf("POPS TF@A\n");
     printf("POPS TF@B\n");
+    printf("POPS TF@A\n");
     printf("MOVE TF@C string@\n");
     printf("CONCAT TF@C TF@A TF@B\n");
     printf("PUSHS TF@C\n");
