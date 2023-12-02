@@ -8,7 +8,7 @@
 #include "token_types.h"
 
 // global variable to count nested comments
-int nested_counter = 1;
+int nested_counter = 0;
 // flag to make nested comments work properlz
 int nested_flag = 0;
 
@@ -327,6 +327,7 @@ lex_token get_next_token()
             }
             else if (c == '/')
             {
+                nested_counter = 1;
                 current_lex_state = STATE_NESTED_COMMENT1;
             }
             break;
@@ -1116,17 +1117,18 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_ML_STRING_ASSEMBLING;
             }
-            else if (c != EOF)
+            else // if (c != EOF) /// possible issue!!!
             {
                 ungetc(c, stdin);
                 current_lex_state = STATE_STRING_DONE;
             }
+            /*
             else
             {
                 string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
                 return current_lex_token;
-            }
+            }*/
             break;
 
         case STATE_ML_STRING_ASSEMBLING:
@@ -1141,7 +1143,7 @@ lex_token get_next_token()
             else if (c == '\\')
             {
                 current_lex_state = STATE_ML_ESCAPE_SEQUENCE;
-                char_insert(&str, c);
+                // char_insert(&str, c); dont insert, will be inserted with certain letter
             }
             else // to do
             {
@@ -1180,8 +1182,29 @@ lex_token get_next_token()
         case STATE_ML_ESCAPE_SEQUENCE:
             if (c == '"' || c == 'n' || c == '\\' || c == 'r' || c == 't')
             {
+                if (c == 'n')
+                {
+                    char_insert(&str, '\n');
+                }
+                else if (c == 'r')
+                {
+                    char_insert(&str, '\r');
+                }
+                else if (c == 't')
+                {
+                    char_insert(&str, '\t');
+                }
+                else if (c == '"')
+                {
+                    char_insert(&str, '\"');
+                }
+                else if (c == '\\')
+                {
+                    char_insert(&str, '\\');
+                }
+
                 current_lex_state = STATE_ML_STRING_ASSEMBLING;
-                char_insert(&str, c);
+                // char_insert(&str, c);
             }
             else if (c == 'u')
             {
@@ -1264,13 +1287,13 @@ lex_token get_next_token()
             }
             else if (c == '"')
             {
-                ungetc(c, stdin);
+                // ungetc(c, stdin);
                 current_lex_state = STATE_STRING_DONE;
             }
             else if (c == '\\')
             {
                 current_lex_state = STATE_ESCAPE_SEQUENCE;
-                char_insert(&str, c);
+                // char_insert(&str, c);
             }
             else // to do
             {
@@ -1283,8 +1306,29 @@ lex_token get_next_token()
         case STATE_ESCAPE_SEQUENCE:
             if (c == '"' || c == 'n' || c == '\\' || c == 'r' || c == 't')
             {
+                if (c == 'n')
+                {
+                    char_insert(&str, '\n');
+                }
+                else if (c == 'r')
+                {
+                    char_insert(&str, '\r');
+                }
+                else if (c == 't')
+                {
+                    char_insert(&str, '\t');
+                }
+                else if (c == '"')
+                {
+                    char_insert(&str, '\"');
+                }
+                else if (c == '\\')
+                {
+                    char_insert(&str, '\\');
+                }
+
                 current_lex_state = STATE_STRING_ASSEMBLING;
-                char_insert(&str, c);
+                // char_insert(&str, c);
             }
             else if (c == 'u')
             {
@@ -1362,7 +1406,7 @@ lex_token get_next_token()
 
         case STATE_STRING_DONE:
 
-            // ungetc(c, stdin);
+            ungetc(c, stdin);
             current_lex_token.type = token_TYPE_STRING_LINE;
             current_lex_token.value.STR_VAL = str.data;
             return current_lex_token;
