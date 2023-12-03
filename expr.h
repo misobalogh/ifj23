@@ -77,6 +77,7 @@ void exprListAddFloat(ExprArray* list, float value);
 void exprListAddString(ExprArray* list, const char* value);
 void exprListAddId(ExprArray* list, const char* idname);
 void exprListAddOperator(ExprArray* list, OperatorType optype);
+void exprListAddNil(ExprArray* list);
 void exprListClear(ExprArray* list);
 
 #endif

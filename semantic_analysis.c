@@ -395,8 +395,18 @@ void analyseAssignEnd(void) {
   }
   // type was hinted and actual type could not be inffered
   // let a: T = <undefined-expr>
-  else if(typeIsValue(assignment.hintedType) && assignment.type.base == 'u') {
+  else if(typeIsValue(assignment.hintedType) && (assignment.type.base == 'u')) {
       EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  }
+  // let a: T? = nil
+  else if(assignment.type.base == 'N') {
+      if (typeIsValue(assignment.hintedType) && assignment.hintedType.nullable) {
+        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+        assign = true;
+      }
+      else {
+          EXIT_WITH_MESSAGE(8);
+      }
   }
   // type was hinted and actual type matches or
   // let a: T = <T-expr>
@@ -476,7 +486,9 @@ void analyseReturn(Type type) {
           EXIT_WITH_MESSAGE(6);
   }
 
-  if (type.base != it->data.dataType.base
+  if (type.base == 'N' && it->data.dataType.nullable) {
+  }
+  else if (type.base != it->data.dataType.base
     || (!it->data.dataType.nullable && type.nullable)) {
       EXIT_WITH_MESSAGE(4);
   }
@@ -653,6 +665,9 @@ void analyseExprOperand(lex_token token) {
   else if (token.type == token_TYPE_STRING_LINE) {
     exprListAddString(exprList, token.value.STR_VAL);
   }
+  else if (token.type == token_NIL) {
+      exprListAddNil(exprList);
+  }
   else {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
@@ -785,18 +800,15 @@ void analyseReassignEnd(void) {
         EXIT_WITH_MESSAGE(SEMANTIC_ERR);
     }
 
-    if (it->data.dataType.base != reassignment.type.base
+    if (reassignment.type.base == 'N' && !it->data.dataType.nullable) {
+        EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+    }
+    else if (it->data.dataType.base != reassignment.type.base
     || (!it->data.dataType.nullable && reassignment.type.nullable)) {
         EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
     }
 
     it->data.flags |= symbol_flag_INITIALIZED;
-    /* global_insertTop(it->key, data); */
-
-    /* if (reassignment.rightId.size > 0) { */
-    /*     // push the value on stack */
-    /*     genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&assignment.idname) }); */
-    /* } */
     genAssign(stringCStr(&reassignment.idname));
 
     prepareStatement();

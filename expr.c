@@ -137,6 +137,23 @@ void exprListAddString(ExprArray* list, const char* value) {
 
   list->data[list->size++] = val;
 }
+
+void exprListAddNil(ExprArray* list) {
+    exprListResize(list);
+
+    ExprItem val = {
+        .type=expr_CONST,
+        .value = {
+            .constValue= {
+                .type=(Type) { 'N', true },
+                .value.INT_VAL=0
+            }
+        }
+    };
+
+    list->data[list->size++] = val;
+}
+
 void exprListAddId(ExprArray* list, const char* idname) {
   exprListResize(list);
 
@@ -169,7 +186,7 @@ bool typeIsVariable(Type t) {
 }
 
 bool typeIsValue(Type t) {
-  return typeIsValid(t) && t.base != 'v' && t.base != 'u';
+  return typeIsValid(t) && t.base != 'v' && t.base != 'u' && t.base != 'N';
 }
 
 bool typeEq(Type a, Type b) {
