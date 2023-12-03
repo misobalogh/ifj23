@@ -42,6 +42,7 @@ void genWhileDeclaration(const char* idname) {
 void genInit(void) {
     printf(".IFJcode23\n");
     blockStack = istackInit();
+    genSubstring();
 }
 
 void genDeinit(void) {
@@ -62,7 +63,9 @@ void genMainLabel(void) {
 }
 
 void genSubstring(void) {
-  /* printf("%s\n", _binary_substring_code_start); */
+    genMainJump();
+    printf("%s\n", _binary_substring_code_start);
+    genMainLabel();
 }
 
 void _genWrite(Param* params, unsigned paramCount) {
@@ -157,7 +160,34 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
     printf("PUSHS TF@temp_A\n");
   }
   else if (strcmp(idname, "substring") == 0) {
-    printf("CALL substring\n");
+        for (int i = 0; i < 3; i++) {
+            if (params[i].isConst) {
+                if (params[i].type.base == 'I') {
+                    printf("PUSHS int@%i\n", params[i].intVal);
+                }
+                else if (params[i].type.base == 'D') {
+                    printf("PUSHS string@%s\n", stringCStr(&params[i].name));
+                }
+                else {
+                    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+                }
+            }
+            else {
+                const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
+                unsigned id;
+                global_symbolSearch(stringCStr(&params[i].name), &id);
+                printf("PUSHS %s@%s%i\n", l, stringCStr(&params[i].name), id);
+            }
+        }
+        printf("CREATEFRAME\n");
+        printf("DEFVAR TF@s-1\n");
+        printf("DEFVAR TF@i-1\n");
+        printf("DEFVAR TF@j-1\n");
+        printf("POPS TF@j-1\n");
+        printf("POPS TF@i-1\n");
+        printf("POPS TF@s-1\n");
+        printf("PUSHFRAME\n");
+        printf("CALL func__substring\n");
   }
   else if (strcmp(idname, "ord") == 0) {
     if (params->isConst) {
@@ -340,18 +370,23 @@ void genExprOperand(ExprItem e) {
 void genExprOperator(OperatorType optype) {
   switch (optype) {
   case op_PLUS:
-    printf("ADDS\n");
+        printf("# plus\n");
+        printf("ADDS\n");
     break;
   case op_MINUS:
+    printf("# minus\n");
     printf("SUBS\n");
     break;
   case op_MUL:
+    printf("# mul\n");
     printf("MULS\n");
     break;
   case op_DIV:
+    printf("# div\n");
     printf("DIVS\n");
     break;
   case op_CONCAT:
+    printf("# concat\n");
     printf("CREATEFRAME\n");
     printf("DEFVAR TF@temp_A\n");
     printf("DEFVAR TF@temp_B\n");
@@ -363,19 +398,24 @@ void genExprOperator(OperatorType optype) {
     printf("PUSHS TF@temp_C\n");
     break;
   case op_EQ:
+    printf("# equals\n");
     printf("EQS\n");
     break;
   case op_NEQ:
+    printf("# not equals\n");
     printf("EQS\n");
     printf("NOTS\n");
     break;
   case op_LESS:
+    printf("# less\n");
     printf("LTS\n");
     break;
   case op_MORE:
+    printf("# more\n");
     printf("GTS\n");
     break;
   case op_LESS_EQ:
+    printf("# less or equals\n");
     printf("CREATEFRAME\n");
     printf("DEFVAR TF@temp_A\n");
     printf("DEFVAR TF@temp_B\n");
@@ -389,14 +429,23 @@ void genExprOperator(OperatorType optype) {
     printf("ORS\n");
     break;
   case op_MORE_EQ:
-    printf("GTS\n");
-    printf("EQS\n");
+    printf("# more or equals\n");
+    printf("CREATEFRAME\n");
+    printf("DEFVAR TF@temp_A\n");
+    printf("DEFVAR TF@temp_B\n");
+    printf("DEFVAR TF@temp_C\n");
+    printf("POPS TF@temp_B\n");
+    printf("POPS TF@temp_A\n");
+    printf("GT TF@temp_C TF@temp_A TF@temp_B\n");
+    printf("PUSHS TF@temp_C\n");
+    printf("EQ TF@temp_C TF@temp_A TF@temp_B\n");
+    printf("PUSHS TF@temp_C\n");
     printf("ORS\n");
     break;
   case op_DEFAULT: {
+    printf("# default\n");
     unsigned id = uid();
 
-    printf("# default\n");
     printf("CREATEFRAME\n");
     printf("DEFVAR TF@temp_left\n");
     printf("DEFVAR TF@temp_right\n");

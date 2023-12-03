@@ -81,8 +81,6 @@ bool rule_EXPRESSION() {
 bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
 
-    genSubstring();
-
     getToken();
     RLOG("\n\n<program> -> <stat_list> EOF\n");
     if (t.type == token_LET ||
