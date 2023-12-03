@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "expr_stack.h"
+#include "generator.h"
 #include "symtable.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
@@ -56,6 +57,7 @@ static struct {
 } reassignment;
 
 static bool returnStarted;
+static bool exprConstOnly;
 
 static ExprArray* exprList;
 static FunctionLList* postponedCheckStack;
@@ -173,25 +175,29 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "readString", (SymbolData) {
       (Type) { 'S', true },
-      NULL, 0, false,
+      NULL, 0,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
   symtableInsert(global_table, "readInt", (SymbolData) {
       (Type) { 'I', true },
-      NULL, 0, false,
+      NULL, 0,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
   symtableInsert(global_table, "readDouble", (SymbolData) {
       (Type) { 'D', true },
-      NULL, 0, false,
+      NULL, 0,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
   symtableInsert(global_table, "write", (SymbolData) {
       (Type) { 'D', true },
-      NULL, 0, true,
+      NULL, 0,
+      symbol_flag_BUILTIN | symbol_flag_VARIADIC,
       symbol_FN
   });
 
@@ -203,7 +209,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "Int2Double", (SymbolData) {
       (Type) { 'D', false },
-      int2DoubleParam, 1, false,
+      int2DoubleParam, 1,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
@@ -214,8 +221,9 @@ bool semanticAnalysisInit(void) {
   double2IntParam->type = (Type) { 'D', false };
 
   symtableInsert(global_table, "Double2Int", (SymbolData) {
-      (Type) { 'D', false },
-      double2IntParam, 1, false,
+      (Type) { 'I', false },
+      double2IntParam, 1,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
@@ -227,7 +235,8 @@ bool semanticAnalysisInit(void) {
 
   symtableInsert(global_table, "length", (SymbolData) {
       (Type) { 'I', false },
-      lengthParam, 1, false,
+      lengthParam, 1,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
@@ -244,8 +253,9 @@ bool semanticAnalysisInit(void) {
   substringParams[2].type = (Type) { 'I', false };
 
   symtableInsert(global_table, "substring", (SymbolData) {
-      (Type) { 'I', false },
-      substringParams, 3, false,
+      (Type) { 'S', true },
+      substringParams, 3,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
@@ -253,11 +263,12 @@ bool semanticAnalysisInit(void) {
   CHECK_MEMORY_ALLOC(ordParam);
   stringInit(&ordParam->label, "_");
   stringInit(&ordParam->name, "c");
-  ordParam->type = (Type) { 'I', false };
+  ordParam->type = (Type) { 'S', false };
 
   symtableInsert(global_table, "ord", (SymbolData) {
       (Type) { 'I', false },
-      ordParam, 1, false,
+      ordParam, 1,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
@@ -265,11 +276,12 @@ bool semanticAnalysisInit(void) {
   CHECK_MEMORY_ALLOC(chrParam);
   stringInit(&chrParam->label, "_");
   stringInit(&chrParam->name, "i");
-  chrParam->type = (Type) { 'S', false };
+  chrParam->type = (Type) { 'I', false };
 
   symtableInsert(global_table, "chr", (SymbolData) {
       (Type) { 'S', false },
-      chrParam, 1, false,
+      chrParam, 1,
+      symbol_flag_BUILTIN,
       symbol_FN
   });
 
@@ -343,6 +355,11 @@ void analyseAssignIdType(void) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
+  genExprOperand((ExprItem) {
+      .type=expr_ID,
+      .value.idName=(char*) stringCStr(&assignment.rightId)
+  });
+
   assignment.type = it->data.dataType;
 }
 
@@ -363,27 +380,52 @@ void analyseAssignEnd(void) {
 
   SymbolData data;
   SymbolType st = assignment.let ? symbol_LET : symbol_VAR;
+  bool assign = false;
 
-  // type was hinted and actual type could not be inffered
-  if (typeIsValue(assignment.hintedType) && !typeIsValue(assignment.type)) {
-    if (assignment.let && assignment.hintedType.base == 0 && !assignment.hintedType.nullable) {
-      // let is initialized to null by default, must be nullable
-      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+  // tyep was hinted and expression is omitted
+  // let a: T
+  if (typeIsValue(assignment.hintedType) && assignment.type.base == 0) {
+    if (assignment.hintedType.nullable) {
+        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+    }
+    else {
+        data = (SymbolData) { assignment.hintedType, NULL, 0, 0U, st };
     }
 
-    data = (SymbolData) { assignment.hintedType, NULL, 0, false, st };
+  }
+  // type was hinted and actual type could not be inffered
+  // let a: T = <undefined-expr>
+  else if(typeIsValue(assignment.hintedType) && assignment.type.base == 'u') {
+      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
   // type was hinted and actual type matches or
-  // type was not inted and actual type is valid type
+  // let a: T = <T-expr>
+  // type was not hinted and actual type is valid type
+  // let a = <expr>
   else if ((typeIsValue(assignment.hintedType) && typeEq(assignment.hintedType, assignment.type))
       || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
-    data = (SymbolData) { assignment.type, NULL, 0, false, st };
+    data = (SymbolData) { assignment.type, NULL, 0, symbol_flag_INITIALIZED, st };
+    assign = true;
+  }
+  // hinted type is Double and actual type is Int and assigned value is const
+  // let a: Double = <Int-const>
+  else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
+          && assignment.rightId.size == 0 && exprConstOnly) {
+      data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+      printf("INT2FLOATS\n");
+      assign = true;
   }
   else {
     EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
   }
 
   global_insertTop(stringCStr(&assignment.idname), data);
+
+  genDef(stringCStr(&assignment.idname));
+  if (assign) {
+      genAssign(stringCStr(&assignment.idname));
+  }
+
   prepareStatement();
 }
 
@@ -429,11 +471,17 @@ void analyseReturn(Type type) {
   symtableItem* it = symtableSearch(global_table, stringCStr(&currentFunction));
   NOT_NULL(it);
 
+  if ((it->data.dataType.base == 'v' && type.base != 'v')
+      || (it->data.dataType.base != 'v' && type.base == 'v')) {
+          EXIT_WITH_MESSAGE(6);
+  }
+
   if (type.base != it->data.dataType.base
     || (!it->data.dataType.nullable && type.nullable)) {
       EXIT_WITH_MESSAGE(4);
   }
 
+  genReturn();
   returnStarted = false;
 }
 
@@ -446,10 +494,13 @@ void analyseFunctionEnd(void) {
 
   NOT_FALSE(typeIsValid(fnDef.type));
 
-  SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, false, symbol_FN };
+  SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, 0u, symbol_FN };
   symtableInsert(global_table, stringCStr(&fnDef.idname), data);
 
   _checkPostponed(stringCStr(&fnDef.idname), data);
+
+  genFunction(stringCStr(&fnDef.idname));
+
 
   fnDef.paramCount = 0;
   stringClear(&fnDef.idname);
@@ -461,13 +512,36 @@ void analyseFunctionEnd(void) {
 void analyseCallFnId(const char* idname) {
   stringClear(&fnCall.idname);
   stringClear(&fnCall.idOrLabel);
+  stringClear(&fnCall.idOrLabel);
   fnCall.paramCount = 0;
   (stringSet(&fnCall.idname, idname));
+
+  for (unsigned i = 0; i < fnCall.paramCount; i++) {
+    stringSet(&fnCall.params[fnCall.paramCount].name, "");
+    stringSet(&fnCall.params[fnCall.paramCount].label, "");
+    fnCall.params[fnCall.paramCount].type = (Type) { 0, false };
+    fnCall.params[fnCall.paramCount].isConst = false;
+  }
 }
 
-void analyseCallConst(tokenType type) {
+void analyseCallConst(lex_token token) {
   fnCallGrow();
-  fnCall.params[fnCall.paramCount].type = tokenToType(type);
+  Type t = tokenToType(token.type);
+  fnCall.params[fnCall.paramCount].type = t;
+  fnCall.params[fnCall.paramCount].isConst = true;
+
+  stringSet(&fnCall.params[fnCall.paramCount].label, "_");
+
+  if (t.base == 'I') {
+    fnCall.params[fnCall.paramCount].intVal = token.value.INT_VAL;
+  }
+  else if (t.base == 'D') {
+    fnCall.params[fnCall.paramCount].floatVal = token.value.FLOAT_VAL;
+  }
+  else if (t.base == 'S') {
+    stringSet(&fnCall.params[fnCall.paramCount].name, token.value.STR_VAL);
+  }
+
   fnCall.paramCount++;
 }
 
@@ -479,7 +553,7 @@ void analyseCallIdOrLabel(const char* value) {
 void analyseCallEpsAfterId(void) {
   //idOrLabel was id
 
-  symtableItem* it = global_symbolSearch(stringCStr(&fnCall.idOrLabel));
+  symtableItem* it = global_symbolSearch(stringCStr(&fnCall.idOrLabel), NULL);
 
   if (it == NULL) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -487,7 +561,9 @@ void analyseCallEpsAfterId(void) {
 
   typeIsVariable(it->data.dataType);
   stringSet(&fnCall.params[fnCall.paramCount].label, "_");
+  stringSet(&fnCall.params[fnCall.paramCount].name, it->key);
   fnCall.params[fnCall.paramCount].type = it->data.dataType;
+  fnCall.params[fnCall.paramCount].isConst = false;
 
   fnCall.paramCount++;
 }
@@ -495,7 +571,7 @@ void analyseCallEpsAfterId(void) {
 void analyseCallIdAfterLabel(const char* idname) {
   // idOrLabel was label
 
-  symtableItem* it = global_symbolSearch(idname);
+  symtableItem* it = global_symbolSearch(idname, NULL);
 
   if (it == NULL) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -505,22 +581,35 @@ void analyseCallIdAfterLabel(const char* idname) {
 
   stringSetS(&fnCall.params[fnCall.paramCount].label, &fnCall.idOrLabel);
   fnCall.params[fnCall.paramCount].type = it->data.dataType;
+  stringSet(&fnCall.params[fnCall.paramCount].name, idname);
+  fnCall.params[fnCall.paramCount].isConst = false;
 
   fnCall.paramCount++;
 }
 
-void analyseCallConstAfterLabel(tokenType type) {
+void analyseCallConstAfterLabel(lex_token token) {
   // idOrLabel was label
 
   Param* param = &fnCall.params[fnCall.paramCount];
   stringSetS(&param->label, &fnCall.idOrLabel);
-  param->type = tokenToType(type);
+  param->type = tokenToType(token.type);
+  fnCall.params[fnCall.paramCount].isConst = true;
+
+  if (param->type.base == 'I') {
+    fnCall.params[fnCall.paramCount].intVal = token.value.INT_VAL;
+  }
+  else if (param->type.base == 'D') {
+    fnCall.params[fnCall.paramCount].floatVal = token.value.FLOAT_VAL;
+  }
+  else if (param->type.base == 'S') {
+    stringSet(&fnCall.params[fnCall.paramCount].name, token.value.STR_VAL);
+  }
 
   fnCall.paramCount++;
 }
 
 Type analyseCallEnd(void) {
-  symtableItem* item = global_symbolSearch(stringCStr(&fnCall.idname));
+  symtableItem* item = global_symbolSearch(stringCStr(&fnCall.idname), NULL);
 
   // function was called before declaration
   if (item == NULL) {
@@ -534,10 +623,12 @@ Type analyseCallEnd(void) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
   }
 
-  if (!item->data.variadic && !_compareParams(item->data.params, item->data.paramCount,
+  if (!(item->data.flags & symbol_flag_VARIADIC) && !_compareParams(item->data.params, item->data.paramCount,
     fnCall.params, fnCall.paramCount)) {
       EXIT_WITH_MESSAGE(4);
   }
+
+  genCall(item->key, fnCall.params, fnCall.paramCount);
 
   return item->data.dataType;
 }
@@ -553,14 +644,14 @@ void analyseExprOperand(lex_token token) {
     exprListAddId(exprList, token.value.STR_VAL);
   }
   else if (token.type == token_CONST_WHOLE_NUMBER) {
-    exprListAddConst(exprList, (Type) { 'I', false });
+    exprListAddInt(exprList, token.value.INT_VAL);
   }
   else if (token.type == token_CONST_DEC_NUMBER
     || token.type == token_CONST_SCIENTIFIC_NOTATION) {
-      exprListAddConst(exprList, (Type) { 'D', false });
+      exprListAddFloat(exprList, token.value.FLOAT_VAL);
   }
   else if (token.type == token_TYPE_STRING_LINE) {
-    exprListAddConst(exprList, (Type) { 'S', false});
+    exprListAddString(exprList, token.value.STR_VAL);
   }
   else {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
@@ -575,10 +666,9 @@ void analyseExprDefault(void) {
   exprListAddOperator(exprList, op_DEFAULT);
 }
 
-
-
 Type analyseExprEnd(void) {
   ExprStack* stack = exprStackInit();
+  exprConstOnly = true;
 
   for (size_t i = 0; i < exprList->size; i++) {
     ExprItem it = exprList->data[i];
@@ -589,19 +679,34 @@ Type analyseExprEnd(void) {
       if (it.value.operatorType == op_UNWRAP) {
         ExprItem a = exprStackPop(stack);
         resultType = _analyseUnwrap(a);
+        if (a.type == expr_ID) {
+            genExprOperand(a);
+        }
       }
       else {
         ExprItem a = exprStackPop(stack);
         ExprItem b = exprStackPop(stack);
-        resultType = _analyseOperation(it.value.operatorType, a, b);
+        resultType = _analyseOperation(it.value.operatorType, &b, &a);
+
+        OperatorType optype = it.value.operatorType;
+        if (resultType.base == 'S') {
+          optype = op_CONCAT;
+        }
+
+        genExprOperand(b);
+        genExprOperand(a);
+        genExprOperator(optype);
       }
       exprStackPush(stack, (ExprItem) {
           .type=expr_INTERMEDIATE,
-          .value={ .constType=resultType }
+          .value={ .constValue.type=resultType }
         });
     }
     else { // operand
       exprStackPush(stack, it);
+      if (it.type != expr_CONST) {
+          exprConstOnly = false;
+      }
     }
   }
 
@@ -611,13 +716,15 @@ Type analyseExprEnd(void) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
+  genExprOperand(top);
+
   if (top.type == expr_ID) {
     lastExprType = variableType(top.value.idName);
     return lastExprType;
   }
 
   if (top.type == expr_INTERMEDIATE || top.type == expr_CONST) {
-    lastExprType = top.value.constType;
+    lastExprType = top.value.constValue.type;
     return lastExprType;
   }
 
@@ -646,12 +753,15 @@ void analyseReassignIdType(void) {
     return;
   }
 
-  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.rightId));
+  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.rightId), NULL);
 
   if (it == NULL
-    || (it->data.symbolType != symbol_LET && it->data.symbolType != symbol_VAR)) {
+    || (it->data.symbolType != symbol_LET && it->data.symbolType != symbol_VAR)
+    || !(it->data.flags & symbol_flag_INITIALIZED)) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
+
+  genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&reassignment.rightId) });
 
   reassignment.type = it->data.dataType;
 }
@@ -661,29 +771,35 @@ void analyseReassignType(Type type) {
 }
 
 void analyseReassignEnd(void) {
-  if (!reassignment.started) {
-    return;
-  }
+    if (!reassignment.started) {
+        return;
+    }
 
-  symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname));
+    symtableItem* it = global_symbolSearch(stringCStr(&reassignment.idname), NULL);
 
-  if (it == NULL) {
-    EXIT_WITH_MESSAGE(UNDEFINED_VAR);
-  }
-  // only var can be reassigned
-  if (it->data.symbolType != symbol_VAR)  {
-    EXIT_WITH_MESSAGE(SEMANTIC_ERR);
-  }
+    if (it == NULL) {
+        EXIT_WITH_MESSAGE(UNDEFINED_VAR);
+    }
+    // only var can be reassigned
+    if (it->data.symbolType != symbol_VAR)  {
+        EXIT_WITH_MESSAGE(SEMANTIC_ERR);
+    }
 
-  if (it->data.dataType.base != reassignment.type.base
+    if (it->data.dataType.base != reassignment.type.base
     || (!it->data.dataType.nullable && reassignment.type.nullable)) {
-      EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
+        EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+    }
 
-  SymbolData  data = it->data;
-  global_insertTop(it->key, data);
+    it->data.flags |= symbol_flag_INITIALIZED;
+    /* global_insertTop(it->key, data); */
 
-  prepareStatement();
+    /* if (reassignment.rightId.size > 0) { */
+    /*     // push the value on stack */
+    /*     genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&assignment.idname) }); */
+    /* } */
+    genAssign(stringCStr(&reassignment.idname));
+
+    prepareStatement();
 }
 
 // helper functions
@@ -695,16 +811,16 @@ bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsign
 
   for (unsigned i = 0; i < fnCount; i++) {
     if (!stringEq(&fnParams[i].label, &callParams[i].label)) {
-      false;
+      return false;
     }
 
     if (fnParams[i].type.base != callParams[i].type.base
       && !(fnParams[i].type.nullable && callParams[i].type.base == 'N')) {
-      false;
+      return false;
     }
 
     if (!fnParams[i].type.nullable && fnParams[i].type.nullable) {
-      false;
+      return false;
     }
   }
 
@@ -751,13 +867,13 @@ Type strToType(const char* typeStr) {
 }
 
 Type variableType(const char* idname) {
-  symtableItem* it = global_symbolSearch(idname);
+  symtableItem* it = global_symbolSearch(idname, NULL);
 
   if (it == NULL) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  if (it->data.symbolType == symbol_FN) {
+  if (it->data.symbolType == symbol_FN || !(it->data.flags & symbol_flag_INITIALIZED)) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
@@ -770,45 +886,51 @@ void analyseCondition(void) {
   }
 }
 
-Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
-  if (a.type == expr_OPERATOR || b.type == expr_OPERATOR) {
+Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
+  if (a->type == expr_OPERATOR || b->type == expr_OPERATOR) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
-  Type typeB = (a.type == expr_CONST || a.type == expr_INTERMEDIATE)
-    ? a.value.constType
-    : variableType(a.value.idName);
+  Type typeA = (a->type == expr_CONST || a->type == expr_INTERMEDIATE)
+    ? a->value.constValue.type
+    : variableType(a->value.idName);
 
-  Type typeA = (b.type == expr_CONST || b.type == expr_INTERMEDIATE)
-    ? b.value.constType
-    : variableType(b.value.idName);
+  Type typeB = (b->type == expr_CONST || b->type == expr_INTERMEDIATE)
+    ? b->value.constValue.type
+    : variableType(b->value.idName);
 
-  if (typeA.base == 'I' && typeB.base == 'D' && b.type == expr_CONST) {
-    typeA.base = 'D';
-  }
-  else if (typeA.base == 'D' && typeB.base == 'I' && a.type == expr_CONST) {
-    typeB.base = 'D';
+  if (!typeIsValue(typeA) || !typeIsValue(typeB)) {
+      EXIT_WITH_MESSAGE(UNDEFINED_VAR);
   }
 
-  if (typeA.base == 'u' || typeB.base == 'u') {
-    return (Type) { 'u', false };
-  }
-
-  if (optype == op_CONCAT) {
+  if (optype == op_CONCAT || optype == op_PLUS) {
     if (typeA.base == 'S' && typeB.base == 'S') {
       return (Type) { 'S', (typeA.nullable || typeB.nullable) };
     }
   }
 
   if (optype == op_PLUS || optype == op_MINUS || optype == op_MUL || optype == op_DIV ) {
-      if (typeA.base == typeB.base) {
-        return (Type) { typeA.base, (typeA.nullable || typeB.nullable) };
-      }
 
-      if ((typeA.base == 'I' && typeB.base == 'D')
+      // implicit const conversion
+    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
+        typeA.base = 'D';
+        a->value.constValue.type = typeA;
+        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
+    }
+    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
+        typeB.base = 'D';
+        b->value.constValue.type = typeB;
+        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
+    }
+
+    if (typeA.base == typeB.base) {
+        return (Type) { typeA.base, (typeA.nullable || typeB.nullable) };
+    }
+
+    if ((typeA.base == 'I' && typeB.base == 'D')
         || (typeA.base == 'D' && typeB.base == 'I')) {
-          return (Type) { 'D', (typeA.nullable || typeB.nullable) };
-      }
+            return (Type) { 'D', (typeA.nullable || typeB.nullable) };
+    }
   }
 
   if (optype == op_DEFAULT) {
@@ -818,12 +940,36 @@ Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b) {
   }
 
   if (optype == op_EQ || optype == op_NEQ) {
+      // implicit const conversion
+    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
+        typeA.base = 'D';
+        a->value.constValue.type = typeA;
+        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
+    }
+    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
+        typeB.base = 'D';
+        b->value.constValue.type = typeB;
+        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
+    }
+
     if (typeA.base == typeB.base) {
       return (Type) { 'B', false };
     }
   }
 
   if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
+      // implicit const conversion
+    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
+        typeA.base = 'D';
+        a->value.constValue.type = typeA;
+        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
+    }
+    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
+        typeB.base = 'D';
+        b->value.constValue.type = typeB;
+        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
+    }
+
     if (typeA.base == typeB.base && !typeA.nullable && !typeB.nullable) {
       return (Type) { 'B', false };
     }
@@ -838,7 +984,7 @@ Type _analyseUnwrap(ExprItem e) {
   }
 
   Type t = (e.type == expr_CONST || e.type == expr_INTERMEDIATE)
-    ? e.value.constType
+    ? e.value.constValue.type
     : variableType(e.value.idName);
 
   if (t.base == 'N') {
@@ -906,7 +1052,7 @@ void pushFnParams(const char* idname) {
     Param* param = &fn->data.params[i];
 
     global_insertTop(stringCStr(&param->name),
-        (SymbolData) { param->type, NULL, 0, false, symbol_LET });
+        (SymbolData) { param->type, NULL, 0, symbol_flag_INITIALIZED, symbol_LET });
   }
 
 }
@@ -918,6 +1064,7 @@ void analyseIfLetBegin(void) {
 void analyseIfLet(const char* idname) {
   iflet.started = true;
   stringSet(&iflet.idname, idname);
+  genIfLet(idname);
 }
 
 void pushIfLet(void) {
@@ -925,7 +1072,8 @@ void pushIfLet(void) {
     return;
   }
 
-  symtableItem* it = global_symbolSearch(stringCStr(&iflet.idname));
+  unsigned oldId;
+  symtableItem* it = global_symbolSearch(stringCStr(&iflet.idname), &oldId);
 
   if (it == NULL || it->data.symbolType == symbol_FN) {
     EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -939,6 +1087,11 @@ void pushIfLet(void) {
   }
 
   global_insertTop(stringCStr(&iflet.idname), data);
+
+  unsigned newId;
+  global_symbolSearch(stringCStr(&iflet.idname), &newId);
+
+  genIfLetShadow(stringCStr(&iflet.idname), oldId, newId);
 }
 
 void analyseReassignAbort(void) {

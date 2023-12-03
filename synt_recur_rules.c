@@ -81,6 +81,8 @@ bool rule_EXPRESSION() {
 bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
 
+    genSubstring();
+
     getToken();
     RLOG("\n\n<program> -> <stat_list> EOF\n");
     if (t.type == token_LET ||
@@ -150,6 +152,9 @@ bool rule_STATEMENT() {
         return rule_AFTER_ID();
     case token_FUNC:
         RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
+
+        genMainJump();
+
         getToken();
         if (t.type != token_ID) {
             return false;
@@ -181,7 +186,7 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, true);
         pushFnParams(stringCStr(&idname));
 
         setCurrentFunction(&idname);
@@ -193,8 +198,12 @@ bool rule_STATEMENT() {
         }
         stringClear(&idname);
         setCurrentFunction(&idname);
+        stringFree(&idname);
 
+        genReturn();
         symtableStackPop(global_symtableStack);
+
+        genMainLabel();
 
         getToken();
         LEX_ERR_CHECK();
@@ -208,6 +217,10 @@ bool rule_STATEMENT() {
         if (rule_CONDITION() == false) {
             return false;
         }
+        symtableStackPush(global_symtableStack, false);
+        pushIfLet();
+
+        genIfBegin();
 
 
         if (t.type != token_BRACKET_L) {
@@ -215,8 +228,8 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
-        pushIfLet();
+
+        genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
@@ -237,11 +250,13 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
+        genIfElse();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
+        genIfEnd();
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -254,6 +269,8 @@ bool rule_STATEMENT() {
         RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
 
+        genWhileBegin();
+
         if (rule_EXPRESSION() == false) {
             return false;
         }
@@ -265,11 +282,13 @@ bool rule_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
-
+        symtableStackPush(global_symtableStack, false);
+        genWhileStats();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+
+        genWhileEnd();
 
         symtableStackPop(global_symtableStack);
 
@@ -337,14 +356,16 @@ bool rule_BRACK_STATEMENT() {
         if (rule_CONDITION() == false) {
             return false;
         }
+        genIfBegin();
         consume_optional_EOL();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
         pushIfLet();
+        genIfBlock();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
@@ -365,11 +386,13 @@ bool rule_BRACK_STATEMENT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
+        genIfElse();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
+        genIfEnd();
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -381,6 +404,7 @@ bool rule_BRACK_STATEMENT() {
         RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
 
+        genWhileBegin();
         if (rule_EXPRESSION() == false) {
             return false;
         }
@@ -392,9 +416,13 @@ bool rule_BRACK_STATEMENT() {
         }
         getToken();
 
+        symtableStackPush(global_symtableStack, false);
+        genWhileStats();
         if (rule_BRACK_STAT_LIST() == false) {
             return false;
         }
+        genWhileEnd();
+        symtableStackPop(global_symtableStack);
         if (t.type != token_BRACKET_R) {
             return false;
         }
@@ -648,7 +676,7 @@ bool rule_INPUT_PARAM() {
         || t.type == token_NIL) {
 
         RLOG("<input_param> -> const\n");
-        (analyseCallConst(t.type));
+        analyseCallConst(t);
         getToken();
         return true;
     }
@@ -699,7 +727,7 @@ bool rule_ID_OR_CONST() {
         || t.type == token_TYPE_STRING_LINE
         || t.type == token_NIL) {
         RLOG("<id_or_const> -> const\n");
-        (analyseCallConstAfterLabel(t.type));
+        analyseCallConstAfterLabel(t);
         getToken();
 
         return true;
@@ -746,7 +774,7 @@ bool rule_PARAM() {
     if (t.type != token_ID) {
         return false;
     }
-    (analyseFunctionParamName(t.value.STR_VAL));
+    analyseFunctionParamName(t.value.STR_VAL);
     getToken();
     LEX_ERR_CHECK();
     consume_optional_EOL();
@@ -853,13 +881,17 @@ bool rule_FUNC_STAT() {
         if (rule_CONDITION() == false) {
             return false;
         }
+
+        symtableStackPush(global_symtableStack, false);
+        pushIfLet();
+
+        genIfBegin();
         if (t.type != token_BRACKET_L) {
             return false;
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
-        pushIfLet();
+        genIfBlock();
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
@@ -880,11 +912,13 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
+        genIfElse();
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
         symtableStackPop(global_symtableStack);
+        genIfEnd();
 
         if (t.type != token_BRACKET_R) {
             return false;
@@ -897,6 +931,7 @@ bool rule_FUNC_STAT() {
         RLOG("<func_stat> -> while <expression> { <func_stat_list> }\n");
         getToken();
 
+        genWhileBegin();
         if (rule_EXPRESSION() == false) {
             return false;
         }
@@ -908,10 +943,12 @@ bool rule_FUNC_STAT() {
         }
         getToken();
 
-        symtableStackPush(global_symtableStack);
+        symtableStackPush(global_symtableStack, false);
+        genWhileStats();
         if (rule_FUNC_STAT_LIST() == false) {
             return false;
         }
+        genWhileEnd();
         symtableStackPop(global_symtableStack);
 
         if (t.type != token_BRACKET_R) {

@@ -1,2 +1,3 @@
 let a: Int? = readInt()
-let b: Int = 2 + a!
+var b: Int = 2 + a!
+b = b!

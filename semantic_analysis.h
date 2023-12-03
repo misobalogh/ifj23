@@ -70,11 +70,11 @@ void analyseAssignType(Type type);
 void analyseAssignEnd(void);
 
 void analyseCallFnId(const char* idname);
-void analyseCallConst(tokenType type);
+void analyseCallConst(lex_token token);
 void analyseCallIdOrLabel(const char* value);
 void analyseCallEpsAfterId(void);
 void analyseCallIdAfterLabel(const char* idname);
-void analyseCallConstAfterLabel(tokenType type);
+void analyseCallConstAfterLabel(lex_token token);
 Type analyseCallEnd(void);
 
 void analyseExprBegin(void);
@@ -109,7 +109,7 @@ void setCurrentFunction(String* idname);
 bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsigned callCount);
 const char* _typeShort(tokenType type);
 void _checkPostponed(const char* fnId, SymbolData data);
-Type _analyseOperation(OperatorType optype, ExprItem a, ExprItem b);
+Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b);
 Type strToType(const char* typeStr);
 String typeToStr(Type type);
 Type tokenToType(tokenType token);
