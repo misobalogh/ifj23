@@ -102,3 +102,4 @@ func substring(of s: String, startingAt i: Int, endingBefore j: Int) -> String?
   let substring = s[fromIdx..<toIdx] 
   return String(substring)
 }
+

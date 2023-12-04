@@ -802,18 +802,18 @@ Type analyseExprEnd(void) {
             else if (resultType.base == 'B') {
                 if (a.value.constValue.type.base == 'S') {
                     constItem.value.constValue.value.INT_VAL = _boolStringConstExpr(optype,
-                        a.value.constValue.value.STR_VAL,
-                        b.value.constValue.value.STR_VAL);
+                        b.value.constValue.value.STR_VAL,
+                        a.value.constValue.value.STR_VAL);
                 }
                 else if (a.value.constValue.type.base == 'D') {
                     constItem.value.constValue.value.INT_VAL = _boolFloatConstExpr(optype,
-                        a.value.constValue.value.FLOAT_VAL,
-                        b.value.constValue.value.FLOAT_VAL);
+                        b.value.constValue.value.FLOAT_VAL,
+                        a.value.constValue.value.FLOAT_VAL);
                 }
                 else if (a.value.constValue.type.base == 'I') {
                     constItem.value.constValue.value.INT_VAL = _boolFloatConstExpr(optype,
-                        a.value.constValue.value.INT_VAL,
-                        b.value.constValue.value.INT_VAL);
+                        b.value.constValue.value.INT_VAL,
+                        a.value.constValue.value.INT_VAL);
                 }
                 else {
                     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
