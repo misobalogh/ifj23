@@ -115,7 +115,7 @@ bool isTerminal(tokenType type);
 typedef union Value_of_token
 {
     int INT_VAL;
-    float FLOAT_VAL;
+    double FLOAT_VAL;
     char* STR_VAL;
 } value_of_token;
 

@@ -102,7 +102,7 @@ void exprListAddInt(ExprArray* list, int value) {
   list->data[list->size++] = val;
 }
 
-void exprListAddFloat(ExprArray* list, float value) {
+void exprListAddFloat(ExprArray* list, double value) {
   exprListResize(list);
 
   ExprItem val = {

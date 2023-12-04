@@ -1,0 +1,23 @@
+let a = "some text"
+
+var b: String? = nil
+b = substring(of: a, startingAt: 0, endingBefore: 5)
+write(b, "\n")
+b = substring(of: a, startingAt: 5, endingBefore: 9)
+write(b, "\n")
+b = substring(of: a, startingAt: 3, endingBefore: 3)
+write(b, "\n")
+b = substring(of: a, startingAt: -1, endingBefore: 5)
+write(b, "\n")
+b = substring(of: a, startingAt: 0, endingBefore: 20)
+write(b, "\n")
+b = substring(of: "", startingAt: 0, endingBefore: 5)
+write(b, "\n")
+b = substring(of: a, startingAt: 0, endingBefore: -5)
+write(b, "\n")
+b = substring(of: a, startingAt: 5, endingBefore: 3)
+write(b, "\n")
+b = substring(of: a, startingAt: 20, endingBefore: 25)
+write(b, "\n")
+b = substring(of: a, startingAt: 3, endingBefore: 30)
+write(b, "\n")

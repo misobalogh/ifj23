@@ -38,6 +38,7 @@ typedef enum OperatorType {
     op_MINUS,
     op_MUL,
     op_DIV,
+    op_IDIV,
     op_CONCAT,
     op_EQ,
     op_NEQ,
@@ -73,7 +74,7 @@ ExprArray* exprListInit(void);
 void exprListResize(ExprArray* list);
 void exprListFree(ExprArray* list);
 void exprListAddInt(ExprArray* list, int value);
-void exprListAddFloat(ExprArray* list, float value);
+void exprListAddFloat(ExprArray* list, double value);
 void exprListAddString(ExprArray* list, const char* value);
 void exprListAddId(ExprArray* list, const char* idname);
 void exprListAddOperator(ExprArray* list, OperatorType optype);

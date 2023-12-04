@@ -36,7 +36,7 @@ typedef struct Param {
   String name;
   Type type;
   int intVal;
-  float floatVal;
+  double floatVal;
   bool isConst;
 } Param;
 

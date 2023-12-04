@@ -9,6 +9,8 @@
 #include "dynamic_string.h"
 #include "istack.h"
 
+typedef struct WhileVariable { char* idname; unsigned id; } WhileVariable;
+
 static unsigned cmain = 0;
 static bool inWhile = false;
 
@@ -16,8 +18,8 @@ IStack* blockStack;
 
 extern char _binary_substring_code_start[];
 
-// TODO: rewrite this with linked list or dynamic array
-static struct { char* idname; unsigned id; } whileVariables[256] = { 0 };
+static unsigned whileVariablesCapacity = 8;
+static WhileVariable* whileVariables;
 static unsigned whileVariableCount = 0;
 
 unsigned uid(void) {
@@ -26,6 +28,14 @@ unsigned uid(void) {
 }
 
 void genWhileDeclaration(const char* idname) {
+    if (whileVariableCount >= whileVariablesCapacity - 1) {
+        whileVariablesCapacity *= 2;
+        whileVariables = realloc(whileVariables, whileVariablesCapacity * sizeof(WhileVariable));
+        CHECK_MEMORY_ALLOC(whileVariables);
+        memset(whileVariables + whileVariableCount * sizeof(WhileVariable), 0,
+                (whileVariablesCapacity - whileVariableCount) * sizeof(WhileVariable));
+    }
+
     if (whileVariables[whileVariableCount].idname == NULL) {
         whileVariables[whileVariableCount].idname = malloc(strlen(idname) + 1);
         CHECK_MEMORY_ALLOC(whileVariables[whileVariableCount].idname);
@@ -42,15 +52,18 @@ void genWhileDeclaration(const char* idname) {
 void genInit(void) {
     printf(".IFJcode23\n");
     blockStack = istackInit();
+    whileVariables = calloc(whileVariablesCapacity, sizeof(WhileVariable));
+    CHECK_MEMORY_ALLOC(whileVariables);
     genSubstring();
 }
 
 void genDeinit(void) {
     istackFree(blockStack);
 
-    for (unsigned i = 0; i < sizeof(whileVariables) / sizeof(whileVariables[0]); i++) {
+    for (unsigned i = 0; i < whileVariablesCapacity; i++) {
         free(whileVariables[i].idname);
     }
+    free(whileVariables);
 }
 
 void genMainJump(void) {
@@ -165,7 +178,7 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
                 if (params[i].type.base == 'I') {
                     printf("PUSHS int@%i\n", params[i].intVal);
                 }
-                else if (params[i].type.base == 'D') {
+                else if (params[i].type.base == 'S') {
                     printf("PUSHS string@%s\n", stringCStr(&params[i].name));
                 }
                 else {
@@ -219,7 +232,9 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
 }
 
 void genCall(const char* idname, Param* params, unsigned paramCount) {
+#ifdef DEBUG
     printf("# call `%s`\n", idname);
+#endif
   symtableItem* it = symtableSearch(global_table, idname);
 
   if (it->data.flags & symbol_flag_BUILTIN) {
@@ -266,7 +281,9 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
   printf("PUSHFRAME\n");
   printf("CALL func__%s\n", idname);
   printf("POPFRAME\n");
+#ifdef DEBUG
   printf("# end call `%s`\n", idname);
+#endif
 }
 
 void genFunction(const char* idname) {
@@ -283,7 +300,9 @@ void genDef(const char* idname) {
         return;
     }
 
+#ifdef DEBUG
     printf("# variable definition\n");
+#endif
     if (global_isLocal(idname)) {
         unsigned id;
         global_symbolSearch(idname, &id);
@@ -297,7 +316,9 @@ void genDef(const char* idname) {
 }
 
 void genAssign(const char* idname) {
+#ifdef DEBUG
     printf("# variable assignment\n");
+#endif
   if (global_isLocal(idname)) {
       unsigned id;
       global_symbolSearch(idname, &id);
@@ -311,7 +332,9 @@ void genAssign(const char* idname) {
 }
 
 void genAssignId(const char* left, const char* right) {
+#ifdef DEBUG
     printf("# variable assignment from variable\n");
+#endif
   const char* ll = global_isLocal(left) ? "LF" : "GF";
   const char* lr = global_isLocal(left) ? "LF" : "GF";
   unsigned leftId, rightId;
@@ -322,14 +345,12 @@ void genAssignId(const char* left, const char* right) {
 
 void _printEscaped(const char* str) {
   while (*str != '\0') {
-    if (*str <= 32 || *str == 35 || *str == 92) {
-      printf("\\%03i", *str);
-    }
-    else {
-      putchar(*str);
+    const char* fmt = "%c";
+    if (*str <= ' ' || *str == '#' || *str == '\\') {
+      fmt = "\\%03i";
     }
 
-    str++;
+    printf(fmt, *str++);
   }
 }
 
@@ -352,6 +373,9 @@ void genExprOperand(ExprItem e) {
       _printEscaped(e.value.constValue.value.STR_VAL);
       putchar('\n');
     }
+    else if (e.value.constValue.type.base == 'B') {
+      printf("PUSHS bool@%s\n", e.value.constValue.value.INT_VAL ? "true" : "false");
+    }
     else if (e.value.constValue.type.base == 'N') {
       printf("PUSHS nil@nil\n");
     }
@@ -368,101 +392,131 @@ void genExprOperand(ExprItem e) {
 }
 
 void genExprOperator(OperatorType optype) {
-  switch (optype) {
-  case op_PLUS:
+    switch (optype) {
+    case op_PLUS:
+#ifdef DEBUG
         printf("# plus\n");
+#endif
         printf("ADDS\n");
-    break;
-  case op_MINUS:
-    printf("# minus\n");
-    printf("SUBS\n");
-    break;
-  case op_MUL:
-    printf("# mul\n");
-    printf("MULS\n");
-    break;
-  case op_DIV:
-    printf("# div\n");
-    printf("DIVS\n");
-    break;
-  case op_CONCAT:
-    printf("# concat\n");
-    printf("CREATEFRAME\n");
-    printf("DEFVAR TF@temp_A\n");
-    printf("DEFVAR TF@temp_B\n");
-    printf("DEFVAR TF@temp_C\n");
-    printf("POPS TF@temp_B\n");
-    printf("POPS TF@temp_A\n");
-    printf("MOVE TF@temp_C string@\n");
-    printf("CONCAT TF@temp_C TF@temp_A TF@temp_B\n");
-    printf("PUSHS TF@temp_C\n");
-    break;
-  case op_EQ:
-    printf("# equals\n");
-    printf("EQS\n");
-    break;
-  case op_NEQ:
-    printf("# not equals\n");
-    printf("EQS\n");
-    printf("NOTS\n");
-    break;
-  case op_LESS:
-    printf("# less\n");
-    printf("LTS\n");
-    break;
+        break;
+    case op_MINUS:
+#ifdef DEBUG
+        printf("# minus\n");
+#endif
+        printf("SUBS\n");
+        break;
+    case op_MUL:
+#ifdef DEBUG
+        printf("# mul\n");
+#endif
+        printf("MULS\n");
+        break;
+    case op_DIV:
+#ifdef DEBUG
+        printf("# div\n");
+#endif
+        printf("DIVS\n");
+        break;
+    case op_IDIV:
+#ifdef DEBUG
+        printf("# int div\n");
+#endif
+        printf("IDIVS\n");
+        break;
+    case op_CONCAT:
+#ifdef DEBUG
+        printf("# concat\n");
+#endif
+        printf("CREATEFRAME\n");
+        printf("DEFVAR TF@temp_A\n");
+        printf("DEFVAR TF@temp_B\n");
+        printf("DEFVAR TF@temp_C\n");
+        printf("POPS TF@temp_B\n");
+        printf("POPS TF@temp_A\n");
+        printf("MOVE TF@temp_C string@\n");
+        printf("CONCAT TF@temp_C TF@temp_A TF@temp_B\n");
+        printf("PUSHS TF@temp_C\n");
+        break;
+    case op_EQ:
+#ifdef DEBUG
+        printf("# equals\n");
+#endif
+        printf("EQS\n");
+        break;
+    case op_NEQ:
+#ifdef DEBUG
+        printf("# not equals\n");
+#endif
+        printf("EQS\n");
+        printf("NOTS\n");
+        break;
+    case op_LESS:
+#ifdef DEBUG
+        printf("# less\n");
+#endif
+        printf("LTS\n");
+        break;
   case op_MORE:
-    printf("# more\n");
-    printf("GTS\n");
-    break;
+#ifdef DEBUG
+        printf("# more\n");
+#endif
+        printf("GTS\n");
+        break;
   case op_LESS_EQ:
-    printf("# less or equals\n");
-    printf("CREATEFRAME\n");
-    printf("DEFVAR TF@temp_A\n");
-    printf("DEFVAR TF@temp_B\n");
-    printf("DEFVAR TF@temp_C\n");
-    printf("POPS TF@temp_B\n");
-    printf("POPS TF@temp_A\n");
-    printf("LT TF@temp_C TF@temp_A TF@temp_B\n");
-    printf("PUSHS TF@temp_C\n");
-    printf("EQ TF@temp_C TF@temp_A TF@temp_B\n");
-    printf("PUSHS TF@temp_C\n");
-    printf("ORS\n");
-    break;
+#ifdef DEBUG
+        printf("# less or equals\n");
+#endif
+        printf("CREATEFRAME\n");
+        printf("DEFVAR TF@temp_A\n");
+        printf("DEFVAR TF@temp_B\n");
+        printf("DEFVAR TF@temp_C\n");
+        printf("POPS TF@temp_B\n");
+        printf("POPS TF@temp_A\n");
+        printf("LT TF@temp_C TF@temp_A TF@temp_B\n");
+        printf("PUSHS TF@temp_C\n");
+        printf("EQ TF@temp_C TF@temp_A TF@temp_B\n");
+        printf("PUSHS TF@temp_C\n");
+        printf("ORS\n");
+        break;
   case op_MORE_EQ:
-    printf("# more or equals\n");
-    printf("CREATEFRAME\n");
-    printf("DEFVAR TF@temp_A\n");
-    printf("DEFVAR TF@temp_B\n");
-    printf("DEFVAR TF@temp_C\n");
-    printf("POPS TF@temp_B\n");
-    printf("POPS TF@temp_A\n");
-    printf("GT TF@temp_C TF@temp_A TF@temp_B\n");
-    printf("PUSHS TF@temp_C\n");
-    printf("EQ TF@temp_C TF@temp_A TF@temp_B\n");
-    printf("PUSHS TF@temp_C\n");
-    printf("ORS\n");
-    break;
+#ifdef DEBUG
+        printf("# more or equals\n");
+#endif
+        printf("CREATEFRAME\n");
+        printf("DEFVAR TF@temp_A\n");
+        printf("DEFVAR TF@temp_B\n");
+        printf("DEFVAR TF@temp_C\n");
+        printf("POPS TF@temp_B\n");
+        printf("POPS TF@temp_A\n");
+        printf("GT TF@temp_C TF@temp_A TF@temp_B\n");
+        printf("PUSHS TF@temp_C\n");
+        printf("EQ TF@temp_C TF@temp_A TF@temp_B\n");
+        printf("PUSHS TF@temp_C\n");
+        printf("ORS\n");
+        break;
   case op_DEFAULT: {
-    printf("# default\n");
-    unsigned id = uid();
+#ifdef DEBUG
+        printf("# default\n");
+#endif
+        unsigned id = uid();
 
-    printf("CREATEFRAME\n");
-    printf("DEFVAR TF@temp_left\n");
-    printf("DEFVAR TF@temp_right\n");
-    printf("POPS TF@temp_left\n");
-    printf("POPS TF@temp_right\n");
-    printf("JUMPIFNEQ default_not_null%04X TF@temp_left nil@nil\n", id);
-    printf("PUSHS TF@temp_right\n");
-    printf("JUMP default_end%04X\n", id);
-    printf("LABEL default_end_null%04X\n", id);
-    printf("PUSHS TF@temp_left\n");
-    printf("LABEL default_end%04X\n", id);
-   }
-    break;
+        printf("CREATEFRAME\n");
+        printf("DEFVAR TF@temp_left\n");
+        printf("DEFVAR TF@temp_right\n");
+        printf("POPS TF@temp_left\n");
+        printf("POPS TF@temp_right\n");
+        printf("JUMPIFNEQ default_not_null%04X TF@temp_left nil@nil\n", id);
+        printf("PUSHS TF@temp_right\n");
+        printf("JUMP default_end%04X\n", id);
+        printf("LABEL default_end_null%04X\n", id);
+        printf("PUSHS TF@temp_left\n");
+        printf("LABEL default_end%04X\n", id);
+       }
+        break;
   case op_UNWRAP:
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-    break;
-  }
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+        break;
+      }
 }
 
 
@@ -470,25 +524,33 @@ void genIfBegin(void) {
     unsigned id = uid();
     istackPush(blockStack, id);
 
+#ifdef DEBUG
     printf("# if begin\n");
+#endif
     printf("PUSHS bool@true\n");
     printf("JUMPIFEQS if%04X\n", id);
     printf("JUMP if_else%04X\n", id);
 }
 
 void genIfBlock(void) {
+#ifdef DEBUG
     printf("# if block\n");
+#endif
     printf("LABEL if%04X\n", istackTop(blockStack));
 }
 
 void genIfElse(void) {
+#ifdef DEBUG
     printf("# if else\n");
+#endif
     printf("JUMP if_end%04X\n", istackTop(blockStack));
     printf("LABEL if_else%04X\n", istackTop(blockStack));
 }
 
 void genIfEnd(void) {
+#ifdef DEBUG
     printf("# if end\n");
+#endif
     printf("LABEL if_end%04X\n", istackTop(blockStack));
 
     istackPop(blockStack);
@@ -500,19 +562,25 @@ void genWhileBegin(void) {
     unsigned id = uid();
     istackPush(blockStack, id);
 
+#ifdef DEBUG
     printf("# while begin\n");
+#endif
     printf("JUMP while_declaration%04X\n", istackTop(blockStack));
     printf("LABEL while_condition%04X\n", id);
 }
 
 void genWhileStats(void) {
+#ifdef DEBUG
     printf("# while condition\n");
+#endif
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS while_end%04X\n", istackTop(blockStack));
 }
 
 void genWhileEnd(void) {
+#ifdef DEBUG
     printf("# while end\n");
+#endif
     printf("JUMP while_condition%04X\n", istackTop(blockStack));
     printf("LABEL while_declaration%04X\n", istackTop(blockStack));
 
@@ -528,7 +596,9 @@ void genWhileEnd(void) {
 }
 
 void genIfLet(const char* idname) {
+#ifdef DEBUG
     printf("# if let\n");
+#endif
     const char* l = global_isLocal(idname) ? "LF" : "GF";
     unsigned id;
     global_symbolSearch(idname, &id);
@@ -539,7 +609,9 @@ void genIfLet(const char* idname) {
 }
 
 void genIfLetShadow(const char* idname, unsigned oldId, unsigned newId) {
+#ifdef DEBUG
     printf("# if let shadowing\n");
+#endif
     const char* l = global_isLocal(idname) ? "LF" : "GF";
     printf("DEFVAR %s@%s%i\n", l, idname, newId);
     printf("MOVE %s@%s%i %s@%s%i\n", l, idname, newId, l, idname, oldId);

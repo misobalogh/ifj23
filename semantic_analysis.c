@@ -681,6 +681,74 @@ void analyseExprDefault(void) {
   exprListAddOperator(exprList, op_DEFAULT);
 }
 
+int _intConstExpr(OperatorType optype, int a, int b) {
+    switch (optype) {
+    case op_PLUS:
+        return a + b;
+    case op_MINUS:
+        return a - b;
+    case op_MUL:
+        return a * b;
+    case op_IDIV:
+        return a / b;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
+float _floatConstExpr(OperatorType optype, double a, double b) {
+    switch (optype) {
+    case op_PLUS:
+        return a + b;
+    case op_MINUS:
+        return a - b;
+    case op_MUL:
+        return a * b;
+    case op_DIV:
+        return a / b;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
+bool _boolFloatConstExpr(OperatorType optype, double a, double b) {
+    switch (optype) {
+    case op_EQ:
+        return a == b;
+    case op_NEQ:
+        return a != b;
+    case op_LESS:
+        return a < b;
+    case op_MORE:
+        return a > b;
+    case op_LESS_EQ:
+        return a <= b;
+    case op_MORE_EQ:
+        return a >= b;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
+bool _boolStringConstExpr(OperatorType optype, const char* a, const char* b) {
+    switch (optype) {
+    case op_EQ:
+        return strcmp(a, b) == 0;
+    case op_NEQ:
+        return strcmp(a, b) != 0;
+    case op_LESS:
+        return strcmp(a, b) < 0;
+    case op_MORE:
+        return strcmp(a, b) > 0;
+    case op_LESS_EQ:
+        return strcmp(a, b) <= 0;
+    case op_MORE_EQ:
+        return strcmp(a, b) >= 0;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
 Type analyseExprEnd(void) {
   ExprStack* stack = exprStackInit();
   exprConstOnly = true;
@@ -694,9 +762,7 @@ Type analyseExprEnd(void) {
       if (it.value.operatorType == op_UNWRAP) {
         ExprItem a = exprStackPop(stack);
         resultType = _analyseUnwrap(a);
-        if (a.type == expr_ID) {
-            genExprOperand(a);
-        }
+        genExprOperand(a);
       }
       else {
         ExprItem a = exprStackPop(stack);
@@ -707,11 +773,67 @@ Type analyseExprEnd(void) {
         if (resultType.base == 'S') {
           optype = op_CONCAT;
         }
+        if (resultType.base == 'I' && optype == op_DIV) {
+            optype = op_IDIV;
+        }
+
+        if (a.type == expr_CONST && b.type == expr_CONST) {
+            ExprItem constItem = {
+                .type=expr_CONST,
+                .value.constValue.type=resultType
+            };
+
+            if (resultType.base == 'I') {
+                constItem.value.constValue.value.INT_VAL = _intConstExpr(optype,
+                    b.value.constValue.value.INT_VAL,
+                    a.value.constValue.value.INT_VAL);
+            }
+            else if (resultType.base == 'D') {
+                constItem.value.constValue.value.FLOAT_VAL = _floatConstExpr(optype,
+                    b.value.constValue.value.FLOAT_VAL,
+                    a.value.constValue.value.FLOAT_VAL);
+            }
+            else if (resultType.base == 'S') {
+                String s;
+                stringInit(&s, b.value.constValue.value.STR_VAL);
+                stringConcatCStr(&s, a.value.constValue.value.STR_VAL);
+                constItem.value.constValue.value.STR_VAL = (char*) stringCStr(&s);
+            }
+            else if (resultType.base == 'B') {
+                if (a.value.constValue.type.base == 'S') {
+                    constItem.value.constValue.value.INT_VAL = _boolStringConstExpr(optype,
+                        a.value.constValue.value.STR_VAL,
+                        b.value.constValue.value.STR_VAL);
+                }
+                else if (a.value.constValue.type.base == 'D') {
+                    constItem.value.constValue.value.INT_VAL = _boolFloatConstExpr(optype,
+                        a.value.constValue.value.FLOAT_VAL,
+                        b.value.constValue.value.FLOAT_VAL);
+                }
+                else if (a.value.constValue.type.base == 'I') {
+                    constItem.value.constValue.value.INT_VAL = _boolFloatConstExpr(optype,
+                        a.value.constValue.value.INT_VAL,
+                        b.value.constValue.value.INT_VAL);
+                }
+                else {
+                    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+                }
+            }
+            else {
+                EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+            }
+
+            exprStackPush(stack, constItem);
+
+            // don't generate instructions, don't push intermediate operand
+            continue;
+        }
 
         genExprOperand(b);
         genExprOperand(a);
         genExprOperator(optype);
       }
+
       exprStackPush(stack, (ExprItem) {
           .type=expr_INTERMEDIATE,
           .value={ .constValue.type=resultType }
@@ -898,18 +1020,31 @@ void analyseCondition(void) {
   }
 }
 
-Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
-  if (a->type == expr_OPERATOR || b->type == expr_OPERATOR) {
+void _implicitConversion(Type* ref_typeA, Type* ref_typeB, ExprItem* ref_a, ExprItem* ref_b) {
+    if (ref_typeA->base == 'I' && ref_typeB->base == 'D' && ref_a->type == expr_CONST) {
+        ref_typeA->base = 'D';
+        ref_a->value.constValue.type = *ref_typeA;
+        ref_a->value.constValue.value.FLOAT_VAL = (double) ref_a->value.constValue.value.INT_VAL;
+    }
+    else if (ref_typeA->base == 'D' && ref_typeB->base == 'I' && ref_b->type == expr_CONST) {
+        ref_typeB->base = 'D';
+        ref_b->value.constValue.type = *ref_typeB;
+        ref_b->value.constValue.value.FLOAT_VAL = (double) ref_b->value.constValue.value.INT_VAL;
+    }
+}
+
+Type _analyseOperation(OperatorType optype, ExprItem* ref_a, ExprItem* ref_b) {
+  if (ref_a->type == expr_OPERATOR || ref_b->type == expr_OPERATOR) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
-  Type typeA = (a->type == expr_CONST || a->type == expr_INTERMEDIATE)
-    ? a->value.constValue.type
-    : variableType(a->value.idName);
+  Type typeA = (ref_a->type == expr_CONST || ref_a->type == expr_INTERMEDIATE)
+    ? ref_a->value.constValue.type
+    : variableType(ref_a->value.idName);
 
-  Type typeB = (b->type == expr_CONST || b->type == expr_INTERMEDIATE)
-    ? b->value.constValue.type
-    : variableType(b->value.idName);
+  Type typeB = (ref_b->type == expr_CONST || ref_b->type == expr_INTERMEDIATE)
+    ? ref_b->value.constValue.type
+    : variableType(ref_b->value.idName);
 
   if (!typeIsValue(typeA) || !typeIsValue(typeB)) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -922,26 +1057,10 @@ Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
   }
 
   if (optype == op_PLUS || optype == op_MINUS || optype == op_MUL || optype == op_DIV ) {
-
-      // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
-        typeA.base = 'D';
-        a->value.constValue.type = typeA;
-        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
-    }
-    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
-        typeB.base = 'D';
-        b->value.constValue.type = typeB;
-        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
-    }
+      _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base) {
         return (Type) { typeA.base, (typeA.nullable || typeB.nullable) };
-    }
-
-    if ((typeA.base == 'I' && typeB.base == 'D')
-        || (typeA.base == 'D' && typeB.base == 'I')) {
-            return (Type) { 'D', (typeA.nullable || typeB.nullable) };
     }
   }
 
@@ -952,17 +1071,7 @@ Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
   }
 
   if (optype == op_EQ || optype == op_NEQ) {
-      // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
-        typeA.base = 'D';
-        a->value.constValue.type = typeA;
-        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
-    }
-    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
-        typeB.base = 'D';
-        b->value.constValue.type = typeB;
-        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
-    }
+      _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base) {
       return (Type) { 'B', false };
@@ -970,17 +1079,7 @@ Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
   }
 
   if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
-      // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
-        typeA.base = 'D';
-        a->value.constValue.type = typeA;
-        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
-    }
-    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
-        typeB.base = 'D';
-        b->value.constValue.type = typeB;
-        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
-    }
+    _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base && !typeA.nullable && !typeB.nullable) {
       return (Type) { 'B', false };

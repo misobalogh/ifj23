@@ -121,13 +121,10 @@ RETURN
 
 LABEL main0
 PUSHS string@text
-# variable definition
 DEFVAR GF@a0
-# variable assignment
 POPS GF@a0
 PUSHS GF@a0
 PUSHS GF@a0
-# concat
 CREATEFRAME
 DEFVAR TF@temp_A
 DEFVAR TF@temp_B
@@ -138,7 +135,6 @@ MOVE TF@temp_C string@
 CONCAT TF@temp_C TF@temp_A TF@temp_B
 PUSHS TF@temp_C
 PUSHS GF@a0
-# concat
 CREATEFRAME
 DEFVAR TF@temp_A
 DEFVAR TF@temp_B
@@ -148,9 +144,6 @@ POPS TF@temp_A
 MOVE TF@temp_C string@
 CONCAT TF@temp_C TF@temp_A TF@temp_B
 PUSHS TF@temp_C
-# variable definition
 DEFVAR GF@c0
-# variable assignment
 POPS GF@c0
-# call `write`
 WRITE GF@c0
