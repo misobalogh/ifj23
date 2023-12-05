@@ -32,10 +32,12 @@ bool global_addVar(char* id, char* type, int value);
 
 void global_generateInstruction();
 
-symtableItem* global_symbolSearch(const char* key);
+symtableItem* global_symbolSearch(const char* key, unsigned* out_id);
 void global_insertTop(const char* key, SymbolData data);
 symtableItem* global_searchTop(const char* key);
 
 const char* errorToString(error_codes err);
+
+bool global_isLocal(const char* key);
 
 #endif // IFJ23_GLOBAL_VARIABLES_H

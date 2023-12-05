@@ -5,5 +5,7 @@
 *.dll
 *.a
 *.exe
+tests_code/temp
+tests_code/output.code
 
 /.VSCodeCounter

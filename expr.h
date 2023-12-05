@@ -54,7 +54,10 @@ OperatorType tokenToOperator(tokenType type);
 typedef struct ExprItem {
   ExprType type;
   union {
-    Type constType;
+    struct {
+      Type type;
+      value_of_token value;
+    } constValue;
     char* idName;
     OperatorType operatorType;
   } value;
@@ -69,7 +72,9 @@ typedef struct ExprArray {
 ExprArray* exprListInit(void);
 void exprListResize(ExprArray* list);
 void exprListFree(ExprArray* list);
-void exprListAddConst(ExprArray* list, Type type);
+void exprListAddInt(ExprArray* list, int value);
+void exprListAddFloat(ExprArray* list, float value);
+void exprListAddString(ExprArray* list, const char* value);
 void exprListAddId(ExprArray* list, const char* idname);
 void exprListAddOperator(ExprArray* list, OperatorType optype);
 void exprListClear(ExprArray* list);

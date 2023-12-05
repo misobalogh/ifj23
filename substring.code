@@ -1,0 +1,32 @@
+// -------------------- substring --------------------
+LABEL substring
+CREATEFRAME
+
+// if i < 0
+DEFVAR TF@A
+LT TF@A LF@i int@0
+JUMPIFEQ substring_nil TF@A bool@true
+
+// if j < 0
+LT TF@A LF@j int@0
+JUMPIFEQ substring_nil TF@A bool@true
+
+DEFVAR TF@len
+STRLEN TF@len LF@s
+
+JUMPIFEQ substring_nil TF@i TF@len
+
+GT TF@A LF@i TF@len
+JUMPIFEQ substring_nil TF@A TF@LEN
+
+GT TF@A LF@j TF@len
+JUMPIFEQ substring_nil TF@A TF@LEN
+
+MOVE TF@A string@
+
+LABEL substring_nil
+PUSHS nil@nil
+
+LABEL substring_end
+RETURN
+// ------------------ substring end -------------------

@@ -64,7 +64,7 @@ Running test {test_file}...
 
     try:
         completed_process = subprocess.run(
-            run_test, shell=True, timeout=timeout_seconds
+            run_test, shell=True, timeout=timeout_seconds, stdout=subprocess.DEVNULL
         )
         return_code = completed_process.returncode
 

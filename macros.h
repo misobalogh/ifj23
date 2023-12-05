@@ -28,7 +28,7 @@
 const char* errorToString(error_codes err);
 
 #define EXIT_WITH_MESSAGE(err) do { \
-    fprintf(stderr,"Error code: %i %s in %s\n", err, errorToString(err), __func__); \
+    fprintf(stderr, "Error code: %i %s in %s\n", err, errorToString(err), __func__); \
     exit(err); \
   } while (0)
 

@@ -1,3 +1,3 @@
 
- let a = 3
-let b = a + "string"
+var a = 5
+a = "string"

@@ -11,7 +11,9 @@
 
 typedef struct SymtableStackItem {
   symtable* table;
+  bool flag; // is this function frame
   struct SymtableStackItem* next;
+  int id;
 } SymtableStackItem;
 
 typedef struct SymtableStack {
@@ -19,8 +21,9 @@ typedef struct SymtableStack {
 } SymtableStack;
 
 void symtableStackInit(SymtableStack* stack);
-bool symtableStackPush(SymtableStack* stack);
+bool symtableStackPush(SymtableStack* stack, bool flag);
 void symtableStackPop(SymtableStack* stack);
-symtableItem* symtableStackSearch(SymtableStack* stack, const char* key);
+symtableItem* symtableStackSearch(SymtableStack* stack, const char* key, unsigned* out_id);
+bool symtableStackIsLocal(SymtableStack* stack, const char* key);
 
 #endif

@@ -61,6 +61,16 @@ ExprArray* exprListInit(void) {
 }
 
 void exprListFree(ExprArray* list) {
+  for (unsigned i = 0; i < list->size; i++) {
+    ExprItem* it = &list->data[i];
+    if (it->type == expr_ID) {
+      free(it->value.idName);
+    }
+    else if (it->type == expr_CONST && it->value.constValue.type.base == 'S') {
+      free(it->value.constValue.value.STR_VAL);
+    }
+  }
+
   free(list->data);
   list->data = NULL;
   free(list);
@@ -76,17 +86,57 @@ void exprListResize(ExprArray* list) {
   }
 }
 
-void exprListAddConst(ExprArray* list, Type type) {
-  if (type.base != 'S' && type.base != 'I' && type.base != 'D') {
-    exit(99);
-  }
-
+void exprListAddInt(ExprArray* list, int value) {
   exprListResize(list);
 
-  ExprItem val = { .type=expr_CONST, .value={ .constType=type } };
+  ExprItem val = {
+    .type=expr_CONST,
+    .value={
+      .constValue = {
+        .type=(Type) { 'I', false },
+        .value.INT_VAL = value
+      },
+    }
+  };
+
   list->data[list->size++] = val;
 }
 
+void exprListAddFloat(ExprArray* list, float value) {
+  exprListResize(list);
+
+  ExprItem val = {
+    .type=expr_CONST,
+    .value={
+      .constValue = {
+        .type=(Type) { 'D', false },
+        .value.FLOAT_VAL = value
+      },
+    }
+  };
+
+  list->data[list->size++] = val;
+}
+
+void exprListAddString(ExprArray* list, const char* value) {
+  exprListResize(list);
+
+  ExprItem val = {
+    .type=expr_CONST,
+    .value={
+      .constValue = {
+        .type=(Type) { 'S', false },
+        .value.STR_VAL = NULL
+      },
+    }
+  };
+
+  val.value.constValue.value.STR_VAL = malloc(strlen(value) + 1);
+  CHECK_MEMORY_ALLOC(val.value.constValue.value.STR_VAL);
+  strcpy(val.value.constValue.value.STR_VAL, value);
+
+  list->data[list->size++] = val;
+}
 void exprListAddId(ExprArray* list, const char* idname) {
   exprListResize(list);
 

@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "generator.h"
 #include "synt_analysis.h"
 #include "synt_prec_stack.h"
 #include "synt_prec_table.h"
@@ -22,13 +23,20 @@
 #include "semantic_analysis.h"
 
 bool recursiveParser(void) {
-  if (!semanticAnalysisInit()) {
-    return false;
-  }
+    if (!semanticAnalysisInit()) {
+        return false;
+    }
 
-  bool result = rule_PROGRAM();
-  semanticAnalysisDeinit();
-  return result;
+    genInit();
+
+    if (!rule_PROGRAM()) {
+        return false;
+    }
+
+    semanticAnalysisDeinit();
+    genDeinit();
+
+    return true;
 }
 
 

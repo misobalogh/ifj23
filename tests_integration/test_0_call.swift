@@ -15,22 +15,22 @@ func f() -> String {
 
 }
 
-foo(2, 2.5)
-var a = foo(2, 2.5)
+//foo(2, 2.5)
+//var a = foo(2, 2.5)
+var a = foo(a: 2, b: 2.5)
+// a = foo(2, b: 2.5)
+// a = foo(2, 2.5)
+// a = foo(a: 2, 2.5)
 a = foo(a: 2, b: 2.5)
-a = foo(2, b: 2.5)
-a = foo(2, 2.5)
-a = foo(a: 2, 2.5)
-a = foo(a: 2, b: 2.5)
-let b = foo(2, a)
+// let b = foo(2, a)
 
-bar(2, 2.5)
-var c = bar(2, 2.5)
+// bar(2, 2.5)
+// var c = bar(2, 2.5)
+var c = bar(a: 2, b: 2.5)
+// c = bar(2, b: 2.5)
+// c = bar(2, 2.5)
+// c = bar(a: 2, 2.5)
 c = bar(a: 2, b: 2.5)
-c = bar(2, b: 2.5)
-c = bar(2, 2.5)
-c = bar(a: 2, 2.5)
-c = bar(a: 2, b: 2.5)
-let d = bar(2, c)
-
+// let d = bar(2, c)
+// 
 
