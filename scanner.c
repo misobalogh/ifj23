@@ -1,3 +1,9 @@
+/*
+ * Author: TADEAS ZOBAL, xzobal02
+ * Faculty: FIT VUT
+ * Date: 6.10.2023
+ */
+
 #include <stdio.h>
 #include "macros.h"
 #include "scanner.h"
@@ -131,6 +137,10 @@ dynamic_string char_insert(dynamic_string *str, char c)
     return *str;
 }
 
+/* function of FSM
+ * works in infinite cycle,
+ * reads input file char by char, moving to different cases and creating tokens
+ */
 lex_token get_next_token()
 {
     states current_lex_state = STATE_START;
@@ -304,13 +314,11 @@ lex_token get_next_token()
             if (c == '\n')
             {
                 ungetc(c, stdin);
-                //    printf("ukoncil se radkovy komentar\n");
                 current_lex_state = STATE_START;
             }
             else if (c == EOF)
             {
-                ungetc(c, stdin); // zmena
-                //  printf("ukoncil se radkovy komentar\n");
+                ungetc(c, stdin);
                 current_lex_state = STATE_START;
             }
             else
@@ -339,7 +347,6 @@ lex_token get_next_token()
             }
             if (c == '/')
             {
-                // printf("ukoncil se blokovy komentar\n");
                 current_lex_state = STATE_START;
             }
             else
@@ -366,7 +373,6 @@ lex_token get_next_token()
                 {
                     nested_check(&nested_counter, 1);
                     current_lex_state = STATE_NESTED_COMMENT2;
-                    // printf("increased, currently: %d\n", nested_counter);
                 }
                 else
                 {
@@ -422,7 +428,6 @@ lex_token get_next_token()
                 {
                     nested_check(&nested_counter, 0);
                     current_lex_state = STATE_NESTED_COMMENT4;
-                    // printf("decrease, currently: %d\n", nested_counter);
                 }
                 else
                 {
@@ -454,7 +459,6 @@ lex_token get_next_token()
             }
             else if (nested_counter == 0)
             {
-                // printf("ukončil se nested comment s poctem %d\n", nested_counter);
                 current_lex_state = STATE_START;
             }
             else if (c == EOF && nested_counter != 0)
@@ -702,9 +706,8 @@ lex_token get_next_token()
             {
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_WHOLE_NUMBER;
-                char_insert(&str, '\0'); // TODO: check if this is correct
+                char_insert(&str, '\0');
                 current_lex_token.value.INT_VAL = atoi(str.data);
-                // string_clear(&str);
                 return current_lex_token;
             }
             break;
@@ -738,9 +741,8 @@ lex_token get_next_token()
             {
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_DEC_NUMBER;
-                char_insert(&str, '\0'); // TODO: check if this is correct
+                char_insert(&str, '\0');
                 current_lex_token.value.FLOAT_VAL = atof(str.data);
-                // string_clear(&str);
                 return current_lex_token;
             }
 
@@ -791,7 +793,6 @@ lex_token get_next_token()
                 ungetc(c, stdin);
                 current_lex_token.type = token_CONST_SCIENTIFIC_NOTATION;
                 current_lex_token.value.FLOAT_VAL = atof(str.data);
-                // string_clear(&str);
                 return current_lex_token;
             }
 
@@ -823,8 +824,7 @@ lex_token get_next_token()
             else
             {
                 ungetc(c, stdin);
-                // current_lex_token.type = TYPE_IDENTIFIER;
-                char_insert(&str, '\0'); // TODO: check if this is correct
+                char_insert(&str, '\0');
                 current_lex_token.type = keyword_check(str.data);
 
                 current_lex_token.value.STR_VAL = malloc(str.size + 1);
@@ -832,7 +832,6 @@ lex_token get_next_token()
                 strncpy(current_lex_token.value.STR_VAL, str.data, str.size);
                 current_lex_token.value.STR_VAL[str.size] = '\0';
 
-                //  string_clear(&str);
                 return current_lex_token;
             }
             break;
@@ -1098,13 +1097,11 @@ lex_token get_next_token()
             if (c == '"')
             {
                 current_lex_state = STATE_Q_MARK_2;
-                // current_lex_state = STATE_STRING_DONE;
             }
             else if (c != '\n' && c != EOF)
             {
                 ungetc(c, stdin);
                 current_lex_state = STATE_STRING_ASSEMBLING;
-                // char_insert(&str, c);
             }
             else
             {
@@ -1119,18 +1116,11 @@ lex_token get_next_token()
             {
                 current_lex_state = STATE_ML_STRING_ASSEMBLING;
             }
-            else // if (c != EOF) /// possible issue!!!
+            else
             {
                 ungetc(c, stdin);
                 current_lex_state = STATE_STRING_DONE;
             }
-            /*
-            else
-            {
-                string_clear(&str);
-                current_lex_token.type = token_LEX_ERROR;
-                return current_lex_token;
-            }*/
             break;
 
         case STATE_ML_STRING_ASSEMBLING:
@@ -1145,9 +1135,8 @@ lex_token get_next_token()
             else if (c == '\\')
             {
                 current_lex_state = STATE_ML_ESCAPE_SEQUENCE;
-                // char_insert(&str, c); dont insert, will be inserted with certain letter
             }
-            else // to do
+            else
             {
                 string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
@@ -1206,7 +1195,6 @@ lex_token get_next_token()
                 }
 
                 current_lex_state = STATE_ML_STRING_ASSEMBLING;
-                // char_insert(&str, c);
             }
             else if (c == 'u')
             {
@@ -1289,15 +1277,13 @@ lex_token get_next_token()
             }
             else if (c == '"')
             {
-                // ungetc(c, stdin);
                 current_lex_state = STATE_STRING_DONE;
             }
             else if (c == '\\')
             {
                 current_lex_state = STATE_ESCAPE_SEQUENCE;
-                // char_insert(&str, c);
             }
-            else // to do
+            else
             {
                 string_clear(&str);
                 current_lex_token.type = token_LEX_ERROR;
@@ -1330,7 +1316,6 @@ lex_token get_next_token()
                 }
 
                 current_lex_state = STATE_STRING_ASSEMBLING;
-                // char_insert(&str, c);
             }
             else if (c == 'u')
             {
