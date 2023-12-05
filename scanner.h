@@ -1,3 +1,9 @@
+/*
+ * Author: TADEAS ZOBAL, xzobal02
+ * Faculty: FIT VUT
+ * Date: 6.10.2023
+ */
+
 // enum of FSM states
 typedef enum States
 {
