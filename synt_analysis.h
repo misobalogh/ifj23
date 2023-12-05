@@ -23,8 +23,6 @@
 
 
 
-// Main function
-bool syntacticAnalysis();
 
 void getToken();
 
@@ -73,8 +71,6 @@ tokenStruct* mock_recursive_nextToken();
 
 //================= DEBUGGING =================
 #define LOGTOKEN(message) printf("%s: %s\n", message, TokenName(t.type))
-
-
 
 
 #endif // _SYNT_ANALYSIS_H

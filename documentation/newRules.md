@@ -1,114 +1,147 @@
-```c
+```
 1. <program> -> <stat_list> EOF
 ```
-```c
+
+```
 2. <stat_list> -> <statement> EOL <stat_list>
 3. <stat_list> -> EPSILON
 ```
-```c
+
+```
 4. <statement> -> <let_or_var> <var_assignment>
 5. <statement> -> id <after_id>
-6. <statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> } 
+6. <statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }
 7. <statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }
 8. <statement> -> while <expression> { <brack_stat_list> }
 9. <statement> -> EPSILON
 ```
 
-```c
-2. <brack_stat_list> -> <statement> EOL <brack_stat_list>
-3. <brack_stat_list> -> EPSILON
 ```
-```c
-4. <brack_statement> -> <let_or_var> <var_assignment>
-5. <brack_statement> -> id <after_id>
-7. <brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }
-8. <brack_statement> -> while <expression> { <brack_stat_list> }
-9. <brack_statement> -> EPSILON
+10. <brack_stat_list> -> <statement> EOL <brack_stat_list>
+11. <brack_stat_list> -> EPSILON
 ```
-```c
-10. <let_or_var> -> let id
-11. <let_or_var> -> var id
+
 ```
-```c
-12. <var_assignment> -> : type <val_assigment>
-13. <var_assignment> -> = id <fn_or_exp> // (if id == const -> expression), 
-// change id to id_or_const, and make new rule rest_of_assignment, in which we can have expression or function call if its id, or just expression if its const
+12. <brack_statement> -> <let_or_var> <var_assignment>
+13. <brack_statement> -> id <after_id>
+14. <brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }
+15. <brack_statement> -> while <expression> { <brack_stat_list> }
+16. <brack_statement> -> EPSILON
 ```
-```c
-14. <val_assignment> -> = id <fn_or_exp> 
-// (if id == const -> expression), same as above
-15. <val_assignment> -> EPSILON
+
 ```
+17. <let_or_var> -> let id
+18. <let_or_var> -> var id
 ```
-16. <fn_or_exp> -> <expression> // (need SECOND(expression))
-17. <fn_or_exp> -> ( <input_param_list> )
+
 ```
+19. <var_assignment> -> : type <val_assigment>
+20. <var_assignment> -> = id <fn_or_exp>
+21. <var_assignment> -> = const <expression>
 ```
-18. <after_id> -> = id <fn_or_exp> // assign value
-19. <after_id> -> ( <input_param_list> ) // function call
+
 ```
+22. <val_assignment> -> = id <fn_or_exp>
+23. <var_assignment> -> = const <expression>
+24. <val_assignment> -> EPSILON
 ```
-20. <input_param_list> -> <input_param> <input_param_next>
-21. <input_param_list> -> EPSILON
+
 ```
+25. <fn_or_exp> -> <expression>
+26. <fn_or_exp> -> ( <input_param_list> )
 ```
-22. <input_param_next> -> , <input_param> <input_param_next>
-23. <input_param_next> -> EPSILON
+
 ```
+27. <after_id> -> = id <fn_or_exp>
+28. <after_id> -> = const <expression>
+29. <after_id> -> ( <input_param_list> )
 ```
-24. <input_param> -> id <with_name>
-25. <input_param> -> const
+
 ```
+30. <input_param_list> -> <input_param> <input_param_next>
+31. <input_param_list> -> EPSILON
 ```
-26. <with_name> -> : <id_or_const>
-27. <with_name> -> EPSILON 
+
 ```
+32. <input_param_next> -> , <input_param> <input_param_next>
+33. <input_param_next> -> EPSILON
 ```
-28. <id_or_const> -> id
-29. <id_or_const> -> const
+
 ```
+34. <input_param> -> id <with_name>
+35. <input_param> -> const
 ```
-30. <param_list> -> <param> <param_next>
-31. <param_list> -> EPSILON
+
 ```
+36. <with_name> -> : <id_or_const>
+37. <with_name> -> EPSILON
 ```
-32. <param> -> <id_or_underscore> id : <type>
+
 ```
+38. <id_or_const> -> id
+39. <id_or_const> -> const
 ```
-34. <id_or_underscore> -> _
-33. <id_or_underscore> -> id
+
 ```
+40. <param_list> -> <param> <param_next>
+41. <param_list> -> EPSILON
 ```
-33. <param_next> -> , <param> <param_next>
-34. <param_next> -> EPSILON
+
 ```
+42. <param> -> <id_or_underscore> id : <type>
 ```
-35. <return_type> => -> <type>
-36. <return_type> => EPSILON
+
 ```
+43. <id_or_underscore> -> _
+44. <id_or_underscore> -> id
 ```
-37. <func_stat_list> -> <func_stat> EOL <func_stat_list>
-38. <func_stat_list> -> EPSILON 
+
 ```
+45. <param_next> -> , <param> <param_next>
+46. <param_next> -> EPSILON
 ```
-39. <func_stat> -> <let_or_var> <var_assignment>
-40. <func_stat> -> id <after_id>
-41. <func_stat> -> <return_stat>
-42. <func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
-43. <func_stat> -> while <expression> { <func_stat_list> }
-44. <func_stat> -> EPSILON
+
 ```
+47. <return_type> => -> <type>
+48. <return_type> => EPSILON
 ```
-45. <return_stat> -> return <ret_val> EOL <func_stat_list>
-46. <return_stat> -> EPSILON
+
 ```
+49. <func_stat_list> -> <func_stat> EOL <func_stat_list>
+50. <func_stat_list> -> EPSILON
 ```
-47. <ret_val> -> <expression>
-48. <ret_val> -> EPSILON
+
 ```
+51. <func_stat> -> <let_or_var> <var_assignment>
+52. <func_stat> -> id <after_id>
+53. <func_stat> -> <return_stat>
+54. <func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
+55. <func_stat> -> while <expression> { <func_stat_list> }
+56. <func_stat> -> EPSILON
 ```
-49. <condition> -> <expression>
-50. <condtion> -> let id
+
+```
+57. <return_stat> -> return <ret_val> EOL <func_stat_list>
+58. <return_stat> -> EPSILON
+```
+
+```
+59. <ret_val> -> <expression>
+60. <ret_val> -> EPSILON
+```
+
+```
+61. <condition> -> <expression>
+62. <condtion> -> let id
+```
+
+```
+63. <type> -> Int
+64. <type> -> Int?
+65. <type> -> Double
+66. <type> -> Double?
+67. <type> -> String
+68. <type> -> String?
 ```
 
 ```
@@ -120,24 +153,5 @@
 56. <expression> -> <expression>!  (force unwrap)
 57. <expression> -> <expression> rel_op <expression>   (not 100% correct)
 58. something like this instead:
-59. <expression> -> <not_rel_exp> rel_op <not_rel_exp> 
-```
-
-```
-60. <not_rel_exp> -> id
-61. <not_rel_exp> -> const
-62. <not_rel_exp> -> ( <expression> )
-63. <not_rel_exp> -> <not_rel_exp> arithm_op <not_rel_exp>
-64. <not_rel_exp> -> <not_rel_exp> ?? <not_rel_exp>
-65. <not_rel_exp> -> <not_rel_exp>!  (force unwrap)
-```
-
-```
-60. //?
-61. <type> -> Int
-62. <type> -> Int?
-63. <type> -> Double
-64. <type> -> Double?
-65. <type> -> String
-66. <type> -> String?
+59. <expression> -> <not_rel_exp> rel_op <not_rel_exp>
 ```
