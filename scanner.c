@@ -145,7 +145,7 @@ lex_token get_next_token()
         {
         case STATE_START:
 
-            if (c == ' ')
+            if (c == ' ' || c == '\t')
             {
                 continue;
             }
