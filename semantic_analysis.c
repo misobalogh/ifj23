@@ -382,24 +382,23 @@ void analyseAssignEnd(void) {
   SymbolType st = assignment.let ? symbol_LET : symbol_VAR;
   bool assign = false;
 
-  // tyep was hinted and expression is omitted
-  // let a: T
-  if (typeIsValue(assignment.hintedType) && assignment.type.base == 0) {
-    if (assignment.hintedType.nullable) {
-        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+    // tyep was hinted and expression is omitted
+    // let a: T
+    if (typeIsValue(assignment.hintedType) && assignment.type.base == 0) {
+        if (assignment.hintedType.nullable) {
+            data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+        }
+        else {
+            data = (SymbolData) { assignment.hintedType, NULL, 0, 0U, st };
+        }
     }
-    else {
-        data = (SymbolData) { assignment.hintedType, NULL, 0, 0U, st };
-    }
-
-  }
-  // type was hinted and actual type could not be inffered
-  // let a: T = <undefined-expr>
-  else if(typeIsValue(assignment.hintedType) && (assignment.type.base == 'u')) {
+    // type was hinted and actual type could not be inffered
+    // let a: T = <undefined-expr>
+    else if(typeIsValue(assignment.hintedType) && (assignment.type.base == 'u')) {
       EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-  // let a: T? = nil
-  else if(assignment.type.base == 'N') {
+    }
+    // let a: T? = nil
+    else if(assignment.type.base == 'N') {
       if (typeIsValue(assignment.hintedType) && assignment.hintedType.nullable) {
         data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
         assign = true;
@@ -407,27 +406,32 @@ void analyseAssignEnd(void) {
       else {
           EXIT_WITH_MESSAGE(8);
       }
-  }
-  // type was hinted and actual type matches or
-  // let a: T = <T-expr>
-  // type was not hinted and actual type is valid type
-  // let a = <expr>
-  else if ((typeIsValue(assignment.hintedType) && typeEq(assignment.hintedType, assignment.type))
-      || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
-    data = (SymbolData) { assignment.type, NULL, 0, symbol_flag_INITIALIZED, st };
-    assign = true;
-  }
-  // hinted type is Double and actual type is Int and assigned value is const
-  // let a: Double = <Int-const>
-  else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
+    }
+    // type was hinted and actual type matches
+    // let a: T = <T-expr>
+    else if(typeIsValue(assignment.hintedType) && assignment.hintedType.base == assignment.type.base
+              && (assignment.hintedType.nullable || !assignment.type.nullable)) {
+        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+        assign = true;
+    }
+    // type was not hinted and actual type is valid type
+    // let a = <expr>
+    else if (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type)) {
+        data = (SymbolData) { assignment.type, NULL, 0, symbol_flag_INITIALIZED, st };
+        assign = true;
+    }
+    // hinted type is Double and actual type is Int and assigned value is const
+    // let a: Double = <Int-const>
+    else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
           && assignment.rightId.size == 0 && exprConstOnly) {
       data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+      // implicit conversion
       printf("INT2FLOATS\n");
       assign = true;
-  }
-  else {
-    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
+    }
+    else {
+        EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+    }
 
   global_insertTop(stringCStr(&assignment.idname), data);
 
@@ -509,7 +513,7 @@ void analyseFunctionEnd(void) {
   SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, 0u, symbol_FN };
   symtableInsert(global_table, stringCStr(&fnDef.idname), data);
 
-  _checkPostponed(stringCStr(&fnDef.idname), data);
+  _checkPostponed(stringCStr(&fnDef.idname), data.params, data.paramCount);
 
   genFunction(stringCStr(&fnDef.idname));
 
@@ -623,13 +627,18 @@ void analyseCallConstAfterLabel(lex_token token) {
 Type analyseCallEnd(void) {
   symtableItem* item = global_symbolSearch(stringCStr(&fnCall.idname), NULL);
 
-  // function was called before declaration
-  if (item == NULL) {
-    // postpone semantic check until function declaration
-    NOT_FALSE(functionStackPush(postponedCheckStack, stringCStr(&fnCall.idname),
-              fnCall.params, fnCall.paramCount));
-    return (Type) { 'u', false };
-  }
+    // function was called before declaration
+    if (item == NULL) {
+        // postpone semantic check until function declaration
+
+        // remove duplicate postponed checks
+        _checkPostponed(stringCStr(&fnCall.idname), fnCall.params, fnCall.paramCount);
+
+        NOT_FALSE(functionStackPush(postponedCheckStack, stringCStr(&fnCall.idname),
+        fnCall.params, fnCall.paramCount));
+        genCall(stringCStr(&fnCall.idname), fnCall.params, fnCall.paramCount);
+        return (Type) { 'u', false };
+    }
 
   if (item->data.symbolType != symbol_FN) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
@@ -841,6 +850,7 @@ Type analyseExprEnd(void) {
     }
     else { // operand
       exprStackPush(stack, it);
+
       if (it.type != expr_CONST) {
           exprConstOnly = false;
       }
@@ -922,8 +932,10 @@ void analyseReassignEnd(void) {
         EXIT_WITH_MESSAGE(SEMANTIC_ERR);
     }
 
-    if (reassignment.type.base == 'N' && !it->data.dataType.nullable) {
-        EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+    if (reassignment.type.base == 'N') {
+        if (!it->data.dataType.nullable) {
+            EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+        }
     }
     else if (it->data.dataType.base != reassignment.type.base
     || (!it->data.dataType.nullable && reassignment.type.nullable)) {
@@ -961,12 +973,12 @@ bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsign
   return true;
 }
 
-void _checkPostponed(const char* fnId, SymbolData data) {
+void _checkPostponed(const char* fnId, Param* params, unsigned paramCount) {
   FunctionLListItem* fn = functionStackRemove(postponedCheckStack, fnId);
 
   // function was called with wrong arguments
   if (fn != NULL) {
-    if (!_compareParams(fn->params, fn->paramCount, data.params, data.paramCount)) {
+    if (!_compareParams(fn->params, fn->paramCount, params, paramCount)) {
       EXIT_WITH_MESSAGE(UNDEFINED_FN);
     }
 
@@ -1063,22 +1075,19 @@ Type _analyseOperation(OperatorType optype, ExprItem* ref_a, ExprItem* ref_b) {
         return (Type) { typeA.base, (typeA.nullable || typeB.nullable) };
     }
   }
-
-  if (optype == op_DEFAULT) {
+  else if (optype == op_DEFAULT) {
     if (typeA.base == typeB.base && !typeB.nullable) {
       return typeB;
     }
   }
-
-  if (optype == op_EQ || optype == op_NEQ) {
+  else if (optype == op_EQ || optype == op_NEQ) {
       _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base) {
       return (Type) { 'B', false };
     }
   }
-
-  if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
+  else if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
     _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base && !typeA.nullable && !typeB.nullable) {
@@ -1163,7 +1172,7 @@ void pushFnParams(const char* idname) {
     Param* param = &fn->data.params[i];
 
     global_insertTop(stringCStr(&param->name),
-        (SymbolData) { param->type, NULL, 0, symbol_flag_INITIALIZED, symbol_LET });
+        (SymbolData) { param->type, NULL, i, symbol_flag_INITIALIZED | symbol_flag_PARAM, symbol_LET });
   }
 
 }

@@ -36,6 +36,8 @@ void functionStackDeinit(FunctionLList* stack) {
 }
 
 bool functionStackPush(FunctionLList* stack, const char* name, Param* params, unsigned count) {
+    functionStackRemove(stack, name);
+
   FunctionLListItem* first = stack->first;
 
   stack->first = malloc(sizeof(FunctionLListItem));

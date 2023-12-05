@@ -108,7 +108,7 @@ void setCurrentFunction(String* idname);
 
 bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsigned callCount);
 const char* _typeShort(tokenType type);
-void _checkPostponed(const char* fnId, SymbolData data);
+void _checkPostponed(const char* fnId, Param* params, unsigned paramCount);
 Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b);
 Type strToType(const char* typeStr);
 String typeToStr(Type type);

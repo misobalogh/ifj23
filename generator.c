@@ -9,7 +9,11 @@
 #include "dynamic_string.h"
 #include "istack.h"
 
-typedef struct WhileVariable { char* idname; unsigned id; } WhileVariable;
+typedef struct WhileVariable {
+    char* idname;
+    unsigned id;
+    bool local;
+} WhileVariable;
 
 static unsigned cmain = 0;
 static bool inWhile = false;
@@ -21,6 +25,7 @@ extern char _binary_substring_code_start[];
 static unsigned whileVariablesCapacity = 8;
 static WhileVariable* whileVariables;
 static unsigned whileVariableCount = 0;
+static unsigned outerWhileId = 0;
 
 unsigned uid(void) {
   static unsigned state = 0;
@@ -45,6 +50,8 @@ void genWhileDeclaration(const char* idname) {
     unsigned id;
     global_symbolSearch(idname, &id);
     whileVariables[whileVariableCount].id = id;
+
+    whileVariables[whileVariableCount].local = global_isLocal(idname);
 
     whileVariableCount++;
 }
@@ -102,8 +109,13 @@ void _genWrite(Param* params, unsigned paramCount) {
     else {
       const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
       unsigned id;
-      global_symbolSearch(stringCStr(&params[i].name), &id);
-      printf("WRITE %s@%s%i\n", l, stringCStr(&params[i].name), id);
+      symtableItem* it = global_symbolSearch(stringCStr(&params[i].name), &id);
+      if (it->data.flags & symbol_flag_PARAM) {
+          printf("WRITE %s@$%i\n", l, it->data.paramCount);
+      }
+      else {
+          printf("WRITE %s@%s%i\n", l, stringCStr(&params[i].name), id);
+      }
     }
   }
 }
@@ -137,8 +149,13 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
     else {
       const char* l = global_isLocal(stringCStr(&params->name)) ? "LF" : "GF";
       unsigned id;
-      global_symbolSearch(stringCStr(&params->name), &id);
-      printf("PUSHS %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      symtableItem* it = global_symbolSearch(stringCStr(&params->name), &id);
+      if (it->data.flags & symbol_flag_PARAM) {
+          printf("PUSHS %s@$%i\n", l, it->data.paramCount);
+      }
+      else {
+          printf("PUSHS %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      }
     }
     printf("INT2FLOATS\n");
   }
@@ -149,8 +166,13 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
     else {
       const char* l = global_isLocal(stringCStr(&params[0].name)) ? "LF" : "GF";
       unsigned id;
-      global_symbolSearch(stringCStr(&params[0].name), &id);
-      printf("PUSHS %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      symtableItem* it = global_symbolSearch(stringCStr(&params[0].name), &id);
+      if (it->data.flags & symbol_flag_PARAM) {
+          printf("PUSHS LF@$%i\n", it->data.paramCount);
+      }
+      else {
+          printf("PUSHS %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      }
     }
     printf("FLOAT2INTS\n");
   }
@@ -166,8 +188,13 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
     else {
       const char* l = global_isLocal(stringCStr(&params->name)) ? "LF" : "GF";
       unsigned id;
-      global_symbolSearch(stringCStr(&params[0].name), &id);
-      printf("STRLEN TF@temp_A %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      symtableItem* it = global_symbolSearch(stringCStr(&params[0].name), &id);
+      if (it->data.flags & symbol_flag_PARAM) {
+          printf("STRLEN TF@temp_A LF@$%i\n", it->data.paramCount);
+      }
+      else {
+          printf("STRLEN TF@temp_A %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      }
     }
 
     printf("PUSHS TF@temp_A\n");
@@ -179,7 +206,9 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
                     printf("PUSHS int@%i\n", params[i].intVal);
                 }
                 else if (params[i].type.base == 'S') {
-                    printf("PUSHS string@%s\n", stringCStr(&params[i].name));
+                    printf("PUSHS string@");
+                    _printEscaped(stringCStr(&params[i].name));
+                    putchar('\n');
                 }
                 else {
                     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
@@ -188,8 +217,13 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
             else {
                 const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
                 unsigned id;
-                global_symbolSearch(stringCStr(&params[i].name), &id);
-                printf("PUSHS %s@%s%i\n", l, stringCStr(&params[i].name), id);
+                symtableItem* it = global_symbolSearch(stringCStr(&params[i].name), &id);
+                if (it->data.flags & symbol_flag_PARAM) {
+                    printf("PUSHS LF@$%i\n", it->data.paramCount);
+                }
+                else {
+                    printf("PUSHS %s@%s%i\n", l, stringCStr(&params[i].name), id);
+                }
             }
         }
         printf("CREATEFRAME\n");
@@ -211,8 +245,13 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
     else {
       const char* l = global_isLocal(stringCStr(&params->name)) ? "LF" : "GF";
       unsigned id;
-      global_symbolSearch(stringCStr(&params[0].name), &id);
-      printf("PUSHS %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      symtableItem* it = global_symbolSearch(stringCStr(&params[0].name), &id);
+      if (it->data.flags & symbol_flag_PARAM) {
+          printf("PUSHS LF@$%i\n", it->data.paramCount);
+      }
+      else {
+          printf("PUSHS %s@%s%i\n", l, stringCStr(&params[0].name), id);
+      }
     }
     printf("PUSHS int@0\n");
     printf("STRI2INTS\n");
@@ -235,34 +274,29 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
 #ifdef DEBUG
     printf("# call `%s`\n", idname);
 #endif
-  symtableItem* it = symtableSearch(global_table, idname);
 
-  if (it->data.flags & symbol_flag_BUILTIN) {
-    _genBuiltinCall(idname, params, paramCount);
-    return;
-  }
-
-  if (it == NULL || it->data.paramCount != paramCount) {
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
+    symtableItem* it = symtableSearch(global_table, idname);
+    if (it != NULL && it->data.flags & symbol_flag_BUILTIN) {
+        _genBuiltinCall(idname, params, paramCount);
+        return;
+    }
 
   printf("CREATEFRAME\n");
 
   for (unsigned i = 0; i < paramCount; i++) {
     Param callParam = params[i];
-    Param funcParam = it->data.params[i];
 
-    printf("DEFVAR TF@%s-1\n", stringCStr(&funcParam.name));
+    printf("DEFVAR TF@$%i\n", i);
 
     if (callParam.isConst) {
       if (callParam.type.base == 'I') {
-        printf("MOVE TF@%s-1 int@%i\n", stringCStr(&funcParam.name), callParam.intVal);
+        printf("MOVE TF@$%i int@%i\n", i, callParam.intVal);
       }
       else if (callParam.type.base == 'D') {
-        printf("MOVE TF@%s-1 float@%a\n", stringCStr(&funcParam.name), callParam.floatVal);
+        printf("MOVE TF@$%i float@%a\n", i, callParam.floatVal);
       }
       else if (callParam.type.base == 'S') {
-        printf("MOVE TF@%s-1 string@", stringCStr(&funcParam.name));
+        printf("MOVE TF@$%i string@", i);
         _printEscaped(stringCStr(&callParam.name));
         putchar('\n');
       }
@@ -273,8 +307,13 @@ void genCall(const char* idname, Param* params, unsigned paramCount) {
     else {
       const char* l = global_isLocal(stringCStr(&callParam.name)) ? "LF" : "GF";
       unsigned varId;
-      global_symbolSearch(stringCStr(&callParam.name), &varId);
-      printf("MOVE TF@%s-1 %s@%s%i\n", stringCStr(&funcParam.name), l, stringCStr(&callParam.name), varId);
+      symtableItem* it = global_symbolSearch(stringCStr(&callParam.name), &varId);
+      if (it->data.flags & symbol_flag_PARAM) {
+          printf("MOVE TF@$%i LF@$%i\n", i, it->data.paramCount);
+      }
+      else {
+          printf("MOVE TF@$%i %s@%s%i\n", i, l, stringCStr(&callParam.name), varId);
+      }
     }
   }
 
@@ -311,7 +350,7 @@ void genDef(const char* idname) {
     else {
         unsigned id;
         global_symbolSearch(idname, &id);
-    printf("DEFVAR GF@%s%i\n", idname, id);
+        printf("DEFVAR GF@%s%i\n", idname, id);
     }
 }
 
@@ -320,14 +359,14 @@ void genAssign(const char* idname) {
     printf("# variable assignment\n");
 #endif
   if (global_isLocal(idname)) {
-      unsigned id;
-      global_symbolSearch(idname, &id);
-    printf("POPS LF@%s%i\n", idname, id);
+        unsigned id;
+        global_symbolSearch(idname, &id);
+        printf("POPS LF@%s%i\n", idname, id);
   }
   else {
-      unsigned id;
-      global_symbolSearch(idname, &id);
-    printf("POPS GF@%s%i\n", idname, id);
+        unsigned id;
+        global_symbolSearch(idname, &id);
+        printf("POPS GF@%s%i\n", idname, id);
   }
 }
 
@@ -339,8 +378,13 @@ void genAssignId(const char* left, const char* right) {
   const char* lr = global_isLocal(left) ? "LF" : "GF";
   unsigned leftId, rightId;
   global_symbolSearch(left, &leftId);
-  global_symbolSearch(right, &rightId);
-  printf("MOVE %s@%s%i %s@%s%i\n", ll, left, leftId, lr, right, rightId);
+  symtableItem* it = global_symbolSearch(right, &rightId);
+  if (it->data.flags & symbol_flag_PARAM) {
+      printf("MOVE %s@%s%i LF@$%i\n", ll, left, leftId, it->data.paramCount);
+  }
+  else {
+      printf("MOVE %s@%s%i %s@%s%i\n", ll, left, leftId, lr, right, rightId);
+  }
 }
 
 void _printEscaped(const char* str) {
@@ -350,7 +394,8 @@ void _printEscaped(const char* str) {
       fmt = "\\%03i";
     }
 
-    printf(fmt, *str++);
+    printf(fmt, *str);
+    str++;
   }
 }
 
@@ -358,8 +403,13 @@ void genExprOperand(ExprItem e) {
   if (e.type == expr_ID) {
     const char* l = global_isLocal(e.value.idName) ? "LF" : "GF";
     unsigned id;
-    global_symbolSearch(e.value.idName, &id);
-    printf("PUSHS %s@%s%i\n", l, e.value.idName, id);
+    symtableItem* it = global_symbolSearch(e.value.idName, &id);
+    if (it->data.flags & symbol_flag_PARAM) {
+        printf("PUSHS LF@$%i\n", it->data.paramCount);
+    }
+    else {
+        printf("PUSHS %s@%s%i\n", l, e.value.idName, id);
+    }
   }
   else if (e.type == expr_CONST) {
     if (e.value.constValue.type.base == 'I') {
@@ -557,15 +607,22 @@ void genIfEnd(void) {
 }
 
 void genWhileBegin(void) {
-    inWhile = true;
-    whileVariableCount = 0;
     unsigned id = uid();
     istackPush(blockStack, id);
+
+    if (!inWhile) {
+        outerWhileId = id;
+        inWhile = true;
+        whileVariableCount = 0;
+    }
 
 #ifdef DEBUG
     printf("# while begin\n");
 #endif
-    printf("JUMP while_declaration%04X\n", istackTop(blockStack));
+
+    if (outerWhileId == id) {
+        printf("JUMP while_declaration%04X\n", istackTop(blockStack));
+    }
     printf("LABEL while_condition%04X\n", id);
 }
 
@@ -582,14 +639,18 @@ void genWhileEnd(void) {
     printf("# while end\n");
 #endif
     printf("JUMP while_condition%04X\n", istackTop(blockStack));
-    printf("LABEL while_declaration%04X\n", istackTop(blockStack));
 
-    for (unsigned i = 0; i < whileVariableCount; i++) {
-        const char* l = global_isLocal(whileVariables[i].idname) ? "LF" : "GF";
-        printf("DEFVAR %s@%s%i\n", l, whileVariables[i].idname, whileVariables[i].id);
+    if (istackTop(blockStack) == outerWhileId) {
+        printf("LABEL while_declaration%04X\n", istackTop(blockStack));
+
+        for (unsigned i = 0; i < whileVariableCount; i++) {
+            const char* l = whileVariables[i].local ? "LF" : "GF";
+            printf("DEFVAR %s@%s%i\n", l, whileVariables[i].idname, whileVariables[i].id);
+        }
+
+        printf("JUMP while_condition%04X\n", istackTop(blockStack));
     }
 
-    printf("JUMP while_condition%04X\n", istackTop(blockStack));
     printf("LABEL while_end%04X\n", istackTop(blockStack));
 
     istackPop(blockStack);
@@ -601,8 +662,13 @@ void genIfLet(const char* idname) {
 #endif
     const char* l = global_isLocal(idname) ? "LF" : "GF";
     unsigned id;
-    global_symbolSearch(idname, &id);
-    printf("PUSHS %s@%s%i\n", l, idname, id);
+    symtableItem* it = global_symbolSearch(idname, &id);
+    if (it->data.flags & symbol_flag_PARAM) {
+        printf("PUSHS LF@$%i\n", it->data.paramCount);
+    }
+    else {
+        printf("PUSHS %s@%s%i\n", l, idname, id);
+    }
     printf("PUSHS nil@nil\n");
     printf("EQS\n");
     printf("NOTS\n");
@@ -612,7 +678,20 @@ void genIfLetShadow(const char* idname, unsigned oldId, unsigned newId) {
 #ifdef DEBUG
     printf("# if let shadowing\n");
 #endif
+
     const char* l = global_isLocal(idname) ? "LF" : "GF";
-    printf("DEFVAR %s@%s%i\n", l, idname, newId);
-    printf("MOVE %s@%s%i %s@%s%i\n", l, idname, newId, l, idname, oldId);
+    if (inWhile) {
+        genWhileDeclaration(idname);
+    }
+    else {
+        printf("DEFVAR %s@%s%i\n", l, idname, newId);
+    }
+
+    symtableItem* it = global_symbolSearch(idname, NULL);
+    if (it->data.flags & symbol_flag_PARAM) {
+        printf("MOVE %s@%s%i LF@$%i\n", l, idname, newId, it->data.paramCount);
+    }
+    else {
+        printf("MOVE %s@%s%i %s@%s%i\n", l, idname, newId, l, idname, oldId);
+    }
 }

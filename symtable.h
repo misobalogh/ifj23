@@ -24,6 +24,7 @@
 #define symbol_flag_VARIADIC 1
 #define symbol_flag_BUILTIN 2
 #define symbol_flag_INITIALIZED 4
+#define symbol_flag_PARAM 8
 
 /* Prime number for size of hash table */
 #define SYMTABLE_SIZE 257   
