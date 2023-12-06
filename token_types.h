@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: token_types.c
 * Description: types of tokens, which are used in syntactic analysis, to know, which rule to apply
-* Author: MICHAL BALOGH, xbalog06
+* Author: MICHAL BALOGH, xbalog06; TADEAS ZOBAL, xzobal02
 * Faculty: FIT VUT
 * Date: 15.10.2023
 
@@ -80,7 +80,6 @@ typedef enum
     token_ELSE,
     token_WHILE,
 
-
     token_FUNC,
     token_RETURN,
     token_BRACKET_L,
@@ -106,7 +105,7 @@ typedef enum
 typedef struct token
 {
     tokenType type;
-    char* value;
+    char *value;
 } tokenStruct;
 
 bool isTerminal(tokenType type);
@@ -116,7 +115,7 @@ typedef union Value_of_token
 {
     int INT_VAL;
     float FLOAT_VAL;
-    char* STR_VAL;
+    char *STR_VAL;
 } value_of_token;
 
 // structure of token
@@ -130,7 +129,7 @@ typedef struct Token
 // structure of dynamic string
 typedef struct Dynamic_String
 {
-    char* data;            // current cuntent
+    char *data;            // current cuntent
     unsigned int size;     // current size
     unsigned int capacity; // max capacity
 } dynamic_string;
@@ -145,6 +144,6 @@ extern lex_token current_lex_token;
 // extern states current_lex_state;
 
 //======DEBUG======
-const char* TokenName(tokenType token);
+const char *TokenName(tokenType token);
 
 #endif // _TOKEN_TYPES_H
