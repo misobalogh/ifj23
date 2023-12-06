@@ -19,7 +19,7 @@ PATH = './tests_code'
 
 
 class TestResultType(IntEnum):
-    SUCCESS = 0
+    PASSED = 0
     COMPILATION_FAILED = 1
     INTERPRETATION_FAILED = 2
     OUTPUT_DIFFERS = 3
@@ -88,7 +88,7 @@ def test(test_file: TextIOWrapper) -> TestResult:
     except subprocess.TimeoutExpired:
         return TestResult(TestResultType.TIMEOUT)
 
-    return TestResult(TestResultType.SUCCESS)
+    return TestResult(TestResultType.PASSED, 0)
 
 def print_test(name: str, result: TestResult):
     if result.result_type == TestResultType.COMPILATION_FAILED:
@@ -102,8 +102,8 @@ def print_test(name: str, result: TestResult):
         with open(f'./tests_code/{name}.diff', 'w') as file:
             file.writelines(result.diff or ['No diff'])
 
-    elif result.result_type == TestResultType.SUCCESS:
-        print(f'{GREEN}test {name} successful{RESET}')
+    elif result.result_type == TestResultType.PASSED:
+        print(f'{GREEN}test {name} passed{RESET}')
     elif result.result_type == TestResultType.TIMEOUT:
         print(f'{RED}test {name} timed out{RESET}')
     else:
@@ -113,10 +113,12 @@ def print_test(name: str, result: TestResult):
 def print_table(table: List[Tuple[str, TestResult]]):
     cellsize = len(max(table, key=lambda t : len(t[0]))[0]) + 1
     table.sort(key=lambda t : t[1].result_type)
-    # resultsize = max(len(r.name) for r in TestResultType) + 1
+    resultsize = max(len(r.name) for r in TestResultType) + 1
+
+    print('Test'.ljust(cellsize), 'Result'.ljust(resultsize), 'Exit code', sep='')
 
     for test_name, test_result in table:
-        color = GREEN if test_result.result_type == TestResultType.SUCCESS else RED
+        color = GREEN if test_result.result_type == TestResultType.PASSED else RED
         print(test_name.ljust(cellsize, '.'),
               (color + test_result.result_type.name + RESET).ljust(31, '.'),
               test_result.exit_code,
@@ -147,7 +149,7 @@ for test_name in test_files:
         print_test(test_name.name, result)
         print()
         test_results[test_name.name] = result
-        if result.result_type == TestResultType.SUCCESS:
+        if result.result_type == TestResultType.PASSED:
             passed_count += 1
 
 print('\nsummary:')

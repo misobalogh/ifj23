@@ -77,12 +77,32 @@ void stringConcatCStr(String* string, const char* cStr);
  */
 void stringConcatChar(String* string, char c);
 
+/**
+ * @brief Clears string.
+ *
+ * @param string String to clear
+ */
 void stringClear(String* string);
 
+/**
+ * @brief Set strings value
+ *
+ * @param string String which value to set
+ * @param cStr null terminated array of characters to use as new value
+ */
 void stringSet(String* string, const char* cStr);
 
+/**
+ * @brief Set strings value
+ *
+ * @param string String which value to set
+ * @param String object to use as new value
+ */
 void stringSetS(String* string, String* other);
 
+/**
+ * @Check if strings equal
+ */
 bool stringEq(String* string, String* other);
 
 #endif

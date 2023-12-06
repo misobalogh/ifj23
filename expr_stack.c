@@ -3,7 +3,6 @@
  * Michal Cenek xcenek04
  */
 
-
 #include "expr_stack.h"
 
 #include <malloc.h>
@@ -25,11 +24,13 @@ void exprStackPush(ExprStack* stack, ExprItem item) {
   it->item = item;
 
   if (it->item.type == expr_ID) {
+      // copy identifier name
     it->item.value.idName = malloc(strlen(item.value.idName) + 1);
     CHECK_MEMORY_ALLOC(it->item.value.idName);
     strcpy(it->item.value.idName, item.value.idName);
   }
   else if (it->item.type == expr_CONST && it->item.value.constValue.type.base == 'S') {
+      // copy string value
     it->item.value.constValue.value.STR_VAL = malloc(strlen(item.value.constValue.value.STR_VAL) + 1);
     CHECK_MEMORY_ALLOC(it->item.value.constValue.value.STR_VAL);
     strcpy(it->item.value.constValue.value.STR_VAL, item.value.constValue.value.STR_VAL);

@@ -13,7 +13,6 @@
 #include "global_variables.h"
 #include "symtablestack.h"
 #include "synt_analysis.h"
-#include "macros.h"
 #include "synt_recur_rules.h"
 #include "semantic_analysis.h"
 #include "generator.h"
@@ -80,8 +79,6 @@ bool rule_EXPRESSION() {
 
 bool rule_PROGRAM() {
     // 1. <program> -> <stat_list> EOF
-
-    genSubstring();
 
     getToken();
     // RLOG("\n\n<program> -> <stat_list> EOF\n");

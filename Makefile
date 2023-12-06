@@ -39,9 +39,6 @@ help:
 string_test: stest.c dynamic_string.c
 	$(CC) $(CFLAGS) $^ -o $@
 
-substr.o: substring.code
-	$(LD) -r -b binary -o $@ $^
-
 test: main
 	rm -rf *.log
 	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))
@@ -58,8 +55,8 @@ run: main
 	rm -rf *.log
 	./main <tests_integration/test_current.swift
 
-$(TARGET): $(OBJ_FILES) substr.o $(SRC_DIR)/main.c
-	$(CC) $(CFLAGS) -o $(TARGET) substr.o $(OBJ_FILES) $(SRC_DIR)/main.c
+$(TARGET): $(OBJ_FILES) $(SRC_DIR)/main.c
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ_FILES) $(SRC_DIR)/main.c
 
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c

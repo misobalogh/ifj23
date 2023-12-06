@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name:    symtable.h
 * Description:  Header file for hash table for storing identifiers
-* Author:       Michal Balogh, xbalog06
+* Author:       Michal Balogh, xbalog06, Michal Cenek 04
 * Faculty:      FIT VUT
 * Date:         10.10.2023
 
@@ -24,6 +24,7 @@
 #define symbol_flag_VARIADIC 1
 #define symbol_flag_BUILTIN 2
 #define symbol_flag_INITIALIZED 4
+#define symbol_flag_PARAM 8
 
 /* Prime number for size of hash table */
 #define SYMTABLE_SIZE 257   
@@ -36,7 +37,7 @@ typedef struct Param {
   String name;
   Type type;
   int intVal;
-  float floatVal;
+  double floatVal;
   bool isConst;
 } Param;
 

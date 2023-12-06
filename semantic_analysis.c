@@ -19,11 +19,13 @@
 #define NOT_FALSE(expr) do { if (!(expr)) EXIT_WITH_MESSAGE(INTERNAL_ERROR); } while (0)
 #define NOT_NULL(expr) do { if ((expr) == NULL) EXIT_WITH_MESSAGE(INTERNAL_ERROR); } while(0)
 
+// information about iflet statement
 static struct {
   String idname;
   bool started;
 } iflet;
 
+// information about function call
 static struct {
   String idname;
   String idOrLabel;
@@ -32,6 +34,7 @@ static struct {
   unsigned paramCapacity;
 } fnCall;
 
+// information about function definition
 static struct {
   Param* params;
   unsigned paramCount;
@@ -40,6 +43,7 @@ static struct {
   Type type;
 } fnDef;
 
+// information about variable declaration and assignment
 static struct {
   bool started;
   bool let;
@@ -49,6 +53,7 @@ static struct {
   Type type;
 } assignment;
 
+// information aobut variable assignment
 static struct {
   bool started;
   String idname;
@@ -56,17 +61,23 @@ static struct {
   Type type;
 } reassignment;
 
+// did return statement start
 static bool returnStarted;
+// did the last expression contain only constants
 static bool exprConstOnly;
 
 static ExprArray* exprList;
+
+// list of function calles encountered before function definition
 static FunctionLList* postponedCheckStack;
 
+// type of last expression
 static Type lastExprType;
 
 static Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
   * ordParam, * chrParam;
 
+// identifier of current function
 static String currentFunction;
 
 void prepareStatement(void) {
@@ -97,6 +108,7 @@ void prepareStatement(void) {
   returnStarted = false;
 }
 
+// grow array of function call parameters if necessarry
 static void fnCallGrow(void) {
   if (fnCall.paramCount + 1 >= fnCall.paramCapacity) {
     fnCall.paramCapacity *= 2;
@@ -110,6 +122,7 @@ static void fnCallGrow(void) {
   }
 }
 
+// grow array of function definition parameters if necessarry
 static void fnDefGrow(void) {
   if (fnDef.paramCount + 1 >= fnDef.paramCapacity) {
     fnDef.paramCapacity *= 2;
@@ -157,7 +170,7 @@ bool semanticAnalysisInit(void) {
     stringInit(&fnCall.params[i].name, "");
   }
 
-  postponedCheckStack = functionStackInit();
+  postponedCheckStack = functionListInit();
 
   if (postponedCheckStack == NULL) {
     semanticAnalysisDeinit();
@@ -312,7 +325,7 @@ void semanticAnalysisDeinit(void) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
   }
 
-  functionStackDeinit(postponedCheckStack);
+  functionListDeinit(postponedCheckStack);
 }
 
 // variable declaration and assignment
@@ -382,42 +395,56 @@ void analyseAssignEnd(void) {
   SymbolType st = assignment.let ? symbol_LET : symbol_VAR;
   bool assign = false;
 
-  // tyep was hinted and expression is omitted
-  // let a: T
-  if (typeIsValue(assignment.hintedType) && assignment.type.base == 0) {
-    if (assignment.hintedType.nullable) {
-        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+    // tyep was hinted and expression is omitted
+    // let a: T
+    if (typeIsValue(assignment.hintedType) && assignment.type.base == 0) {
+        if (assignment.hintedType.nullable) {
+            data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+        }
+        else {
+            data = (SymbolData) { assignment.hintedType, NULL, 0, 0U, st };
+        }
     }
-    else {
-        data = (SymbolData) { assignment.hintedType, NULL, 0, 0U, st };
-    }
-
-  }
-  // type was hinted and actual type could not be inffered
-  // let a: T = <undefined-expr>
-  else if(typeIsValue(assignment.hintedType) && assignment.type.base == 'u') {
+    // type was hinted and actual type could not be inffered
+    // let a: T = <undefined-expr>
+    else if(typeIsValue(assignment.hintedType) && (assignment.type.base == 'u')) {
       EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
-  // type was hinted and actual type matches or
-  // let a: T = <T-expr>
-  // type was not hinted and actual type is valid type
-  // let a = <expr>
-  else if ((typeIsValue(assignment.hintedType) && typeEq(assignment.hintedType, assignment.type))
-      || (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type))) {
-    data = (SymbolData) { assignment.type, NULL, 0, symbol_flag_INITIALIZED, st };
-    assign = true;
-  }
-  // hinted type is Double and actual type is Int and assigned value is const
-  // let a: Double = <Int-const>
-  else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
+    }
+    // let a: T? = nil
+    else if(assignment.type.base == 'N') {
+      if (typeIsValue(assignment.hintedType) && assignment.hintedType.nullable) {
+        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+        assign = true;
+      }
+      else {
+          EXIT_WITH_MESSAGE(8);
+      }
+    }
+    // type was hinted and actual type matches
+    // let a: T = <T-expr>
+    else if(typeIsValue(assignment.hintedType) && assignment.hintedType.base == assignment.type.base
+              && (assignment.hintedType.nullable || !assignment.type.nullable)) {
+        data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+        assign = true;
+    }
+    // type was not hinted and actual type is valid type
+    // let a = <expr>
+    else if (!typeIsValue(assignment.hintedType) && typeIsValue(assignment.type)) {
+        data = (SymbolData) { assignment.type, NULL, 0, symbol_flag_INITIALIZED, st };
+        assign = true;
+    }
+    // hinted type is Double and actual type is Int and assigned value is const
+    // let a: Double = <Int-const>
+    else if(assignment.hintedType.base == 'D' && assignment.type.base == 'I'
           && assignment.rightId.size == 0 && exprConstOnly) {
       data = (SymbolData) { assignment.hintedType, NULL, 0, symbol_flag_INITIALIZED, st };
+      // implicit conversion
       printf("INT2FLOATS\n");
       assign = true;
-  }
-  else {
-    EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
-  }
+    }
+    else {
+        EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+    }
 
   global_insertTop(stringCStr(&assignment.idname), data);
 
@@ -476,7 +503,9 @@ void analyseReturn(Type type) {
           EXIT_WITH_MESSAGE(6);
   }
 
-  if (type.base != it->data.dataType.base
+  if (type.base == 'N' && it->data.dataType.nullable) {
+  }
+  else if (type.base != it->data.dataType.base
     || (!it->data.dataType.nullable && type.nullable)) {
       EXIT_WITH_MESSAGE(4);
   }
@@ -497,7 +526,7 @@ void analyseFunctionEnd(void) {
   SymbolData data = { fnDef.type, fnDef.params, fnDef.paramCount, 0u, symbol_FN };
   symtableInsert(global_table, stringCStr(&fnDef.idname), data);
 
-  _checkPostponed(stringCStr(&fnDef.idname), data);
+  _checkPostponed(stringCStr(&fnDef.idname), data.params, data.paramCount);
 
   genFunction(stringCStr(&fnDef.idname));
 
@@ -611,13 +640,18 @@ void analyseCallConstAfterLabel(lex_token token) {
 Type analyseCallEnd(void) {
   symtableItem* item = global_symbolSearch(stringCStr(&fnCall.idname), NULL);
 
-  // function was called before declaration
-  if (item == NULL) {
-    // postpone semantic check until function declaration
-    NOT_FALSE(functionStackPush(postponedCheckStack, stringCStr(&fnCall.idname),
-              fnCall.params, fnCall.paramCount));
-    return (Type) { 'u', false };
-  }
+    // function was called before declaration
+    if (item == NULL) {
+        // postpone semantic check until function declaration
+
+        // remove duplicate postponed checks
+        _checkPostponed(stringCStr(&fnCall.idname), fnCall.params, fnCall.paramCount);
+
+        NOT_FALSE(functionListPush(postponedCheckStack, stringCStr(&fnCall.idname),
+        fnCall.params, fnCall.paramCount));
+        genCall(stringCStr(&fnCall.idname), fnCall.params, fnCall.paramCount);
+        return (Type) { 'u', false };
+    }
 
   if (item->data.symbolType != symbol_FN) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
@@ -653,6 +687,9 @@ void analyseExprOperand(lex_token token) {
   else if (token.type == token_TYPE_STRING_LINE) {
     exprListAddString(exprList, token.value.STR_VAL);
   }
+  else if (token.type == token_NIL) {
+      exprListAddNil(exprList);
+  }
   else {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
@@ -664,6 +701,74 @@ void analyseExprOperator(lex_token token) {
 
 void analyseExprDefault(void) {
   exprListAddOperator(exprList, op_DEFAULT);
+}
+
+int _intConstExpr(OperatorType optype, int a, int b) {
+    switch (optype) {
+    case op_PLUS:
+        return a + b;
+    case op_MINUS:
+        return a - b;
+    case op_MUL:
+        return a * b;
+    case op_IDIV:
+        return a / b;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
+float _floatConstExpr(OperatorType optype, double a, double b) {
+    switch (optype) {
+    case op_PLUS:
+        return a + b;
+    case op_MINUS:
+        return a - b;
+    case op_MUL:
+        return a * b;
+    case op_DIV:
+        return a / b;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
+bool _boolFloatConstExpr(OperatorType optype, double a, double b) {
+    switch (optype) {
+    case op_EQ:
+        return a == b;
+    case op_NEQ:
+        return a != b;
+    case op_LESS:
+        return a < b;
+    case op_MORE:
+        return a > b;
+    case op_LESS_EQ:
+        return a <= b;
+    case op_MORE_EQ:
+        return a >= b;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
+}
+
+bool _boolStringConstExpr(OperatorType optype, const char* a, const char* b) {
+    switch (optype) {
+    case op_EQ:
+        return strcmp(a, b) == 0;
+    case op_NEQ:
+        return strcmp(a, b) != 0;
+    case op_LESS:
+        return strcmp(a, b) < 0;
+    case op_MORE:
+        return strcmp(a, b) > 0;
+    case op_LESS_EQ:
+        return strcmp(a, b) <= 0;
+    case op_MORE_EQ:
+        return strcmp(a, b) >= 0;
+    default:
+        EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+    }
 }
 
 Type analyseExprEnd(void) {
@@ -679,9 +784,7 @@ Type analyseExprEnd(void) {
       if (it.value.operatorType == op_UNWRAP) {
         ExprItem a = exprStackPop(stack);
         resultType = _analyseUnwrap(a);
-        if (a.type == expr_ID) {
-            genExprOperand(a);
-        }
+        genExprOperand(a);
       }
       else {
         ExprItem a = exprStackPop(stack);
@@ -692,11 +795,74 @@ Type analyseExprEnd(void) {
         if (resultType.base == 'S') {
           optype = op_CONCAT;
         }
+        if (resultType.base == 'I' && optype == op_DIV) {
+            optype = op_IDIV;
+        }
+
+        // simplify operation on constants into single constant
+        if (a.type == expr_CONST && b.type == expr_CONST) {
+            ExprItem constItem = {
+                .type=expr_CONST,
+                .value.constValue.type=resultType
+            };
+
+            if (resultType.base == 'I') {
+                constItem.value.constValue.value.INT_VAL = _intConstExpr(optype,
+                    b.value.constValue.value.INT_VAL,
+                    a.value.constValue.value.INT_VAL);
+            }
+            else if (resultType.base == 'D') {
+                constItem.value.constValue.value.FLOAT_VAL = _floatConstExpr(optype,
+                    b.value.constValue.value.FLOAT_VAL,
+                    a.value.constValue.value.FLOAT_VAL);
+            }
+            else if (resultType.base == 'S') {
+                String s;
+                stringInit(&s, b.value.constValue.value.STR_VAL);
+                stringConcatCStr(&s, a.value.constValue.value.STR_VAL);
+                constItem.value.constValue.value.STR_VAL = (char*) stringCStr(&s);
+            }
+            else if (resultType.base == 'B') {
+                if (a.value.constValue.type.base == 'S') {
+                    constItem.value.constValue.value.INT_VAL = _boolStringConstExpr(optype,
+                        b.value.constValue.value.STR_VAL,
+                        a.value.constValue.value.STR_VAL);
+                }
+                else if (a.value.constValue.type.base == 'D') {
+                    constItem.value.constValue.value.INT_VAL = _boolFloatConstExpr(optype,
+                        b.value.constValue.value.FLOAT_VAL,
+                        a.value.constValue.value.FLOAT_VAL);
+                }
+                else if (a.value.constValue.type.base == 'I') {
+                    constItem.value.constValue.value.INT_VAL = _boolFloatConstExpr(optype,
+                        b.value.constValue.value.INT_VAL,
+                        a.value.constValue.value.INT_VAL);
+                }
+                else {
+                    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+                }
+            }
+            else {
+                EXIT_WITH_MESSAGE(INTERNAL_ERROR);
+            }
+
+            exprStackPush(stack, constItem);
+
+            // don't generate instructions, don't push intermediate operand
+            continue;
+        }
 
         genExprOperand(b);
-        genExprOperand(a);
+        if (a.type == expr_INTERMEDIATE) {
+            genSwitchStackTop();
+        }
+        else {
+            genExprOperand(a);
+        }
+
         genExprOperator(optype);
       }
+
       exprStackPush(stack, (ExprItem) {
           .type=expr_INTERMEDIATE,
           .value={ .constValue.type=resultType }
@@ -704,6 +870,7 @@ Type analyseExprEnd(void) {
     }
     else { // operand
       exprStackPush(stack, it);
+
       if (it.type != expr_CONST) {
           exprConstOnly = false;
       }
@@ -785,18 +952,17 @@ void analyseReassignEnd(void) {
         EXIT_WITH_MESSAGE(SEMANTIC_ERR);
     }
 
-    if (it->data.dataType.base != reassignment.type.base
+    if (reassignment.type.base == 'N') {
+        if (!it->data.dataType.nullable) {
+            EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
+        }
+    }
+    else if (it->data.dataType.base != reassignment.type.base
     || (!it->data.dataType.nullable && reassignment.type.nullable)) {
         EXIT_WITH_MESSAGE(TYPE_COMPATIBILITY_ERR);
     }
 
     it->data.flags |= symbol_flag_INITIALIZED;
-    /* global_insertTop(it->key, data); */
-
-    /* if (reassignment.rightId.size > 0) { */
-    /*     // push the value on stack */
-    /*     genExprOperand((ExprItem) { .type=expr_ID, .value.idName=(char*) stringCStr(&assignment.idname) }); */
-    /* } */
     genAssign(stringCStr(&reassignment.idname));
 
     prepareStatement();
@@ -827,12 +993,12 @@ bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsign
   return true;
 }
 
-void _checkPostponed(const char* fnId, SymbolData data) {
-  FunctionLListItem* fn = functionStackRemove(postponedCheckStack, fnId);
+void _checkPostponed(const char* fnId, Param* params, unsigned paramCount) {
+  FunctionLListItem* fn = functionListRemove(postponedCheckStack, fnId);
 
   // function was called with wrong arguments
   if (fn != NULL) {
-    if (!_compareParams(fn->params, fn->paramCount, data.params, data.paramCount)) {
+    if (!_compareParams(fn->params, fn->paramCount, params, paramCount)) {
       EXIT_WITH_MESSAGE(UNDEFINED_FN);
     }
 
@@ -845,25 +1011,6 @@ void _checkPostponed(const char* fnId, SymbolData data) {
   }
 
   // function was not called
-}
-
-Type strToType(const char* typeStr) {
-  struct { const char* key; Type type; } map[] = {
-    { "I", { 'I', false } },
-    { "I?", { 'I', true } },
-    { "D", { 'D', false } },
-    { "D?", { 'D', true } },
-    { "S", { 'S', false } },
-    { "S?", { 'S', true } }
-  };
-
-  for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-    if (strcmp(typeStr, map[i].key) == 0) {
-      return map[i].type;
-    }
-  }
-
-  EXIT_WITH_MESSAGE(INTERNAL_ERROR);
 }
 
 Type variableType(const char* idname) {
@@ -886,18 +1033,31 @@ void analyseCondition(void) {
   }
 }
 
-Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
-  if (a->type == expr_OPERATOR || b->type == expr_OPERATOR) {
+void _implicitConversion(Type* ref_typeA, Type* ref_typeB, ExprItem* ref_a, ExprItem* ref_b) {
+    if (ref_typeA->base == 'I' && ref_typeB->base == 'D' && ref_a->type == expr_CONST) {
+        ref_typeA->base = 'D';
+        ref_a->value.constValue.type = *ref_typeA;
+        ref_a->value.constValue.value.FLOAT_VAL = (double) ref_a->value.constValue.value.INT_VAL;
+    }
+    else if (ref_typeA->base == 'D' && ref_typeB->base == 'I' && ref_b->type == expr_CONST) {
+        ref_typeB->base = 'D';
+        ref_b->value.constValue.type = *ref_typeB;
+        ref_b->value.constValue.value.FLOAT_VAL = (double) ref_b->value.constValue.value.INT_VAL;
+    }
+}
+
+Type _analyseOperation(OperatorType optype, ExprItem* ref_a, ExprItem* ref_b) {
+  if (ref_a->type == expr_OPERATOR || ref_b->type == expr_OPERATOR) {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
 
-  Type typeA = (a->type == expr_CONST || a->type == expr_INTERMEDIATE)
-    ? a->value.constValue.type
-    : variableType(a->value.idName);
+  Type typeA = (ref_a->type == expr_CONST || ref_a->type == expr_INTERMEDIATE)
+    ? ref_a->value.constValue.type
+    : variableType(ref_a->value.idName);
 
-  Type typeB = (b->type == expr_CONST || b->type == expr_INTERMEDIATE)
-    ? b->value.constValue.type
-    : variableType(b->value.idName);
+  Type typeB = (ref_b->type == expr_CONST || ref_b->type == expr_INTERMEDIATE)
+    ? ref_b->value.constValue.type
+    : variableType(ref_b->value.idName);
 
   if (!typeIsValue(typeA) || !typeIsValue(typeB)) {
       EXIT_WITH_MESSAGE(UNDEFINED_VAR);
@@ -910,65 +1070,26 @@ Type _analyseOperation(OperatorType optype, ExprItem* a, ExprItem* b) {
   }
 
   if (optype == op_PLUS || optype == op_MINUS || optype == op_MUL || optype == op_DIV ) {
-
-      // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
-        typeA.base = 'D';
-        a->value.constValue.type = typeA;
-        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
-    }
-    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
-        typeB.base = 'D';
-        b->value.constValue.type = typeB;
-        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
-    }
+      _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base) {
         return (Type) { typeA.base, (typeA.nullable || typeB.nullable) };
     }
-
-    if ((typeA.base == 'I' && typeB.base == 'D')
-        || (typeA.base == 'D' && typeB.base == 'I')) {
-            return (Type) { 'D', (typeA.nullable || typeB.nullable) };
-    }
   }
-
-  if (optype == op_DEFAULT) {
+  else if (optype == op_DEFAULT) {
     if (typeA.base == typeB.base && !typeB.nullable) {
       return typeB;
     }
   }
-
-  if (optype == op_EQ || optype == op_NEQ) {
-      // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
-        typeA.base = 'D';
-        a->value.constValue.type = typeA;
-        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
-    }
-    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
-        typeB.base = 'D';
-        b->value.constValue.type = typeB;
-        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
-    }
+  else if (optype == op_EQ || optype == op_NEQ) {
+      _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base) {
       return (Type) { 'B', false };
     }
   }
-
-  if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
-      // implicit const conversion
-    if (typeA.base == 'I' && typeB.base == 'D' && a->type == expr_CONST) {
-        typeA.base = 'D';
-        a->value.constValue.type = typeA;
-        a->value.constValue.value.FLOAT_VAL = (float) a->value.constValue.value.INT_VAL;
-    }
-    else if (typeA.base == 'D' && typeB.base == 'I' && b->type == expr_CONST) {
-        typeB.base = 'D';
-        b->value.constValue.type = typeB;
-        b->value.constValue.value.FLOAT_VAL = (float) b->value.constValue.value.INT_VAL;
-    }
+  else if (optype == op_LESS || optype == op_MORE || optype == op_LESS_EQ || optype == op_MORE_EQ) {
+    _implicitConversion(&typeA, &typeB, ref_a, ref_b);
 
     if (typeA.base == typeB.base && !typeA.nullable && !typeB.nullable) {
       return (Type) { 'B', false };
@@ -993,23 +1114,6 @@ Type _analyseUnwrap(ExprItem e) {
 
   t.nullable = false;
   return t;
-}
-
-String typeToStr(Type type) {
-  String result;
-  (stringInit(&result, ""));
-
-  if (type.base != 'I' && type.base != 'D' && type.base != 'S') {
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
-
-  stringConcatChar(&result, type.base);
-
-  if (type.nullable) {
-    stringConcatChar(&result, '?');
-  }
-
-  return result;
 }
 
 Type tokenToType(tokenType token) {
@@ -1052,7 +1156,7 @@ void pushFnParams(const char* idname) {
     Param* param = &fn->data.params[i];
 
     global_insertTop(stringCStr(&param->name),
-        (SymbolData) { param->type, NULL, 0, symbol_flag_INITIALIZED, symbol_LET });
+        (SymbolData) { param->type, NULL, i, symbol_flag_INITIALIZED | symbol_flag_PARAM, symbol_LET });
   }
 
 }

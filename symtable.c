@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: symtable.c
 * Description: implementation of hash table for table of symbols
-* Author: MICHAL BALOGH xbalog06
+* Author: MICHAL BALOGH xbalog06, Michal Cenek xcenek04
 * Faculty: FIT VUT
 * Date: 5.10.2023
 
@@ -130,28 +130,25 @@ int symtableInsert(symtable* tab, const char* key, SymbolData data) {
     strcpy(tab->table[hashValue].key, key);
 
     tab->table[hashValue].data = data;
-    if (data.paramCount > 0) {
-        tab->table[hashValue].data.params = malloc(sizeof(Param) * data.paramCount);
-        CHECK_MEMORY_ALLOC(tab->table[hashValue].data.params);
+    if (data.symbolType == symbol_FN && data.paramCount > 0) {
+      tab->table[hashValue].data.params = malloc(sizeof(Param) * data.paramCount);
+      CHECK_MEMORY_ALLOC(tab->table[hashValue].data.params);
     }
     else {
         tab->table[hashValue].data.params = NULL;
     }
 
-    for (unsigned i = 0; i < data.paramCount; i++) {
-        Param* tableParam = &tab->table[hashValue].data.params[i];
-        Param* dataParam = &data.params[i];
+    if (data.symbolType == symbol_FN) {
+        for (unsigned i = 0; i < data.paramCount; i++) {
+          Param* tableParam = &tab->table[hashValue].data.params[i];
+          Param* dataParam = &data.params[i];
 
-        *tableParam = *dataParam;
-        stringInit(&tableParam->name, stringCStr(&dataParam->name));
-        stringInit(&tableParam->label, stringCStr(&dataParam->label));
+          *tableParam = *dataParam;
+          stringInit(&tableParam->name, stringCStr(&dataParam->name));
+          stringInit(&tableParam->label, stringCStr(&dataParam->label));
+        }
     }
 
-    /* tab->table[hashValue].type = (char*)malloc(sizeof(char) * (strlen(type) + 1)); */
-    /* CHECK_MEMORY_ALLOC(tab->table[hashValue].type); */
-    /* strcpy(tab->table[hashValue].type, type); */
-
-    /* tab->table[hashValue].data = data; */
     tab->itemCount++;
 
     return 2;
@@ -268,10 +265,12 @@ void symtableClear(symtable* tab) {
             free(tab->table[i].key);
             tab->table[i].key = NULL;
 
-            for (unsigned j = 0; j < tab->table[i].data.paramCount; j++) {
-                Param* param = &tab->table[i].data.params[j];
-                stringFree(&param->name);
-                stringFree(&param->label);
+            if (tab->table[i].data.symbolType == symbol_FN) {
+                for (unsigned j = 0; j < tab->table[i].data.paramCount; j++) {
+                  Param* param = &tab->table[i].data.params[j];
+                  stringFree(&param->name);
+                  stringFree(&param->label);
+                }
             }
 
             free(tab->table[i].data.params);

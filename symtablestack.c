@@ -6,7 +6,6 @@
 
 #include "symtablestack.h"
 #include <malloc.h>
-#include "global_variables.h"
 
 static unsigned counter = 1;
 

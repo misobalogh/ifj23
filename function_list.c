@@ -3,13 +3,12 @@
  * Michal Cenek xcenek04
  */
 
-
 #include "function_list.h"
 #include "symtable.h"
 #include <string.h>
 #include <malloc.h>
 
-FunctionLList* functionStackInit(void) {
+FunctionLList* functionListInit(void) {
   FunctionLList* stack = malloc(sizeof(FunctionLList));
   if (stack == NULL) {
     return NULL;
@@ -20,7 +19,7 @@ FunctionLList* functionStackInit(void) {
   return stack;
 }
 
-void functionStackDeinit(FunctionLList* stack) {
+void functionListDeinit(FunctionLList* stack) {
   FunctionLListItem* current = stack->first;
 
   while (current != NULL) {
@@ -35,7 +34,9 @@ void functionStackDeinit(FunctionLList* stack) {
   free(stack);
 }
 
-bool functionStackPush(FunctionLList* stack, const char* name, Param* params, unsigned count) {
+bool functionListPush(FunctionLList* stack, const char* name, Param* params, unsigned count) {
+    functionListRemove(stack, name);
+
   FunctionLListItem* first = stack->first;
 
   stack->first = malloc(sizeof(FunctionLListItem));
@@ -66,7 +67,7 @@ bool functionStackPush(FunctionLList* stack, const char* name, Param* params, un
   return true;
 }
 
-FunctionLListItem* functionStackRemove(FunctionLList* stack, const char* name) {
+FunctionLListItem* functionListRemove(FunctionLList* stack, const char* name) {
   FunctionLListItem* current = stack->first;
   FunctionLListItem* prev = NULL;
 
