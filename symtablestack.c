@@ -11,41 +11,41 @@
 static unsigned counter = 1;
 
 void symtableStackInit(SymtableStack* stack) {
-  stack->first = NULL;
+    stack->first = NULL;
 }
 
 bool symtableStackPush(SymtableStack* stack, bool flag) {
-  SymtableStackItem* item = malloc(sizeof(SymtableStackItem));
+    SymtableStackItem* item = malloc(sizeof(SymtableStackItem));
 
-  if (item == NULL) {
-    return false;
-  }
+    if (item == NULL) {
+        return false;
+    }
 
-  item->next = stack->first;
-  item->table = symtableInit(SYMTABLE_SIZE);
-  item->flag = flag;
-  if (item->flag) {
-      item->id = -1;
-  }
-  else {
-      item->id = counter++;
-  }
+    item->next = stack->first;
+    item->table = symtableInit(SYMTABLE_SIZE);
+    item->flag = flag;
+    if (item->flag) {
+        item->id = -1;
+    }
+    else {
+        item->id = counter++;
+    }
 
-  stack->first = item;
+    stack->first = item;
 
-  return true;
+    return true;
 }
 
 void symtableStackPop(SymtableStack* stack) {
-  SymtableStackItem* first = stack->first;
+    SymtableStackItem* first = stack->first;
 
-  if (first == NULL) {
-    return;
-  }
+    if (first == NULL) {
+        return;
+    }
 
-  stack->first = first->next;
-  symtableFree(first->table);
-  free(first);
+    stack->first = first->next;
+    symtableFree(first->table);
+    free(first);
 }
 
 symtableItem* symtableStackSearch(SymtableStack* stack, const char* key, unsigned* out_id) {

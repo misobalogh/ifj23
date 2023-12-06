@@ -1,6 +1,6 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
-* File Name: rules.c
+* File Name: synt_prec_rules.c
 * Description: rules for syntactic analysis
 * Author: MICHAL BALOGH
 * Faculty: FIT VUT
@@ -18,15 +18,15 @@ const precedenceType precedenceTable[9][9] = {
     //+-----+-----+------+------+------+-------+-------+------+-------+------+
     //      |  +- |  */  |  ??  |   !  |  REL  |   (   |   )  |   i   |  $   |
     //+-----+-----+------+------+------+-------+-------+------+-------+------+---+------
-            {HIGH,  LOW,   HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,      HIGH},//  |  +-  |
-            {HIGH,  HIGH,  HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,      HIGH},//   |  */  |
-            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    HIGH,   LOW,      HIGH},//   |  ??  |
-            {HIGH,  HIGH,  HIGH,  EMPTY, HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},//|  !   |
-            {LOW,   LOW,   HIGH,  LOW,   EMPTY,  LOW,    HIGH,   LOW,      HIGH},//   |  REL |
-            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EQUAL,  LOW,      EMPTY},//  |  (   |
-            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},// |  )   |
-            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},// |  i   |
-            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EMPTY,  LOW,     EMPTY}//   |  $   |
+            {HIGH,  LOW,   HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,    HIGH},//   |  +-  |
+            {HIGH,  HIGH,  HIGH,  LOW,   HIGH,   LOW,    HIGH,   LOW,    HIGH},//   |  */  |
+            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    HIGH,   LOW,    HIGH},//   |  ??  |
+            {HIGH,  HIGH,  HIGH,  EMPTY, HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},//   |  !   |
+            {LOW,   LOW,   HIGH,  LOW,   EMPTY,  LOW,    HIGH,   LOW,    HIGH},//   |  REL |
+            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EQUAL,  LOW,    EMPTY},//  |  (   |
+            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},//   |  )   |
+            {HIGH,  HIGH,  HIGH,  HIGH,  HIGH,   EMPTY,  HIGH,   EMPTY,  HIGH},//   |  i   |
+            {LOW,   LOW,   LOW,   LOW,   LOW,    LOW,    EMPTY,  LOW,    EMPTY}//   |  $   |
 };
 
 /**
@@ -49,7 +49,7 @@ void rule_ID_OP_ID(stack* s) {
     stackPop(s);
     stackPop(s);
     stackPop(s);
-    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 }; // sem asi treba doplnit hodnotu z predchadzajuceho vypoctu, napr. 2 op 4, (op by bol +), .value bude 6
+    lex_token tokenNonterminal = { .type = token_NONTERMINAL, .value = 0 };
     stackPush(s, tokenNonterminal);
 }
 
@@ -86,7 +86,9 @@ void rule_ID_FORCE_UNWRAP(stack* s) {
     stackPush(s, tokenNonterminal);
 }
 
-
+/**
+ * @brief Rule: E -> E rel_op E
+ */
 void rule_ID_REL_ID(stack* s) {
     stackPop(s);
     stackPop(s);

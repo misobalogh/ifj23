@@ -1,4 +1,14 @@
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: synt_recur_rules.h
+* Description: Recursive rules defined by LL gramatic
+* Author: MICHAL BALOGH, xbalog06
+* Faculty: FIT VUT
+* Date: 14.10.2023
 
+* Comments:
+
+***************************************************************/
 
 #include <stdbool.h>
 #include "token_types.h"

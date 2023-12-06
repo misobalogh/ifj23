@@ -73,7 +73,7 @@ symtable* symtableInit(size_t capacity) {
         tab->table[i].key = NULL;
         tab->table[i].data.paramCount = 0;
         tab->table[i].data.params = NULL;
-        tab->table[i].data.dataType = (Type) { 'u', false };
+        tab->table[i].data.dataType = (Type){ 'u', false };
         tab->table[i].data.flags = 0u;
         tab->table[i].data.symbolType = symbol_FN;
         /* memset(&tab->table[i].data, 0, sizeof(SymbolData)); */
@@ -135,7 +135,7 @@ int symtableInsert(symtable* tab, const char* key, SymbolData data) {
       CHECK_MEMORY_ALLOC(tab->table[hashValue].data.params);
     }
     else {
-      tab->table[hashValue].data.params = NULL;
+        tab->table[hashValue].data.params = NULL;
     }
 
     if (data.symbolType == symbol_FN) {
@@ -180,7 +180,6 @@ symtableItem* symtableSearch(symtable* tab, const char* key) {
     return NULL;
 }
 
-//TODO: implement symtableDeleteItem
 /**
  * @brief Delete an item from the hash table by key.
  *
@@ -190,7 +189,7 @@ symtableItem* symtableSearch(symtable* tab, const char* key) {
  // TOOD: add flag to symtableItem struct to indicate if item is deleted instead of freeing the key
 
 
- /**
+/**
   * @brief Copy hash table items from src to dest
   *
   * @return true if copy was successful, false if dest capacity is smaller than src capacity or if dest or src is NULL
