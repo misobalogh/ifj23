@@ -22,8 +22,6 @@
 #define LEX_ERR_CHECK() do { if (t.type == token_LEX_ERROR) { exit(LEX_ANALYSIS_ERR); } } while(0)
 
 
-
-
 void getToken();
 
 /**
@@ -57,17 +55,6 @@ bool precedenceParser();
 
 // Recursive descent parser
 bool recursiveParser();
-
-/**
- * @brief Mocking function for testing purposes
-*/
-tokenStruct* mock_precedence_nextToken();
-
-/**
- * @brief Mocking function for testing purposes
-*/
-tokenStruct* mock_recursive_nextToken();
-
 
 //================= DEBUGGING =================
 #define LOGTOKEN(message) printf("%s: %s\n", message, TokenName(t.type))

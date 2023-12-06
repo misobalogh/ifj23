@@ -1,8 +1,14 @@
-/*
- * Author: TADEAS ZOBAL, xzobal02
+/***************************************************************
+ * Project Name: Implementace překladače imperativního jazyka IFJ23
+ * File Name: synt_precedence_parser.c
+ * Description: Precedence syntactic analysis (parser for expression)
+ * Author: TADEAS ZOBAL, xzobal02, MICHAL BALOGH, xbalog06
  * Faculty: FIT VUT
  * Date: 6.10.2023
- */
+
+ * Comments:
+
+ ***************************************************************/
 
 #include <stdio.h>
 #include "macros.h"
@@ -13,21 +19,21 @@
 #include <stdbool.h>
 #include "token_types.h"
 
-// global variable to count nested comments
+ // global variable to count nested comments
 int nested_counter = 0;
 // flag to make nested comments work properlz
 int nested_flag = 0;
 
-dynamic_string str = {.data = NULL, .size = 0, .capacity = 0};
+dynamic_string str = { .data = NULL, .size = 0, .capacity = 0 };
 
-lex_token current_lex_token = {.type = token_LEX_ERROR, .value = 0};
+lex_token current_lex_token = { .type = token_LEX_ERROR, .value = 0 };
 
 // function for counting nested comments
 /*
 upordown 1 == increase
 opordown 0 == decrease
 */
-void nested_check(int *nested_counter, int upordown)
+void nested_check(int* nested_counter, int upordown)
 {
     if (upordown == 1)
     {
@@ -45,7 +51,7 @@ void nested_check(int *nested_counter, int upordown)
 }
 
 // function for picking a keyword from input string
-tokenType keyword_check(char *str)
+tokenType keyword_check(char* str)
 {
     if (str == NULL)
     {
@@ -94,11 +100,11 @@ tokenType keyword_check(char *str)
 }
 
 // function initializes dynamic string for reading nubers,string and identifiers
-dynamic_string string_init(dynamic_string *str)
+dynamic_string string_init(dynamic_string* str)
 {
     str->size = 0;      // initial current size
     str->capacity = 32; // initial capacity of string
-    str->data = (char *)malloc(str->capacity * sizeof(char));
+    str->data = (char*)malloc(str->capacity * sizeof(char));
 
     if (str->data == NULL)
     {
@@ -109,7 +115,7 @@ dynamic_string string_init(dynamic_string *str)
 }
 // function clears initialized string
 
-void string_clear(dynamic_string *str)
+void string_clear(dynamic_string* str)
 {
     if (str->data == NULL)
     {
@@ -120,12 +126,12 @@ void string_clear(dynamic_string *str)
 }
 
 // if dynamic string is full, function will realloc its memory to 2 times its previous size
-dynamic_string char_insert(dynamic_string *str, char c)
+dynamic_string char_insert(dynamic_string* str, char c)
 {
     if (str->size == str->capacity)
     {
         str->capacity = str->capacity * 2; // doubles the maximum capacity
-        str->data = (char *)realloc(str->data, str->capacity);
+        str->data = (char*)realloc(str->data, str->capacity);
         if (str->data == NULL)
         {
             fprintf(stderr, "Realloc of dynamic string failed\n");
@@ -285,7 +291,7 @@ lex_token get_next_token()
                     fprintf(stderr, "\\%i\n", c);
                 }
                 string_clear(&str);
-                return (lex_token){.type = token_LEX_ERROR, .value = 1};
+                return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
 
             break;
@@ -579,7 +585,7 @@ lex_token get_next_token()
                     fprintf(stderr, "\\%i\n", c);
                 }
                 string_clear(&str);
-                return (lex_token){.type = token_LEX_ERROR, .value = 1};
+                return (lex_token) { .type = token_LEX_ERROR, .value = 1 };
             }
 
             break;
@@ -1408,5 +1414,5 @@ lex_token get_next_token()
         }
     }
 
-    return (lex_token){.type = token_EOF};
+    return (lex_token) { .type = token_EOF };
 }

@@ -73,7 +73,7 @@ symtable* symtableInit(size_t capacity) {
         tab->table[i].key = NULL;
         tab->table[i].data.paramCount = 0;
         tab->table[i].data.params = NULL;
-        tab->table[i].data.dataType = (Type) { 'u', false };
+        tab->table[i].data.dataType = (Type){ 'u', false };
         tab->table[i].data.flags = 0u;
         tab->table[i].data.symbolType = symbol_FN;
         /* memset(&tab->table[i].data, 0, sizeof(SymbolData)); */
@@ -131,20 +131,20 @@ int symtableInsert(symtable* tab, const char* key, SymbolData data) {
 
     tab->table[hashValue].data = data;
     if (data.paramCount > 0) {
-      tab->table[hashValue].data.params = malloc(sizeof(Param) * data.paramCount);
-      CHECK_MEMORY_ALLOC(tab->table[hashValue].data.params);
+        tab->table[hashValue].data.params = malloc(sizeof(Param) * data.paramCount);
+        CHECK_MEMORY_ALLOC(tab->table[hashValue].data.params);
     }
     else {
-      tab->table[hashValue].data.params = NULL;
+        tab->table[hashValue].data.params = NULL;
     }
 
     for (unsigned i = 0; i < data.paramCount; i++) {
-      Param* tableParam = &tab->table[hashValue].data.params[i];
-      Param* dataParam = &data.params[i];
+        Param* tableParam = &tab->table[hashValue].data.params[i];
+        Param* dataParam = &data.params[i];
 
-      *tableParam = *dataParam;
-      stringInit(&tableParam->name, stringCStr(&dataParam->name));
-      stringInit(&tableParam->label, stringCStr(&dataParam->label));
+        *tableParam = *dataParam;
+        stringInit(&tableParam->name, stringCStr(&dataParam->name));
+        stringInit(&tableParam->label, stringCStr(&dataParam->label));
     }
 
     /* tab->table[hashValue].type = (char*)malloc(sizeof(char) * (strlen(type) + 1)); */
@@ -183,7 +183,6 @@ symtableItem* symtableSearch(symtable* tab, const char* key) {
     return NULL;
 }
 
-//TODO: implement symtableDeleteItem
 /**
  * @brief Delete an item from the hash table by key.
  *
@@ -193,7 +192,7 @@ symtableItem* symtableSearch(symtable* tab, const char* key) {
  // TOOD: add flag to symtableItem struct to indicate if item is deleted instead of freeing the key
 
 
- /**
+/**
   * @brief Copy hash table items from src to dest
   *
   * @return true if copy was successful, false if dest capacity is smaller than src capacity or if dest or src is NULL
@@ -270,9 +269,9 @@ void symtableClear(symtable* tab) {
             tab->table[i].key = NULL;
 
             for (unsigned j = 0; j < tab->table[i].data.paramCount; j++) {
-              Param* param = &tab->table[i].data.params[j];
-              stringFree(&param->name);
-              stringFree(&param->label);
+                Param* param = &tab->table[i].data.params[j];
+                stringFree(&param->name);
+                stringFree(&param->label);
             }
 
             free(tab->table[i].data.params);

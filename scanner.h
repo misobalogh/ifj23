@@ -1,8 +1,14 @@
-/*
- * Author: TADEAS ZOBAL, xzobal02
- * Faculty: FIT VUT
- * Date: 6.10.2023
- */
+/***************************************************************
+* Project Name: Implementace překladače imperativního jazyka IFJ23
+* File Name: synt_precedence_parser.c
+* Description: Precedence syntactic analysis (parser for expression)
+* Author: TADEAS ZOBAL, xzobal02
+* Faculty: FIT VUT
+* Date: 6.10.2023
+
+* Comments:
+
+***************************************************************/
 
 // enum of FSM states
 typedef enum States
@@ -87,94 +93,3 @@ typedef enum States
     STATE_NESTED_COMMENT3,
     STATE_NESTED_COMMENT4,
 } states;
-
-// enum of token types
-typedef enum Type_of_token
-{
-    TYPE_ERROR,
-    TYPE_EOF,
-    TYPE_EOL,
-    TYPE_ADD,
-    TYPE_SUB,
-    TYPE_DIV,
-    TYPE_MUL,
-    TYPE_OP_GREATER_THAN,
-    TYPE_OP_GREATER_OR_EQUAL_THAN,
-    TYPE_OP_LESS_THAN,
-    TYPE_OP_LESS_OR_EQUAL_THAN,
-    TYPE_OPTIONAL,
-    TYPE_DEFAULT_VALUE,
-    TYPE_SEMICOLON,
-    TYPE_LEFT_BRACKET,
-    TYPE_RIGHT_BRACKET,
-    TYPE_LEFT_CURV_BRACKET,
-    TYPE_RIGHT_CURV_BRACKET,
-    TYPE_LEFT_SQUARE_BRACKET,
-    TYPE_RIGHT_SQUARE_BRACKET,
-    TYPE_COMMA,
-    TYPE_RIGHT_ARROW,
-    TYPE_LEFT_ARROW,
-    TYPE_WHOLE_NUMBER,
-    TYPE_DEC_NUMBER,
-    TYPE_EXP_POWER,
-    TYPE_NOT,
-    TYPE_NOT_EQUAL,
-    TYPE_EQUAL,
-    TYPE_ASSING,
-    TYPE_IDENTIFIER,
-    TYPE_UNDERSCORE,
-    TYPE_COLON,
-    TYPE_INT,
-    TYPE_INT_Q,
-    TYPE_DOUBLE,
-    TYPE_DOUBLE_Q,
-    TYPE_STRING,
-    TYPE_STRING_Q,
-    KEYWORD_DOUBLE,
-    KEYWORD_DOUBLE_Q,
-    KEYWORD_ELSE,
-    KEYWORD_FUNC,
-    KEYWORD_IF,
-    KEYWORD_INT,
-    KEYWORD_INT_Q,
-    KEYWORD_LET,
-    KEYWORD_NIL,
-    KEYWORD_RETURN,
-    KEYWORD_STRING,
-    KEYWORD_STRING_Q,
-    KEYWORD_VAR,
-    KEYWORD_WHILE,
-} type_of_token;
-/*
-// union for specific token data type
-typedef union Value_of_token
-{
-    int INT_VAL;
-    float FLOAT_VAL;
-    char *STR_VAL;
-} value_of_token;
-
-// structure of token
-typedef struct Token
-{
-    value_of_token token_value;
-    type_of_token token_type;
-    int line;
-} lex_token;
-
-// structure of dynamic string
-typedef struct Dynamic_String
-{
-    char *data;            // current cuntent
-    unsigned int size;     // current size
-    unsigned int capacity; // max capacity
-} dynamic_string;
-
-// function to get new token
-lex_token get_next_token();
-
-// current token
-extern lex_token current_lex_token;
-
-// current state
-extern states current_lex_state;*/

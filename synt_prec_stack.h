@@ -1,7 +1,7 @@
 /***************************************************************
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: synt_prec_stack.h
-* Description: Function declarations for stack for state machine in syntactic analysis
+* Description: Function declarations for stack for precedence syntactic analysis
 * Author: MICHAL BALOGH, xbalog06
 * Faculty: FIT VUT
 * Date: 13.10.2023

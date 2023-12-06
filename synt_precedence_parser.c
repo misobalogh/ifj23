@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: synt_precedence_parser.c
 * Description: Precedence syntactic analysis (parser for expression)
-* Author: MICHAL BALOGH, xbalog06
+* Author: MICHAL BALOGH, xbalog06, MICHAL CENEK xcenek04
 * Faculty: FIT VUT
 * Date: 14.10.2023
 
@@ -15,11 +15,16 @@
 #include "synt_analysis.h"
 #include "synt_prec_stack.h"
 #include "synt_prec_table.h"
-#include "operator_precedence.h"
 #include "token_types.h"
 #include "macros.h"
 #include "synt_prec_rules.h"
 
+
+/**
+ * @brief Gives information if current token is some type of constant
+ *
+ * @return true if token is constant, false otherwise
+*/
 bool connstTypes(tokenType type) {
     if (type == token_CONST
         || type == token_CONST_WHOLE_NUMBER
@@ -32,6 +37,11 @@ bool connstTypes(tokenType type) {
     return false;
 }
 
+/**
+ * @brief Gives information if current token is valid part of expression
+ *
+ * @return true if token can be part of expression, false otherwise
+*/
 bool possibleExpressionTokensWithoutID() {
     if (connstTypes(t.type)
         || t.type == token_PARENTHESES_L
@@ -44,6 +54,13 @@ bool possibleExpressionTokensWithoutID() {
     }
 }
 
+/**
+ * @brief Get index for precedence table
+ *
+ * @param token to get index for
+ *
+ * @return index to the table
+*/
 int getTableIndex(tokenType token) {
     switch (token)
     {
@@ -107,7 +124,7 @@ bool reduce(stack* s) {
     stackItem* second = stackSecond(s);
     stackItem* third = stackThird(s);
 
-
+    // rule ID
     if ((top->token.type == token_ID
         || top->token.type == token_CONST
         || top->token.type == token_CONST_WHOLE_NUMBER
@@ -115,53 +132,58 @@ bool reduce(stack* s) {
         || top->token.type == token_CONST_SCIENTIFIC_NOTATION
         || top->token.type == token_TYPE_STRING_LINE
         || top->token.type == token_NIL) && top->flag == true) {
-        PLOG("---rule ID---");
+        // PLOG("---rule ID---");
 
         analyseExprOperand(top->token);
 
         rule_E_ID(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
+    // rule E op E
     else if (
         first->token.type == token_NONTERMINAL &&
         (second->token.type == token_PLUS || second->token.type == token_MINUS || second->token.type == token_MUL || second->token.type == token_DIV) &&
         third->token.type == token_NONTERMINAL) {
-        PLOG("---rule E op E---");
+        // PLOG("---rule E op E---");
 
         analyseExprOperator(second->token);
 
         rule_ID_OP_ID(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
+    // rule E ?? E
     else if (
         first->token.type == token_NONTERMINAL &&
         second->token.type == token_DEFAULT_VALUE &&
         third->token.type == token_NONTERMINAL) {
-        PLOG("---rule E ?? E---");
+        // PLOG("---rule E ?? E---");
 
         analyseExprDefault();
 
         rule_ID_CONCAT_ID(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
+    // rule (E)
     else if (
         first->token.type == token_PARENTHESES_R &&
         second->token.type == token_NONTERMINAL &&
         third->token.type == token_PARENTHESES_L) {
-        PLOG("---rule (E)---");
+        // PLOG("---rule (E)---");
         rule_PAR_ID_PAR(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
+    // rule E!
     else if (
         first->token.type == token_FORCE_UNWRAP &&
         second->token.type == token_NONTERMINAL) {
-        PLOG("---rule E!---");
+        // PLOG("---rule E!---");
 
         analyseExprOperator(first->token);
 
         rule_ID_FORCE_UNWRAP(s);
-        stackPrint(s);
+        // stackPrint(s);
     }
+    // rule ID rel ID
     else if (
         first->token.type == token_NONTERMINAL
         && (second->token.type == token_REL
@@ -172,15 +194,15 @@ bool reduce(stack* s) {
             || second->token.type == token_LESS_EQ
             || second->token.type == token_MORE_EQ)
         && third->token.type == token_NONTERMINAL) {
-        PLOG("rule ID rel ID\n");
+        // PLOG("rule ID rel ID\n");
 
         analyseExprOperator(second->token);
 
-        stackPrint(s);
+        // stackPrint(s);
         rule_ID_REL_ID(s);
     }
     else {
-        PLOG("ERROR: unknown rule\n");
+        // PLOG("ERROR: unknown rule\n");
         return false;
     }
 
@@ -196,9 +218,8 @@ bool precedenceParser() {
     lex_token tokenDollar = { .type = token_DOLLAR, .value = 0 };
     stackPush(&s, tokenDollar);
 
-    // debug
-    PLOG("====INIT====");
-    stackPrint(&s);
+    // PLOG("====INIT====");
+    // stackPrint(&s);
 
     tokenType lastToken = token_DOLLAR;
 
@@ -207,14 +228,9 @@ bool precedenceParser() {
         lex_token temp = t;
         t = stash;
         stash = temp;
-
-        /* if (stash.type == token_ID || stash.type == token_TYPE_STRING_LINE) { */
-        /*   stash.value.STR_VAL = malloc(sizeof(t.value.STR_VAL) + 1); */
-        /*   CHECK_MEMORY_ALLOC(stash.value.STR_VAL); */
-        /*   strcpy(stash.value.STR_VAL, t.value.STR_VAL); */
-        /* } */
     }
 
+    // flag to check if we even entered the while loop, if not -> not valid tokens for expressions were found -> return false
     bool expression_is_empty = true;
 
     while (possibleExpressionTokensWithoutID() || t.type == token_ID || stackTopTerminal(&s)->token.type != token_DOLLAR) {
@@ -249,8 +265,8 @@ bool precedenceParser() {
             lastToken = t.type;
             getToken();
 
-            PLOG("====EQUAL====");
-            stackPrint(&s);
+            // PLOG("====EQUAL====");
+            // stackPrint(&s);
             break;
         case LOW: // expand  "<"
             stackPush(&s, t);
@@ -259,13 +275,13 @@ bool precedenceParser() {
             lastToken = t.type;
             getToken();
 
-            PLOG("====LOW====");
-            stackPrint(&s);
+            // PLOG("====LOW====");
+            // stackPrint(&s);
             break;
         case HIGH: // reduce ">"
             if (reduce(&s)) {
-                PLOG("====HIGH====");
-                stackPrint(&s);
+                // PLOG("====HIGH====");
+                // stackPrint(&s);
                 break;
             }
             else {
@@ -273,24 +289,25 @@ bool precedenceParser() {
                 return false;
             }
         case EMPTY: // error
-            PLOG("====EMPTY====");
-            stackPrint(&s);
+            // PLOG("====EMPTY====");
+            // stackPrint(&s);
             stackFreeItems(&s);
             return false;
         default:
-            PLOG("ERROR: unknown precedence table value\n");
+            // PLOG("ERROR: unknown precedence table value\n");
             return false;
         }
     }
 
     stash.type = token_EMPTY;
 
-    PLOG("====END====\n");
+    // PLOG("====END====\n");
     stackFreeItems(&s);
 
     if (expression_is_empty) {
         return false;
     }
+
     return true;
 }
 

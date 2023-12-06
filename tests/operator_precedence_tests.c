@@ -6,7 +6,6 @@
 #include "../operator_precedence.h"
 
 
-
 void test_PRECEDENCE_OP_NOT(void) {
     const char* operator = "!";
     CU_ASSERT_EQUAL(PRECEDENCE(operator), OP_FORCE_UNWRAP);

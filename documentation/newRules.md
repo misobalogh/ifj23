@@ -114,44 +114,37 @@
 ```
 51. <func_stat> -> <let_or_var> <var_assignment>
 52. <func_stat> -> id <after_id>
-53. <func_stat> -> <return_stat>
+53. <func_stat> -> return <ret_val> EOL <func_stat_list>
 54. <func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }
 55. <func_stat> -> while <expression> { <func_stat_list> }
 56. <func_stat> -> EPSILON
 ```
 
 ```
-57. <return_stat> -> return <ret_val> EOL <func_stat_list>
-58. <return_stat> -> EPSILON
+57. <ret_val> -> <expression>
+58. <ret_val> -> EPSILON
 ```
 
 ```
-59. <ret_val> -> <expression>
-60. <ret_val> -> EPSILON
+59. <condition> -> <expression>
+60. <condtion> -> let id
 ```
 
 ```
-61. <condition> -> <expression>
-62. <condtion> -> let id
+62. <type> -> Int
+63. <type> -> Int?
+64. <type> -> Double
+65. <type> -> Double?
+66. <type> -> String
+67. <type> -> String?
 ```
 
 ```
-63. <type> -> Int
-64. <type> -> Int?
-65. <type> -> Double
-66. <type> -> Double?
-67. <type> -> String
-68. <type> -> String?
-```
-
-```
-51. <expression> -> id
-52. <expression> -> const
-53. <expression> -> ( <expression> )
-54. <expression> -> <expression> arithm_op <expression>
-55. <expression> -> <expression> ?? <expression>
-56. <expression> -> <expression>!  (force unwrap)
-57. <expression> -> <expression> rel_op <expression>   (not 100% correct)
-58. something like this instead:
-59. <expression> -> <not_rel_exp> rel_op <not_rel_exp>
+68. <expression> -> id
+69. <expression> -> const
+70. <expression> -> ( <expression> )
+71. <expression> -> <expression> arithm_op <expression>
+72. <expression> -> <expression> ?? <expression>
+73. <expression> -> <expression>!  (force unwrap)
+74. <expression> -> <expression> rel_op <expression>  
 ```
