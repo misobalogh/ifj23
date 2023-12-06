@@ -37,13 +37,6 @@ void stackPush(stack* s, lex_token token) {
     CHECK_MEMORY_ALLOC(newItem);
     newItem->token = token;
 
-    /* if (token.type == token_ID) { */
-    /*   size_t len = strlen(token.value.STR_VAL) + 1; */
-    /*   newItem->token.value.STR_VAL = malloc(len); */
-    /*   CHECK_MEMORY_ALLOC(newItem->token.value.STR_VAL); */
-    /*   strncpy(newItem->token.value.STR_VAL, token.value.STR_VAL, len); */
-    /* } */
-
     newItem->lower = s->top;
     newItem->flag = false;
     s->top = newItem;
@@ -64,7 +57,7 @@ void stackPop(stack* s) {
     stackItem* topItem = s->top;
 
     if (topItem->token.type == token_ID) {
-      free(topItem->token.value.STR_VAL);
+        free(topItem->token.value.STR_VAL);
     }
 
     s->top = s->top->lower;

@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: synt_recur_rules.c
 * Description: rules for top-down syntactic analysis
-// * Author: MICHAL BALOGH
+* Author: MICHAL BALOGH xbalog06, MICHAL CENEK xcenek04
 * Faculty: FIT VUT
 * Date: 21.10.2023
 
@@ -50,7 +50,7 @@ lex_token stash = { .type = token_EMPTY, .value = {0} };
 void consume_optional_EOL() {
     EOL_flag = false;
     while (t.type == token_EOL) {
-        RLOG("EOL consumed\n");
+        // RLOG("EOL consumed\n");
         t = get_next_token();
         LEX_ERR_CHECK();
         EOL_flag = true;
@@ -60,7 +60,7 @@ void consume_optional_EOL() {
 // ===================== RULES =====================
 
 bool rule_EXPRESSION() {
-    RLOG("<expression> => switching to precedence parser\n");
+    // RLOG("<expression> => switching to precedence parser\n");
     analyseExprBegin();
     if (!precedenceParser()) {
         return false;
@@ -84,7 +84,7 @@ bool rule_PROGRAM() {
     genSubstring();
 
     getToken();
-    RLOG("\n\n<program> -> <stat_list> EOF\n");
+    // RLOG("\n\n<program> -> <stat_list> EOF\n");
     if (t.type == token_LET ||
         t.type == token_VAR ||
         t.type == token_IF ||
@@ -93,17 +93,17 @@ bool rule_PROGRAM() {
         t.type == token_FUNC
         ) {
         if (rule_STAT_LIST()) {
-            RLOG("EOF\n");
-            RLOG("Returned TRUE");
+            // RLOG("EOF\n");
+            // RLOG("Returned TRUE");
             return true;
         }
     }
     else if (t.type == token_EOF) {
-        RLOG("Returned TRUE");
-        RLOG("DONE");
+        // RLOG("Returned TRUE");
+        // RLOG("DONE");
         return true;
     }
-    RLOG("Returned FALSE");
+    // RLOG("Returned FALSE");
     return false;
 }
 
@@ -115,7 +115,7 @@ bool rule_STAT_LIST() {
         t.type == token_WHILE ||
         t.type == token_ID ||
         t.type == token_FUNC) {
-        RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
+        // RLOG("<stat_list> -> <statement> EOL <stat_list>\n");
         if (rule_STATEMENT()) {
             if (EOL_flag == true) {
                 return rule_STAT_LIST();
@@ -127,7 +127,7 @@ bool rule_STAT_LIST() {
     }
     // 3. <stat_list> -> EPSILON
     else if (t.type == token_EOF) {
-        RLOG("<stat_list> -> EPSILON\n");
+        // RLOG("<stat_list> -> EPSILON\n");
         return true;
     }
     return false;
@@ -140,18 +140,18 @@ bool rule_STATEMENT() {
     switch (t.type) {
     case token_LET:
     case token_VAR:
-        RLOG("<statement> -> <let_or_var> <var_assignment>\n");
+        // RLOG("<statement> -> <let_or_var> <var_assignment>\n");
         analyseAssignBegin();
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
-        RLOG("<statement> -> id <after_id>\n");
+        // RLOG("<statement> -> id <after_id>\n");
         analyseReassignStart();
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
         getToken();
         return rule_AFTER_ID();
     case token_FUNC:
-        RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
+        // RLOG("<statement> -> func id ( <param_list> ) <return_type> { <func_stat_list> }\n");
 
         genMainJump();
 
@@ -209,7 +209,7 @@ bool rule_STATEMENT() {
         LEX_ERR_CHECK();
         return true;
     case token_IF:
-        RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
+        // RLOG("<statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
 
         analyseIfLetBegin();
@@ -266,7 +266,7 @@ bool rule_STATEMENT() {
         return true;
 
     case token_WHILE:
-        RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
+        // RLOG("<statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
 
         genWhileBegin();
@@ -299,11 +299,11 @@ bool rule_STATEMENT() {
         return true;
 
     case token_EOL:
-        RLOG("<statement> -> EPSILON\n");
+        // RLOG("<statement> -> EPSILON\n");
         return true;
 
     default:
-        RLOG("ERROR: <statement>\n");
+        // RLOG("ERROR: <statement>\n");
         return false;
     }
 }
@@ -316,7 +316,7 @@ bool rule_BRACK_STAT_LIST() {
         t.type == token_IF ||
         t.type == token_WHILE ||
         t.type == token_ID) {
-        RLOG("<brack_stat_list> -> <brack_statement> EOL <brack_stat_list>\n");
+        // RLOG("<brack_stat_list> -> <brack_statement> EOL <brack_stat_list>\n");
         if (rule_BRACK_STATEMENT()) {
             if (EOL_flag == true) {
                 return rule_BRACK_STAT_LIST();
@@ -324,7 +324,7 @@ bool rule_BRACK_STAT_LIST() {
         }
     }
     if (t.type == token_BRACKET_R) {
-        RLOG("<brack_stat_list> -> EPSILON\n");
+        // RLOG("<brack_stat_list> -> EPSILON\n");
         return true;
     }
     return false;
@@ -337,11 +337,11 @@ bool rule_BRACK_STATEMENT() {
     switch (t.type) {
     case token_LET:
     case token_VAR:
-        RLOG("<brack_statement> -> <let_or_var> <var_assignment>\n");
+        // RLOG("<brack_statement> -> <let_or_var> <var_assignment>\n");
         analyseAssignBegin();
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
-        RLOG("<brack_statement> -> id <after_id>\n");
+        // RLOG("<brack_statement> -> id <after_id>\n");
         analyseReassignStart();
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
@@ -349,7 +349,7 @@ bool rule_BRACK_STATEMENT() {
 
         return rule_AFTER_ID();
     case token_IF:
-        RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
+        // RLOG("<brack_statement> -> if <condition> { <brack_stat_list> } else { <brack_stat_list> }\n");
         getToken();
 
         analyseIfLetBegin();
@@ -401,7 +401,7 @@ bool rule_BRACK_STATEMENT() {
         return true;
 
     case token_WHILE:
-        RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
+        // RLOG("<brack_statement> -> while <expression> { <brack_stat_list> }\n");
         getToken();
 
         genWhileBegin();
@@ -429,10 +429,10 @@ bool rule_BRACK_STATEMENT() {
         getToken();
         return true;
     case token_EOL:
-        RLOG("<brack_statement> -> EPSILON\n");
+        // RLOG("<brack_statement> -> EPSILON\n");
         return true;
     default:
-        RLOG("ERROR: <brack_statement>\n");
+        // RLOG("ERROR: <brack_statement>\n");
         return false;
     }
 }
@@ -440,7 +440,7 @@ bool rule_BRACK_STATEMENT() {
 
 bool rule_LET_OR_VAR() {
     if (t.type == token_LET) {
-        RLOG("<let_or_var> -> let id\n");
+        // RLOG("<let_or_var> -> let id\n");
         analyseAssignLet(true);
         getToken();
 
@@ -453,7 +453,7 @@ bool rule_LET_OR_VAR() {
         }
     }
     else if (t.type == token_VAR) {
-        RLOG("<let_or_var> -> var id\n");
+        // RLOG("<let_or_var> -> var id\n");
         analyseAssignLet(false);
         getToken();
         if (t.type == token_ID) {
@@ -468,7 +468,7 @@ bool rule_LET_OR_VAR() {
 bool rule_VAR_ASSIGNMENT() {
     // <var_assigment> -> : type <val_assigment>
     if (t.type == token_COLON) {
-        RLOG("<var_assignment> -> : type <val_assignment>\n");
+        // RLOG("<var_assignment> -> : type <val_assignment>\n");
         getToken();
         if (rule_TYPE()) {
             return rule_VAL_ASSIGNMENT();
@@ -479,7 +479,7 @@ bool rule_VAR_ASSIGNMENT() {
         getToken();
 
         if (t.type == token_ID) {
-            RLOG("<var_assignment> -> = id <fn_or_exp>\n");
+            // RLOG("<var_assignment> -> = id <fn_or_exp>\n");
 
             analyseCallFnId(t.value.STR_VAL);
             analyseAssignRightId(t.value.STR_VAL);
@@ -497,7 +497,7 @@ bool rule_VAR_ASSIGNMENT() {
             || t.type == token_PARENTHESES_L
             || t.type == token_TYPE_STRING_LINE
             || t.type == token_NIL) {
-            RLOG("<var_assignment> -> = const <expression>\n");
+            // RLOG("<var_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
     }
@@ -510,7 +510,7 @@ bool rule_VAL_ASSIGNMENT() {
         getToken();
 
         if (t.type == token_ID) {
-            RLOG("<val_assignment> -> = id <fn_or_exp>\n");
+            // RLOG("<val_assignment> -> = id <fn_or_exp>\n");
             analyseAssignRightId(t.value.STR_VAL);
             analyseCallFnId(t.value.STR_VAL);
             lex_token lastToken = t;
@@ -527,14 +527,14 @@ bool rule_VAL_ASSIGNMENT() {
             || t.type == token_PARENTHESES_L
             || t.type == token_TYPE_STRING_LINE
             || t.type == token_NIL) {
-            RLOG("<val_assignment> -> = const <expression>\n");
+            // RLOG("<val_assignment> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
     }
     // <val_assigment> -> EPSILON
     else if (EOL_flag) {
         analyseAssignEnd();
-        RLOG("<val_assignment> -> EPSILON\n");
+        // RLOG("<val_assignment> -> EPSILON\n");
         return true;
     }
     return false;
@@ -543,7 +543,7 @@ bool rule_VAL_ASSIGNMENT() {
 bool rule_FN_OR_EXP() {
     // <fn_or_exp> -> id/const
     if (EOL_flag || t.type == token_EOF) {
-        RLOG("<fn_or_exp> -> id\n");
+        // RLOG("<fn_or_exp> -> id\n");
         analyseAssignIdType();
         analyseAssignEnd();
 
@@ -554,12 +554,12 @@ bool rule_FN_OR_EXP() {
     }
     // <fn_or_exp> -> <expression> 
     else if ((t.type >= token_OP_START && t.type <= token_OP_END)) {
-        RLOG("<fn_or_exp> -> <expression>\n");
+        // RLOG("<fn_or_exp> -> <expression>\n");
         return rule_EXPRESSION();
     }
     // <fn_or_exp> -> ( <input_param_list> )
     else if (t.type == token_PARENTHESES_L) {
-        RLOG("<fn_or_exp> -> ( <input_param_list> )\n");
+        // RLOG("<fn_or_exp> -> ( <input_param_list> )\n");
         stash.type = token_EMPTY;
         getToken();
 
@@ -592,7 +592,7 @@ bool rule_AFTER_ID() {
 
 
         if (t.type == token_ID) {
-            RLOG("<after_id> -> = id <fn_or_exp>\n");
+            // RLOG("<after_id> -> = id <fn_or_exp>\n");
             analyseReassignRightId(t.value.STR_VAL);
             analyseCallFnId(t.value.STR_VAL);
             lex_token lastToken = t;
@@ -608,13 +608,13 @@ bool rule_AFTER_ID() {
             || t.type == token_PARENTHESES_L
             || t.type == token_TYPE_STRING_LINE
             || t.type == token_NIL) {
-            RLOG("<after_id> -> = const <expression>\n");
+            // RLOG("<after_id> -> = const <expression>\n");
             return rule_EXPRESSION();
         }
     }
     // <after_id> -> ( <input_param_list> ) 
     else if (t.type == token_PARENTHESES_L) {
-        RLOG("<after_id> -> ( <input_param_list> )\n");
+        // RLOG("<after_id> -> ( <input_param_list> )\n");
         getToken();
         analyseReassignAbort();
         if (rule_INPUT_PARAM_LIST() == false) {
@@ -633,7 +633,7 @@ bool rule_AFTER_ID() {
 bool rule_INPUT_PARAM_LIST() {
     // <input_param_list> -> EPSILON
     if (t.type == token_PARENTHESES_R) {
-        RLOG("<input_param_list> -> EPSILON\n");
+        // RLOG("<input_param_list> -> EPSILON\n");
         return true;
     }
     // <input_param_list> -> <input_param> <input_param_next>
@@ -644,7 +644,7 @@ bool rule_INPUT_PARAM_LIST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE
         || t.type == token_NIL) {
-        RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
+        // RLOG("<input_param_list> -> <input_param> <input_param_next>\n");
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
     return false;
@@ -653,14 +653,14 @@ bool rule_INPUT_PARAM_LIST() {
 bool rule_INPUT_PARAM_NEXT() {
     // <input_param_next> -> , <input_param> <input_param_next>
     if (t.type == token_COMMA) {
-        RLOG("<input_param_next> -> , <input_param> <input_param_next>\n");
+        // RLOG("<input_param_next> -> , <input_param> <input_param_next>\n");
         getToken();
 
         return rule_INPUT_PARAM() && rule_INPUT_PARAM_NEXT();
     }
     // <input_param_next> -> EPSILON
     else if (t.type == token_PARENTHESES_R) {
-        RLOG("<input_param_next> -> EPSILON\n");
+        // RLOG("<input_param_next> -> EPSILON\n");
         return true;
     }
     return false;
@@ -675,14 +675,14 @@ bool rule_INPUT_PARAM() {
         || t.type == token_TYPE_STRING_LINE
         || t.type == token_NIL) {
 
-        RLOG("<input_param> -> const\n");
+        // RLOG("<input_param> -> const\n");
         analyseCallConst(t);
         getToken();
         return true;
     }
     // <input_param> -> id <with_name>
     else if (t.type == token_ID) {
-        RLOG("<input_param> -> id <with_name>\n");
+        // RLOG("<input_param> -> id <with_name>\n");
         (analyseCallIdOrLabel(t.value.STR_VAL));
         getToken();
 
@@ -695,13 +695,13 @@ bool rule_WITH_NAME() {
     // <with_name> -> EPSILON 
     if (t.type == token_COMMA ||
         t.type == token_PARENTHESES_R) {
-        RLOG("<with_name> -> EPSILON\n");
+        // RLOG("<with_name> -> EPSILON\n");
         analyseCallEpsAfterId();
         return true;
     }
     // <with_name> -> : <id_or_const>
     else if (t.type == token_COLON) {
-        RLOG("<with_name> -> : <id_or_const>\n");
+        // RLOG("<with_name> -> : <id_or_const>\n");
         getToken();
 
         return rule_ID_OR_CONST();
@@ -712,7 +712,7 @@ bool rule_WITH_NAME() {
 bool rule_ID_OR_CONST() {
     // <id_or_const> -> id
     if (t.type == token_ID) {
-        RLOG("<id_or_const> -> id\n");
+        // RLOG("<id_or_const> -> id\n");
         LEX_ERR_CHECK();
         analyseCallIdAfterLabel(t.value.STR_VAL);
         getToken();
@@ -726,7 +726,7 @@ bool rule_ID_OR_CONST() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE
         || t.type == token_NIL) {
-        RLOG("<id_or_const> -> const\n");
+        // RLOG("<id_or_const> -> const\n");
         analyseCallConstAfterLabel(t);
         getToken();
 
@@ -738,12 +738,12 @@ bool rule_ID_OR_CONST() {
 bool rule_PARAM_LIST() {
     // <param_list> -> EPSILON
     if (t.type == token_PARENTHESES_R) {
-        RLOG("<param_list> -> EPSILON\n");
+        // RLOG("<param_list> -> EPSILON\n");
         return true;
     }
     // <param_list> -> <param> <param_next>
     else if (t.type == token_ID || t.type == token_UNDERSCORE) {
-        RLOG("<param_list> -> <param> <param_next>\n");
+        // RLOG("<param_list> -> <param> <param_next>\n");
         return rule_PARAM() && rule_PARAM_NEXT();
     }
     return false;
@@ -752,14 +752,14 @@ bool rule_PARAM_LIST() {
 bool rule_PARAM_NEXT() {
     // <param_next> -> , <param> <param_next>
     if (t.type == token_COMMA) {
-        RLOG("<param_next> -> , <param> <param_next>\n");
+        // RLOG("<param_next> -> , <param> <param_next>\n");
         getToken();
 
         return rule_PARAM() && rule_PARAM_NEXT();
     }
     // <param_next> -> EPSILON
     else if (t.type == token_PARENTHESES_R) {
-        RLOG("<param_next> -> EPSILON\n");
+        // RLOG("<param_next> -> EPSILON\n");
         return true;
     }
     return false;
@@ -767,7 +767,7 @@ bool rule_PARAM_NEXT() {
 
 bool rule_PARAM() {
     // <param> -> <id_or_underscore> id : <type>
-    RLOG("<param> -> <id_or_underscore> id : <type>\n");
+    // RLOG("<param> -> <id_or_underscore> id : <type>\n");
     if (rule_ID_OR_UNDERSCORE() == false) {
         return false;
     }
@@ -791,7 +791,7 @@ bool rule_PARAM() {
 bool rule_ID_OR_UNDERSCORE() {
     // <id_or_underscore> -> id
     if (t.type == token_ID) {
-        RLOG("<id_or_underscore> -> id\n");
+        // RLOG("<id_or_underscore> -> id\n");
         (analyseFunctionParamLabel(t.value.STR_VAL));
         getToken();
 
@@ -799,7 +799,7 @@ bool rule_ID_OR_UNDERSCORE() {
     }
     // <id_or_underscore> -> _
     else if (t.type == token_UNDERSCORE) {
-        RLOG("<id_or_underscore> -> _\n");
+        // RLOG("<id_or_underscore> -> _\n");
         analyseFunctionParamLabel("_");
         getToken();
 
@@ -811,7 +811,7 @@ bool rule_ID_OR_UNDERSCORE() {
 bool rule_RETURN_TYPE() {
     // <return_type> -> ". type"
     if (t.type == token_ARROW) {
-        RLOG("<return_type> -> -> <type>\n");
+        // RLOG("<return_type> -> -> <type>\n");
         getToken();
         (analyseFunctionType(t.type));
 
@@ -822,7 +822,7 @@ bool rule_RETURN_TYPE() {
     // <return_type> -> EPSILON
     else if (t.type == token_BRACKET_L) {
         (analyseFunctionType(token_EMPTY));
-        RLOG("<return_type> -> EPSILON");
+        // RLOG("<return_type> -> EPSILON");
         return true;
     }
     return false;
@@ -836,7 +836,7 @@ bool rule_FUNC_STAT_LIST() {
         t.type == token_WHILE ||
         t.type == token_ID ||
         t.type == token_RETURN) {
-        RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
+        // RLOG("<func_stat_list> -> <func_stat> EOL <func_stat_list>\n");
         if (rule_FUNC_STAT()) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
@@ -845,7 +845,7 @@ bool rule_FUNC_STAT_LIST() {
     }
     // <func_stat_list> -> EPSILON    
     if (t.type == token_BRACKET_R) {
-        RLOG("<func_stat_list> -> EPSILON\n");
+        // RLOG("<func_stat_list> -> EPSILON\n");
         return true;
     }
     return false;
@@ -857,11 +857,11 @@ bool rule_FUNC_STAT() {
     switch (t.type) {
     case token_LET:
     case token_VAR:
-        RLOG("<func_stat> -> <let_or_var> <var_assignment>\n");
+        // RLOG("<func_stat> -> <let_or_var> <var_assignment>\n");
         analyseAssignBegin();
         return rule_LET_OR_VAR() && rule_VAR_ASSIGNMENT();
     case token_ID:
-        RLOG("<func_stat> -> id <after_id>\n");
+        // RLOG("<func_stat> -> id <after_id>\n");
         analyseReassignStart();
         analyseReassignId(t.value.STR_VAL);
         analyseCallFnId(t.value.STR_VAL);
@@ -870,10 +870,10 @@ bool rule_FUNC_STAT() {
         return rule_AFTER_ID();
     case token_RETURN:
         // <func_stat> -> <return_stat>
-        RLOG("<func_stat> -> <return_stat>\n");
+        // RLOG("<func_stat> -> <return_stat>\n");
         return rule_RETURN_STAT();
     case token_IF:
-        RLOG("<func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }\n");
+        // RLOG("<func_stat> -> if <condition> { <func_stat_list> } else { <func_stat_list> }\n");
         getToken();
 
         analyseIfLetBegin();
@@ -928,7 +928,7 @@ bool rule_FUNC_STAT() {
         return true;
 
     case token_WHILE:
-        RLOG("<func_stat> -> while <expression> { <func_stat_list> }\n");
+        // RLOG("<func_stat> -> while <expression> { <func_stat_list> }\n");
         getToken();
 
         genWhileBegin();
@@ -959,11 +959,11 @@ bool rule_FUNC_STAT() {
         return true;
 
     case token_EOL:
-        RLOG("<func_stat> -> EPSILON\n");
+        // RLOG("<func_stat> -> EPSILON\n");
         return true;
 
     default:
-        RLOG("ERROR: <func_stat>\n");
+        // RLOG("ERROR: <func_stat>\n");
         return false;
     }
 }
@@ -971,18 +971,13 @@ bool rule_FUNC_STAT() {
 bool rule_RETURN_STAT() {
     // <return_stat> -> return <ret_val> EOL <func_stat_list>
     if (t.type == token_RETURN) {
-        RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
+        // RLOG("<return_stat> -> return <ret_val> EOL <func_stat_list>\n");
         getToken();
         if (rule_RET_VAL()) {
             if (EOL_flag) {
                 return rule_FUNC_STAT_LIST();
             }
         }
-    }
-    // <return_stat> -> EPSILON
-    else if (EOL_flag) {
-        RLOG("<return_stat> -> EPSILON\n");
-        return true;
     }
     return false;
 }
@@ -999,12 +994,12 @@ bool rule_RET_VAL() {
         || t.type == token_CONST_SCIENTIFIC_NOTATION
         || t.type == token_TYPE_STRING_LINE
         || t.type == token_NIL) {
-        RLOG("<ret_val> -> <expression>\n");
+        // RLOG("<ret_val> -> <expression>\n");
         return rule_EXPRESSION();
     }
     // <ret_value> -> EPSILON
     else if (EOL_flag) {
-        RLOG("<ret_val> -> EPSILON\n");
+        // RLOG("<ret_val> -> EPSILON\n");
         analyseReturn((Type) { 'v', false });
         return true;
     }
@@ -1021,7 +1016,7 @@ bool rule_CONDITION() {
         || t.type == token_PARENTHESES_L
         || t.type == token_TYPE_STRING_LINE
         || t.type == token_NIL) {
-        RLOG("<condition> -> <expression>\n");
+        // RLOG("<condition> -> <expression>\n");
         if (!rule_EXPRESSION()) {
             return false;
         }
@@ -1030,7 +1025,7 @@ bool rule_CONDITION() {
     }
     // <condtion> -> let id
     if (t.type == token_LET) {
-        RLOG("<condition> -> let id\n");
+        // RLOG("<condition> -> let id\n");
         getToken();
 
         if (t.type == token_ID) {
@@ -1049,7 +1044,7 @@ bool rule_TYPE() {
         t.type == token_TYPE_INT_Q ||
         t.type == token_TYPE_DOUBLE ||
         t.type == token_TYPE_DOUBLE_Q) {
-        RLOG("<type> -> type\n");
+        // RLOG("<type> -> type\n");
         analyseAssignHint(t.type);
         getToken();
         LEX_ERR_CHECK();
