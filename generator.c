@@ -3,11 +3,11 @@
  * Michal Cenek xcenek04
  */
 
-
 #include "generator.h"
 #include "global_variables.h"
 #include "dynamic_string.h"
 #include "istack.h"
+#include "substring.h"
 
 typedef struct WhileVariable {
     char* idname;
@@ -18,21 +18,22 @@ typedef struct WhileVariable {
 static unsigned cmain = 0;
 static bool inWhile = false;
 
+// stack for uniquely undentifying block scopes
 IStack* blockStack;
-
-extern char _binary_substring_code_start[];
 
 static unsigned whileVariablesCapacity = 8;
 static WhileVariable* whileVariables;
 static unsigned whileVariableCount = 0;
 static unsigned outerWhileId = 0;
 
+// get unique udentifier
 unsigned uid(void) {
   static unsigned state = 0;
   return state++;
 }
 
 void genWhileDeclaration(const char* idname) {
+    // grow array if necesarry
     if (whileVariableCount >= whileVariablesCapacity - 1) {
         whileVariablesCapacity *= 2;
         whileVariables = realloc(whileVariables, whileVariablesCapacity * sizeof(WhileVariable));
@@ -41,16 +42,19 @@ void genWhileDeclaration(const char* idname) {
                 (whileVariablesCapacity - whileVariableCount) * sizeof(WhileVariable));
     }
 
+    // copy the string
     if (whileVariables[whileVariableCount].idname == NULL) {
         whileVariables[whileVariableCount].idname = malloc(strlen(idname) + 1);
         CHECK_MEMORY_ALLOC(whileVariables[whileVariableCount].idname);
     }
     strcpy(whileVariables[whileVariableCount].idname, idname);
 
+    // add symtable stack id
     unsigned id;
     global_symbolSearch(idname, &id);
     whileVariables[whileVariableCount].id = id;
 
+    // add locality info
     whileVariables[whileVariableCount].local = global_isLocal(idname);
 
     whileVariableCount++;
@@ -106,6 +110,7 @@ void _genWrite(Param* params, unsigned paramCount) {
         EXIT_WITH_MESSAGE(INTERNAL_ERROR);
       }
     }
+    // variable
     else {
       const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
       unsigned id;
@@ -200,41 +205,42 @@ void _genBuiltinCall(const char* idname, Param* params, unsigned paramCount) {
     printf("PUSHS TF@temp_A\n");
   }
   else if (strcmp(idname, "substring") == 0) {
-        for (int i = 0; i < 3; i++) {
-            if (params[i].isConst) {
-                if (params[i].type.base == 'I') {
-                    printf("PUSHS int@%i\n", params[i].intVal);
-                }
-                else if (params[i].type.base == 'S') {
-                    printf("PUSHS string@");
-                    _printEscaped(stringCStr(&params[i].name));
-                    putchar('\n');
-                }
-                else {
-                    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-                }
+    for (int i = 0; i < 3; i++) { // for each parameter
+        if (params[i].isConst) {
+            if (params[i].type.base == 'I') {
+                printf("PUSHS int@%i\n", params[i].intVal);
+            }
+            else if (params[i].type.base == 'S') {
+                printf("PUSHS string@");
+                _printEscaped(stringCStr(&params[i].name));
+                putchar('\n');
             }
             else {
-                const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
-                unsigned id;
-                symtableItem* it = global_symbolSearch(stringCStr(&params[i].name), &id);
-                if (it->data.flags & symbol_flag_PARAM) {
-                    printf("PUSHS LF@$%i\n", it->data.paramCount);
-                }
-                else {
-                    printf("PUSHS %s@%s%i\n", l, stringCStr(&params[i].name), id);
-                }
+                EXIT_WITH_MESSAGE(INTERNAL_ERROR);
             }
         }
-        printf("CREATEFRAME\n");
-        printf("DEFVAR TF@s-1\n");
-        printf("DEFVAR TF@i-1\n");
-        printf("DEFVAR TF@j-1\n");
-        printf("POPS TF@j-1\n");
-        printf("POPS TF@i-1\n");
-        printf("POPS TF@s-1\n");
-        printf("PUSHFRAME\n");
-        printf("CALL func__substring\n");
+        // param is variable
+        else {
+            const char* l = global_isLocal(stringCStr(&params[i].name)) ? "LF" : "GF";
+            unsigned id;
+            symtableItem* it = global_symbolSearch(stringCStr(&params[i].name), &id);
+            if (it->data.flags & symbol_flag_PARAM) {
+                printf("PUSHS LF@$%i\n", it->data.paramCount);
+            }
+            else {
+                printf("PUSHS %s@%s%i\n", l, stringCStr(&params[i].name), id);
+            }
+        }
+    }
+    printf("CREATEFRAME\n");
+    printf("DEFVAR TF@s-1\n");
+    printf("DEFVAR TF@i-1\n");
+    printf("DEFVAR TF@j-1\n");
+    printf("POPS TF@j-1\n");
+    printf("POPS TF@i-1\n");
+    printf("POPS TF@s-1\n");
+    printf("PUSHFRAME\n");
+    printf("CALL func__substring\n");
   }
   else if (strcmp(idname, "ord") == 0) {
     if (params->isConst) {
@@ -434,6 +440,7 @@ void genExprOperand(ExprItem e) {
     }
   }
   else if (e.type == expr_INTERMEDIATE) {
+    // intermediate values are only for semantic analysis
     return;
   }
   else {
@@ -568,7 +575,6 @@ void genExprOperator(OperatorType optype) {
         break;
       }
 }
-
 
 void genIfBegin(void) {
     unsigned id = uid();

@@ -1,3 +1,8 @@
+/*
+ * Project: Implementace překladače imperativního jazyka IFJ23
+ * Authors: Michal Cenek xcenek04
+*/
+
 #include "istack.h"
 #include "macros.h"
 #include <stdlib.h>

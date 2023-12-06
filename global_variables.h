@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: global_variables.h
 * Description: interface for global variables and global table of symbols
-* Author: MICHAL BALOGH
+* Authors: MICHAL BALOGH, Michal Cenek xcenek04
 * Faculty: FIT VUT
 * Date: 14.10.2023
 

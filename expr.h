@@ -12,8 +12,12 @@
 
 #define LIST_GROWTH 2
 
+// internal type of expression
 typedef enum ExprType { expr_CONST, expr_ID, expr_OPERATOR, expr_INTERMEDIATE } ExprType;
 
+/**
+ * @brief IFJ23 data type
+ */
 typedef struct Type {
   /*
    * I: Int
@@ -27,12 +31,27 @@ typedef struct Type {
   bool nullable;
 } Type;
 
+/**
+ * @brief Check if t.base valid value?
+ */
 bool typeIsValid(Type t);
-bool typeIsVariable(Type t);
-bool typeEq(Type a, Type b);
-bool typeBaseEq(Type a, Type b);
+
+/**
+ * @brief Check if type is actual value
+ */
 bool typeIsValue(Type t);
 
+/**
+ * @brief Check if variable can be this type
+ */
+bool typeIsVariable(Type t);
+
+/**
+ * @brief Check if types equal
+ */
+bool typeEq(Type a, Type b);
+
+// type of operator
 typedef enum OperatorType {
     op_PLUS,
     op_MINUS,
@@ -50,16 +69,22 @@ typedef enum OperatorType {
     op_UNWRAP
 } OperatorType;
 
+/**
+ * @brief get OperatorType from tokenType
+ */
 OperatorType tokenToOperator(tokenType type);
 
+/**
+ * @brief Item in expression - operator or operand
+ */
 typedef struct ExprItem {
   ExprType type;
   union {
     struct {
-      Type type;
-      value_of_token value;
+      Type type; // datatype of operand
+      value_of_token value; // value of const
     } constValue;
-    char* idName;
+    char* idName; // identificator of variable
     OperatorType operatorType;
   } value;
 } ExprItem;

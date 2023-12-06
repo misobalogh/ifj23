@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: symtable.c
 * Description: implementation of hash table for table of symbols
-* Author: MICHAL BALOGH xbalog06
+* Author: MICHAL BALOGH xbalog06, Michal Cenek xcenek04
 * Faculty: FIT VUT
 * Date: 5.10.2023
 

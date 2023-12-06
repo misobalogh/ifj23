@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name:    symtable.h
 * Description:  Header file for hash table for storing identifiers
-* Author:       Michal Balogh, xbalog06
+* Author:       Michal Balogh, xbalog06, Michal Cenek 04
 * Faculty:      FIT VUT
 * Date:         10.10.2023
 

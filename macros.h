@@ -2,7 +2,7 @@
 * Project Name: Implementace překladače imperativního jazyka IFJ23
 * File Name: macros.h
 * Description: macros for the whole project
-* Author: MICHAL BALOGH xbalog06
+* Authors: MICHAL BALOGH xbalog06, Michal Cenek xcenek04
 * Faculty: FIT VUT
 * Date: 29.09.2023
 

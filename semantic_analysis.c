@@ -19,11 +19,13 @@
 #define NOT_FALSE(expr) do { if (!(expr)) EXIT_WITH_MESSAGE(INTERNAL_ERROR); } while (0)
 #define NOT_NULL(expr) do { if ((expr) == NULL) EXIT_WITH_MESSAGE(INTERNAL_ERROR); } while(0)
 
+// information about iflet statement
 static struct {
   String idname;
   bool started;
 } iflet;
 
+// information about function call
 static struct {
   String idname;
   String idOrLabel;
@@ -32,6 +34,7 @@ static struct {
   unsigned paramCapacity;
 } fnCall;
 
+// information about function definition
 static struct {
   Param* params;
   unsigned paramCount;
@@ -40,6 +43,7 @@ static struct {
   Type type;
 } fnDef;
 
+// information about variable declaration and assignment
 static struct {
   bool started;
   bool let;
@@ -49,6 +53,7 @@ static struct {
   Type type;
 } assignment;
 
+// information aobut variable assignment
 static struct {
   bool started;
   String idname;
@@ -56,17 +61,23 @@ static struct {
   Type type;
 } reassignment;
 
+// did return statement start
 static bool returnStarted;
+// did the last expression contain only constants
 static bool exprConstOnly;
 
 static ExprArray* exprList;
+
+// list of function calles encountered before function definition
 static FunctionLList* postponedCheckStack;
 
+// type of last expression
 static Type lastExprType;
 
 static Param* int2DoubleParam, * double2IntParam, * lengthParam, * substringParams, 
   * ordParam, * chrParam;
 
+// identifier of current function
 static String currentFunction;
 
 void prepareStatement(void) {
@@ -97,6 +108,7 @@ void prepareStatement(void) {
   returnStarted = false;
 }
 
+// grow array of function call parameters if necessarry
 static void fnCallGrow(void) {
   if (fnCall.paramCount + 1 >= fnCall.paramCapacity) {
     fnCall.paramCapacity *= 2;
@@ -110,6 +122,7 @@ static void fnCallGrow(void) {
   }
 }
 
+// grow array of function definition parameters if necessarry
 static void fnDefGrow(void) {
   if (fnDef.paramCount + 1 >= fnDef.paramCapacity) {
     fnDef.paramCapacity *= 2;
@@ -157,7 +170,7 @@ bool semanticAnalysisInit(void) {
     stringInit(&fnCall.params[i].name, "");
   }
 
-  postponedCheckStack = functionStackInit();
+  postponedCheckStack = functionListInit();
 
   if (postponedCheckStack == NULL) {
     semanticAnalysisDeinit();
@@ -312,7 +325,7 @@ void semanticAnalysisDeinit(void) {
     EXIT_WITH_MESSAGE(UNDEFINED_FN);
   }
 
-  functionStackDeinit(postponedCheckStack);
+  functionListDeinit(postponedCheckStack);
 }
 
 // variable declaration and assignment
@@ -634,7 +647,7 @@ Type analyseCallEnd(void) {
         // remove duplicate postponed checks
         _checkPostponed(stringCStr(&fnCall.idname), fnCall.params, fnCall.paramCount);
 
-        NOT_FALSE(functionStackPush(postponedCheckStack, stringCStr(&fnCall.idname),
+        NOT_FALSE(functionListPush(postponedCheckStack, stringCStr(&fnCall.idname),
         fnCall.params, fnCall.paramCount));
         genCall(stringCStr(&fnCall.idname), fnCall.params, fnCall.paramCount);
         return (Type) { 'u', false };
@@ -974,7 +987,7 @@ bool _compareParams(Param* fnParams, unsigned fnCount, Param* callParams, unsign
 }
 
 void _checkPostponed(const char* fnId, Param* params, unsigned paramCount) {
-  FunctionLListItem* fn = functionStackRemove(postponedCheckStack, fnId);
+  FunctionLListItem* fn = functionListRemove(postponedCheckStack, fnId);
 
   // function was called with wrong arguments
   if (fn != NULL) {
@@ -991,25 +1004,6 @@ void _checkPostponed(const char* fnId, Param* params, unsigned paramCount) {
   }
 
   // function was not called
-}
-
-Type strToType(const char* typeStr) {
-  struct { const char* key; Type type; } map[] = {
-    { "I", { 'I', false } },
-    { "I?", { 'I', true } },
-    { "D", { 'D', false } },
-    { "D?", { 'D', true } },
-    { "S", { 'S', false } },
-    { "S?", { 'S', true } }
-  };
-
-  for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-    if (strcmp(typeStr, map[i].key) == 0) {
-      return map[i].type;
-    }
-  }
-
-  EXIT_WITH_MESSAGE(INTERNAL_ERROR);
 }
 
 Type variableType(const char* idname) {
@@ -1113,23 +1107,6 @@ Type _analyseUnwrap(ExprItem e) {
 
   t.nullable = false;
   return t;
-}
-
-String typeToStr(Type type) {
-  String result;
-  (stringInit(&result, ""));
-
-  if (type.base != 'I' && type.base != 'D' && type.base != 'S') {
-    EXIT_WITH_MESSAGE(INTERNAL_ERROR);
-  }
-
-  stringConcatChar(&result, type.base);
-
-  if (type.nullable) {
-    stringConcatChar(&result, '?');
-  }
-
-  return result;
 }
 
 Type tokenToType(tokenType token) {

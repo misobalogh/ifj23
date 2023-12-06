@@ -13,7 +13,6 @@
 #include "global_variables.h"
 #include "symtablestack.h"
 #include "synt_analysis.h"
-#include "macros.h"
 #include "synt_recur_rules.h"
 #include "semantic_analysis.h"
 #include "generator.h"

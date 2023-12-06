@@ -10,13 +10,10 @@
 
 ***************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "synt_analysis.h"
 #include "synt_prec_stack.h"
 #include "synt_prec_table.h"
 #include "token_types.h"
-#include "macros.h"
 #include "synt_prec_rules.h"
 
 
