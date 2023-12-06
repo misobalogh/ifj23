@@ -1,7 +1,7 @@
 # Project Name: Implementace překladače imperativního jazyka IFJ23
 # Authors: MICHAL BALOGH xbalog06, 
 
-CFLAGS = -g -Wextra -Wall -pedantic -std=c11 -Wno-missing-braces -DDEBUG
+CFLAGS = -g -Wextra -Wall -pedantic -std=c11 -Wno-missing-braces
 CC = gcc
 TESTLIB = cunit
 LD = ld
