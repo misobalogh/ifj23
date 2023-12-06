@@ -799,6 +799,7 @@ Type analyseExprEnd(void) {
             optype = op_IDIV;
         }
 
+        // simplify operation on constants into single constant
         if (a.type == expr_CONST && b.type == expr_CONST) {
             ExprItem constItem = {
                 .type=expr_CONST,
