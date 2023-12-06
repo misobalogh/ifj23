@@ -440,12 +440,21 @@ void genExprOperand(ExprItem e) {
     }
   }
   else if (e.type == expr_INTERMEDIATE) {
-    // intermediate values are only for semantic analysis
-    return;
+      return;
   }
   else {
     EXIT_WITH_MESSAGE(INTERNAL_ERROR);
   }
+}
+
+void genSwitchStackTop(void) {
+  printf("CREATEFRAME\n");
+  printf("DEFVAR TF@temp_A\n");
+  printf("DEFVAR TF@temp_B\n");
+  printf("POPS TF@temp_A\n");
+  printf("POPS TF@temp_B\n");
+  printf("PUSHS TF@temp_A\n");
+  printf("PUSHS TF@temp_B\n");
 }
 
 void genExprOperator(OperatorType optype) {

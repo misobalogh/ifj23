@@ -853,7 +853,13 @@ Type analyseExprEnd(void) {
         }
 
         genExprOperand(b);
-        genExprOperand(a);
+        if (a.type == expr_INTERMEDIATE) {
+            genSwitchStackTop();
+        }
+        else {
+            genExprOperand(a);
+        }
+
         genExprOperator(optype);
       }
 

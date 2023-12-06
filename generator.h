@@ -127,4 +127,5 @@ void genWhileDeclaration(const char* idname);
  */
 void _printEscaped(const char* str);
 
+void genSwitchStackTop(void);
 #endif
