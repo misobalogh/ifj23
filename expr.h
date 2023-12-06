@@ -95,15 +95,34 @@ typedef struct ExprArray {
   ExprItem* data;
 } ExprArray;
 
+// initialize array of operators and operands
 ExprArray* exprListInit(void);
+
+// resize array of operators and operands if necesarry
 void exprListResize(ExprArray* list);
+
+// free memory allocated during initialization and usage
 void exprListFree(ExprArray* list);
+
+// add int constant operand to array to build postfix notation
 void exprListAddInt(ExprArray* list, int value);
+
+// add float constant operand to array to build postfix notation
 void exprListAddFloat(ExprArray* list, double value);
+
+// add string constant operand to array to build postfix notation
 void exprListAddString(ExprArray* list, const char* value);
+
+// add variable identifier operand to array to build posfix notation
 void exprListAddId(ExprArray* list, const char* idname);
+
+// add operator to array to build postfix notation
 void exprListAddOperator(ExprArray* list, OperatorType optype);
+
+// add nil constant operand to build postfix notation
 void exprListAddNil(ExprArray* list);
+
+// clear array
 void exprListClear(ExprArray* list);
 
 #endif
