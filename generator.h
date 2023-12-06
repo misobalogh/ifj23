@@ -118,14 +118,18 @@ void genMainLabel(void);
 void genIfLet(const char* idname);
 
 /**
- * @brief record information about variable declaration inside while-loop for future generation
+ * @brief record information about variable declaration inside while-loop for future declaration generation
  */
 void genWhileDeclaration(const char* idname);
+
+/**
+ * @brief switch two values at the top of the stack
+ */
+void genSwitchStackTop(void);
 
 /**
  * @print a string to stdout with special characters escaped
  */
 void _printEscaped(const char* str);
 
-void genSwitchStackTop(void);
 #endif
