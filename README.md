@@ -189,7 +189,7 @@ The compiler returns specific exit codes for different error types:
 ## 📚 Documentation
 
 Detailed documentation can be found in the `docs/` directory:
-- `dokumentace.pdf` - Complete project documentation (Czech)
+- `dokumentace.pdf` - Complete project documentation (Slovak)
 - `LL_table.jpg` - LL parsing table visualization
 - `lex_and_synt.pdf` - Lexical and syntactic analysis details
 
