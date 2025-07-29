@@ -1,11 +1,46 @@
-/.vscode
+# Build artifacts
+build/
 *.o
+*.d
+*.log
+ifj23_compiler
+main
 *.out
 *.so
 *.dll
 *.a
 *.exe
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.VSCodeCounter/
+.idea/
+*.sublime-*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
 tests_code/temp
 tests_code/output.code
 
-/.VSCodeCounter
+# Documentation build artifacts
+docs/*.aux
+docs/*.log
+docs/*.synctex.gz
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Test outputs
+*.ifjcode23
+test_output/
