@@ -1,74 +1,124 @@
 # Project Name: Implementace překladače imperativního jazyka IFJ23
-# Authors: MICHAL BALOGH xbalog06, 
+# Authors: MICHAL BALOGH xbalog06, ADAM ČENĚK xcenek04, TADEAS ZOBAL xzobal02
 
-CFLAGS = -g -Wextra -Wall -pedantic -std=c11 -Wno-missing-braces
+# Compiler and flags
 CC = gcc
+CFLAGS = -g -Wextra -Wall -pedantic -std=c11 -Wno-missing-braces
 TESTLIB = cunit
-LD = ld
 
-SRC_DIR = .
-OBJ_DIR = .
-TARGET = main
+# Directories
+SRC_DIR = src
+BUILD_DIR = build
+INCLUDE_DIR = include
+TEST_DIR = tests
 
-SRC_FILES = $(filter-out $(SRC_DIR)/main.c, $(wildcard $(SRC_DIR)/*.c))
-OBJ_FILES = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
-EXEC = $(basename $(SRC_FILES))
-TEST_FILES = $(wildcard tests/*.c)
-UNIT_TESTS = $(basename $(TEST_FILES))
+# Target executable
+TARGET = ifj23_compiler
 
-all: main
+# Source files from different modules
+LEXICAL_SRC = $(wildcard $(SRC_DIR)/lexical/*.c)
+SYNTACTIC_SRC = $(wildcard $(SRC_DIR)/syntactic/*.c)
+SEMANTIC_SRC = $(wildcard $(SRC_DIR)/semantic/*.c)
+CODEGEN_SRC = $(wildcard $(SRC_DIR)/codegen/*.c)
+UTILS_SRC = $(wildcard $(SRC_DIR)/utils/*.c)
+MAIN_SRC = $(SRC_DIR)/main.c
 
+# All source files except main
+SRC_FILES = $(LEXICAL_SRC) $(SYNTACTIC_SRC) $(SEMANTIC_SRC) $(CODEGEN_SRC) $(UTILS_SRC)
+
+# Object files
+OBJ_FILES = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
+MAIN_OBJ = $(BUILD_DIR)/main.o
+
+# Test files
+TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
+UNIT_TESTS = $(patsubst $(TEST_DIR)/%.c, $(BUILD_DIR)/tests/%, $(TEST_FILES))
+
+# Default target
+all: $(TARGET)
+
+# Help target
 help:
+	@echo ""
+	@echo "IFJ23 Compiler Build System"
+	@echo "==========================="
 	@echo ""
 	@echo "Usage:"
 	@echo "  make help      - Print this help message"
-	@echo "  make           - Print this help message"
-	@echo "  make all       - Compile all files and run tests"
-	@echo "  make test      - Runs integration test on the program"
-	@echo "  make test (test name) Runs only specific test"
-	@echo "  make run       - Run the main program"
-	@echo "  make main      - Compile the main program"
-	@echo "  make tests     - Compile all unit tests"
-	@echo "  make runtests  - Run all unit tests"
-	@echo "  make <target>  - Compile a specific target program"
-	@echo "  make clean     - Remove all object files and binaries"	
+	@echo "  make           - Build the main compiler"
+	@echo "  make all       - Build the main compiler"
+	@echo "  make test      - Run integration tests"
+	@echo "  make unit      - Build and run unit tests"
+	@echo "  make run       - Run the main program with test input"
+	@echo "  make clean     - Remove all build artifacts"
+	@echo "  make debug     - Build with additional debug flags"
 	@echo ""
 
+# Main target
+$(TARGET): $(OBJ_FILES) $(MAIN_OBJ)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $^
 
+# Debug build
+debug: CFLAGS += -DDEBUG -g3 -O0
+debug: $(TARGET)
 
-string_test: stest.c dynamic_string.c
-	$(CC) $(CFLAGS) $^ -o $@
+# Object files compilation
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
-test: main
-	rm -rf *.log
-	python3 test_integration.py  $(word 2, $(MAKECMDGOALS))
+# Unit tests compilation
+$(BUILD_DIR)/tests/%: $(TEST_DIR)/%.c $(OBJ_FILES)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) $^ -o $@ -l$(TESTLIB)
 
-test-code: main
-	python3 ./test.py
+# Build all unit tests
+unit-build: $(UNIT_TESTS)
 
-rununit: $(UNIT_TESTS)
+# Run unit tests
+unit: unit-build
+	@echo "Running unit tests..."
 	@for test in $(UNIT_TESTS); do \
-		./$$test; \
+		if [ -f $$test ]; then \
+			echo "Running $$test..."; \
+			./$$test; \
+		fi; \
 	done
 
-run: main
-	rm -rf *.log
-	./main <tests_integration/test_current.swift
+# Integration tests
+test: $(TARGET)
+	@echo "Running integration tests..."
+	@if [ -f test_integration.py ]; then \
+		python3 test_integration.py; \
+	else \
+		echo "Integration test script not found"; \
+	fi
 
-$(TARGET): $(OBJ_FILES) $(SRC_DIR)/main.c
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ_FILES) $(SRC_DIR)/main.c
+# Run with sample input
+run: $(TARGET)
+	@if [ -f tests_code/factorial.swift ]; then \
+		./$(TARGET) < tests_code/factorial.swift; \
+	else \
+		echo "No test input found. Run: ./$(TARGET) < your_input.swift"; \
+	fi
 
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-tests: $(UNIT_TESTS)
-
-tests/%: tests/%.o $(filter-out $(OBJ_DIR)/main.o, $(OBJ_FILES))
-	$(CC) $(CFLAGS) $^ -o $@ -l$(TESTLIB)
-
+# Clean build artifacts
 clean:
-	rm -rf $(TARGET) $(EXEC) $(UNIT_TESTS) *.log *.o ./obj
+	rm -rf $(BUILD_DIR) $(TARGET) *.log *.o
 
-.PHONY: all clean
+# Create build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Phony targets
+.PHONY: all help debug unit unit-build test run clean
+
+# Dependencies (automatically generated)
+-include $(OBJ_FILES:.o=.d)
+-include $(MAIN_OBJ:.o=.d)
+
+# Generate dependencies
+$(BUILD_DIR)/%.d: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
+	@$(CC) -I$(INCLUDE_DIR) -MM $< | sed 's|^|$(BUILD_DIR)/|' > $@
